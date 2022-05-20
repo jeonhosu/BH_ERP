@@ -1,0 +1,86 @@
+/******************************************************************************/
+/* Project      : FPCB ERP
+/* Module       : FCM
+/* Program Name : FI_BALANCE_STATEMENT
+/* Description  : 계정잔액명세서 잔액 관리
+/*
+/* Reference by :
+/* Program History
+/*------------------------------------------------------------------------------
+/*   Date       In Charge          Description
+/*------------------------------------------------------------------------------
+/* 07-JUN-2010  Jeon Ho Su          Initialize
+/******************************************************************************/
+CREATE TABLE FI_BALANCE_STATEMENT
+( GL_DATE                     DATE          NOT NULL,    -- 잔액일자.
+  GL_DATE_SEQ                 NUMBER        DEFAULT 1,   -- 잔액일자 발생구분
+  ACCOUNT_CONTROL_ID          NUMBER        NOT NULL,    -- 계정관리ID. 
+  ACCOUNT_CODE                VARCHAR2(20)  NOT NULL,    -- 계정코드.  
+  CURRENCY_CODE               VARCHAR2(20)  NOT NULL,    -- 통화.
+  ITEM_GROUP_ID               NUMBER        DEFAULT 1,   -- 관리항목 그룹 ID
+  SOB_ID                      NUMBER        NOT NULL,
+  FORWARD_AMOUNT              NUMBER        DEFAULT 0,   -- 이월금액.
+  INCREASE_AMOUNT             NUMBER        DEFAULT 0,   -- 증가금액
+  DECREASE_AMOUNT             NUMBER        DEFAULT 0,   -- 감소금액.
+  REMAIN_AMOUNT               NUMBER        DEFAULT 0,   -- 잔액금액.
+  CURR_FORWARD_AMOUNT         NUMBER        DEFAULT 0,   -- 외화 이월금액.
+  CURR_INCREASE_AMOUNT        NUMBER        DEFAULT 0,   -- 외화 증가금액.
+  CURR_DECREASE_AMOUNT        NUMBER        DEFAULT 0,   -- 외화 감소금액.
+  CURR_REMAIN_AMOUNT          NUMBER        DEFAULT 0,   -- 외화 잔액금액.
+  NEW_EXCHANGE_RATE           NUMBER        DEFAULT 0,   -- 환산환율.
+  NEW_REMAIN_AMOUNT           NUMBER        DEFAULT 0,   -- 환산금액.
+  ESTIMATE_DATE               DATE          ,            -- 환산 평가 일자.
+  ESTIMATE_PERSON_ID          NUMBER        ,            -- 환산 평가 처리자.
+  CARRY_FORWARD_YN            VARCHAR2(1)   DEFAULT 'N',  -- 잔액이월 여부.
+  CLOSED_YN                   CHAR(1)       DEFAULT 'N',  -- 마감여부.
+  CLOSED_DATE                 DATE          ,             -- 마감처리일자.
+  CLOSED_PERSON_ID            NUMBER        ,             -- 마감처리자.
+  DESCRIPTION                 VARCHAR2(200) ,
+  ATTRIBUTE_A                 VARCHAR2(250) ,    
+  ATTRIBUTE_B                 VARCHAR2(250) ,    
+  ATTRIBUTE_C                 VARCHAR2(250) ,    
+  ATTRIBUTE_D                 VARCHAR2(250) ,    
+  ATTRIBUTE_E                 VARCHAR2(250) ,    
+  ATTRIBUTE_1                 NUMBER        ,    
+  ATTRIBUTE_2                 NUMBER        ,    
+  ATTRIBUTE_3                 NUMBER        ,    
+  ATTRIBUTE_4                 NUMBER        ,
+  ATTRIBUTE_5                 NUMBER        ,
+  CREATION_DATE               DATE          NOT NULL,  -- 생성자.
+  CREATED_BY                  NUMBER        NOT NULL,  -- 생성일.
+  LAST_UPDATE_DATE            DATE          NOT NULL,  -- 수정자.
+  LAST_UPDATED_BY             NUMBER        NOT NULL   -- 수정일.
+) TABLESPACE FCM_TS_DATA;
+
+COMMENT ON TABLE FI_BALANCE_STATEMENT IS '계정잔액명세서 잔액 관리';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.GL_DATE IS '잔액일자';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.GL_DATE_SEQ IS '잔액일자 발생구분(0-이월금액, 1-발생금액)';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.ACCOUNT_CONTROL_ID IS '계정통제ID';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.ACCOUNT_CODE IS '계정코드';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.CURRENCY_CODE IS '통화';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.ITEM_GROUP_ID IS '관리항목 그룹 ID';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.SOB_ID IS '회사ID';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.FORWARD_AMOUNT IS '이월 금액';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.INCREASE_AMOUNT IS '증가 금액';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.DECREASE_AMOUNT IS '감소 금액';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.REMAIN_AMOUNT IS '잔액 금액';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.CURR_FORWARD_AMOUNT IS '외화 이월금액';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.CURR_INCREASE_AMOUNT IS '외화 증가금액';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.CURR_DECREASE_AMOUNT IS '외화 감소금액';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.CURR_REMAIN_AMOUNT IS '외화 잔액금액';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.NEW_EXCHANGE_RATE IS '환산 환율';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.NEW_REMAIN_AMOUNT IS '환산 금액';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.ESTIMATE_DATE IS '환산평가 일시';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.ESTIMATE_PERSON_ID IS '환산평가 처리자';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.CARRY_FORWARD_YN IS '잔액이월 여부';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.CLOSED_YN IS '마감 여부';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.CLOSED_DATE IS '마감 일시';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.CLOSED_PERSON_ID IS '마감 처리자';
+COMMENT ON COLUMN FI_BALANCE_STATEMENT.DESCRIPTION IS '비고';
+
+-- INDEX.
+ALTER TABLE FI_BALANCE_STATEMENT ADD CONSTRAINT FI_BALANCE_STATEMENT PRIMARY KEY(GL_DATE, GL_DATE_SEQ, ACCOUNT_CONTROL_ID, CURRENCY_CODE, ITEM_GROUP_ID, SOB_ID);
+
+CREATE INDEX FI_BALANCE_STATEMENT_N1 ON FI_BALANCE_STATEMENT(GL_DATE, GL_DATE_SEQ, ACCOUNT_CODE, CURRENCY_CODE, ITEM_GROUP_ID, SOB_ID) TABLESPACE FCM_TS_IDX;
+CREATE INDEX FI_BALANCE_STATEMENT_N2 ON FI_BALANCE_STATEMENT(GL_DATE, GL_DATE_SEQ, ACCOUNT_CONTROL_ID, SOB_ID) TABLESPACE FCM_TS_IDX;
+CREATE INDEX FI_BALANCE_STATEMENT_N3 ON FI_BALANCE_STATEMENT(GL_DATE, GL_DATE_SEQ, ACCOUNT_CONTROL_ID, REMAIN_AMOUNT, CURR_REMAIN_AMOUNT, SOB_ID) TABLESPACE FCM_TS_IDX;

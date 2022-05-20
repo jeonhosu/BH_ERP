@@ -1,0 +1,91 @@
+/******************************************************************************/
+/* Project      : FPCB ERP
+/* Module       : HR
+/* Program Name : HRD_HOLY_TYPE
+/* Description  : 고정근태 관리
+/*
+/* Reference by :
+/* Program History
+/*------------------------------------------------------------------------------
+/*   Date       In Charge          Description
+/*------------------------------------------------------------------------------
+/* 07-JUN-2010  Jeon Ho Su          Initialize
+/******************************************************************************/
+CREATE TABLE HRD_HOLY_TYPE         
+( HOLY_TYPE_ID                      NUMBER        NOT NULL,
+  PERSON_ID                         NUMBER        NOT NULL,
+  START_DATE                        DATE          NOT NULL,  
+  END_DATE                          DATE          NOT NULL,
+  CORP_ID                           NUMBER        NOT NULL,
+  WORK_CORP_ID                      NUMBER        NOT NULL,
+  HOLY_TYPE                         VARCHAR2(10)  NOT NULL,  
+  APPROVED_YN                       CHAR(1)       DEFAULT 'N',
+  APPROVED_DATE                     DATE          , 
+  APPROVED_PERSON_ID                NUMBER        ,
+  CONFIRMED_YN                      CHAR(1)       DEFAULT 'N',
+  CONFIRMED_DATE                    DATE          ,
+  CONFIRMED_PERSON_ID               NUMBER        ,
+  APPROVE_STATUS                    VARCHAR2(1)   DEFAULT 'N',
+  EMAIL_STATUS                      VARCHAR2(2)   DEFAULT 'N',
+  CALENDAR_TRAN_YN                  CHAR(1)       DEFAULT 'N',
+  DESCRIPTION                       VARCHAR2(100) ,
+  REJECT_YN	                        CHAR(1)       DEFAULT 'N',
+  REJECT_DATE	                      DATE          ,
+  REJECT_PERSON_ID	                NUMBER        ,
+  REJECT_REMARK                     VARCHAR2(100) ,
+  ATTRIBUTE1                        VARCHAR2(100) ,
+  ATTRIBUTE2                        VARCHAR2(100) ,
+  ATTRIBUTE3                        VARCHAR2(100) ,
+  ATTRIBUTE4                        VARCHAR2(100) ,
+  ATTRIBUTE5                        VARCHAR2(100) ,
+  SOB_ID                            NUMBER        NOT NULL,
+  ORG_ID                            NUMBER        NOT NULL,
+  CREATION_DATE                     DATE          NOT NULL,
+  CREATED_BY                        NUMBER        NOT NULL,
+  LAST_UPDATE_DATE                  DATE          NOT NULL,
+  LAST_UPDATED_BY                   NUMBER        NOT NULL
+) TABLESPACE FCM_TS_DATA;
+
+-- Add comments to the columns 
+COMMENT ON TABLE HRD_HOLY_TYPE IS '근무변경관리';
+COMMENT ON COLUMN HRD_HOLY_TYPE.HOLY_TYPE_ID IS '일련번호';
+COMMENT ON COLUMN HRD_HOLY_TYPE.PERSON_ID IS '사원번호';
+COMMENT ON COLUMN HRD_HOLY_TYPE.START_DATE IS '시작일자';
+COMMENT ON COLUMN HRD_HOLY_TYPE.END_DATE IS '종료일자';
+COMMENT ON COLUMN HRD_HOLY_TYPE.HOLY_TYPE IS '근무타입';
+COMMENT ON COLUMN HRD_HOLY_TYPE.APPROVED_YN IS '1차 승인구분';
+COMMENT ON COLUMN HRD_HOLY_TYPE.APPROVED_DATE IS '1차 승인일시';
+COMMENT ON COLUMN HRD_HOLY_TYPE.APPROVED_PERSON_ID IS '1차 승인자';
+COMMENT ON COLUMN HRD_HOLY_TYPE.CONFIRMED_YN IS '확정승인구분-승인시 근무카렌다 반영';
+COMMENT ON COLUMN HRD_HOLY_TYPE.CONFIRMED_DATE IS '확정승인일시';
+COMMENT ON COLUMN HRD_HOLY_TYPE.CONFIRMED_PERSON_ID IS '확정승인자';
+COMMENT ON COLUMN HRD_HOLY_TYPE.APPROVE_STATUS IS '승인 상태(A-미승인,B-1차승인, C-확정승인, N-승인미요청,R-반려)';
+COMMENT ON COLUMN HRD_HOLY_TYPE.EMAIL_STATUS IS 'EMAIL 발송여부(N-미발송,AR/BR-발송준비,AS/BS-발송완료)';
+COMMENT ON COLUMN HRD_HOLY_TYPE.CALENDAR_TRAN_YN IS '카렌다 반영 구분';
+COMMENT ON COLUMN HRD_HOLY_TYPE.DESCRIPTION IS '비고(사유)';
+COMMENT ON COLUMN HRD_HOLY_TYPE.REJECT_YN IS '반려여부';
+COMMENT ON COLUMN HRD_HOLY_TYPE.REJECT_DATE IS '반려 처리일시';
+COMMENT ON COLUMN HRD_HOLY_TYPE.REJECT_PERSON_ID IS '반려처리자';
+COMMENT ON COLUMN HRD_HOLY_TYPE.REJECT_REMARK IS '반려사유';
+COMMENT ON COLUMN HRD_HOLY_TYPE.ATTRIBUTE5 IS '근태코드';
+COMMENT ON COLUMN HRD_HOLY_TYPE.CREATION_DATE  IS '생성일자';
+COMMENT ON COLUMN HRD_HOLY_TYPE.CREATED_BY IS '생성자';
+COMMENT ON COLUMN HRD_HOLY_TYPE.LAST_UPDATE_DATE IS '최종수정일자';
+COMMENT ON COLUMN HRD_HOLY_TYPE.LAST_UPDATED_BY IS '최종수정자';
+
+-- CREATE INDEX.
+CREATE UNIQUE INDEX HRD_HOLY_TYPE_U1 ON HRD_HOLY_TYPE(HOLY_TYPE_ID) TABLESPACE FCM_TS_IDX;
+CREATE UNIQUE INDEX HRD_HOLY_TYPE_U2 ON HRD_HOLY_TYPE(START_DATE, END_DATE, PERSON_ID, HOLY_TYPE, CORP_ID, SOB_ID, ORG_ID) TABLESPACE FCM_TS_IDX;
+CREATE INDEX HRD_HOLY_TYPE_N1 ON HRD_HOLY_TYPE(APPROVE_STATUS, SOB_ID, ORG_ID) TABLESPACE FCM_TS_IDX;
+CREATE INDEX HRD_HOLY_TYPE_N2 ON HRD_HOLY_TYPE(START_DATE, END_DATE, PERSON_ID, HOLY_TYPE, WORK_CORP_ID, SOB_ID, ORG_ID) TABLESPACE FCM_TS_IDX;
+
+-- SEQUENCE;
+DROP SEQUENCE HRD_HOLY_TYPE_S1;
+CREATE SEQUENCE HRD_HOLY_TYPE_S1;
+
+-- ANALYZE.
+ANALYZE TABLE HRD_HOLY_TYPE COMPUTE STATISTICS;
+ANALYZE INDEX HRD_HOLY_TYPE_U1 COMPUTE STATISTICS;
+ANALYZE INDEX HRD_HOLY_TYPE_U2 COMPUTE STATISTICS;
+ANALYZE INDEX HRD_HOLY_TYPE_N1 COMPUTE STATISTICS;
+ANALYZE INDEX HRD_HOLY_TYPE_N2 COMPUTE STATISTICS;

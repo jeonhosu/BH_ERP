@@ -1,0 +1,150 @@
+SELECT A.ACC_CODE,
+       LEFT(A.SLIP_DATE, 7),
+       SUM(A.SLIP_CHA_AMT),
+       SUM(A.SLIP_DAE_AMT)
+  FROM TAT01D A, TAT01M B
+ WHERE A.SLIP_BONJI = @SLIP_BONJI
+   AND SUBSTRING(B.SLIP_ACC_DATE, 1, 7) = @MONTH
+   AND B.SLIP_OK = 'O'
+   AND A.SLIP_BONJI = B.SLIP_BONJI
+   AND A.SLIP_DATE = B.SLIP_DATE
+   AND A.SLIP_NO = B.SLIP_NO AND
+  LEFT(A.ACC_CODE, 1) = '6'
+ GROUP BY A.ACC_CODE,
+  LEFT(A.SLIP_DATE, 7)
+;
+
+-- 비용인 계정을 집계.
+SELECT SL.ACCOUNT_CONTROL_ID
+     , SL.ACCOUNT_CODE
+     , SL.PERIOD_NAME
+     , SUM(DECODE(SL.ACCOUNT_DR_CR, '1', SL.GL_AMOUNT, 0)) AS DR_AMOUNT
+     , SUM(DECODE(SL.ACCOUNT_DR_CR, '2', SL.GL_AMOUNT, 0)) AS CR_AMOUNT
+  FROM FI_SLIP_LINE SL
+    , FI_SLIP_HEADER SH
+WHERE SL.SLIP_HEADER_ID           = SH.SLIP_HEADER_ID
+  AND SL.PERIOD_NAME              = &W_PERIOD_NAME
+  AND SL.SOB_ID                   = &W_SOB_ID
+  AND SL.CONFIRM_YN               = 'Y'
+  AND SUBSTR(SL.ACCOUNT_CODE, 1, 1) = '6'
+GROUP BY SL.ACCOUNT_CONTROL_ID
+      , SL.ACCOUNT_CODE
+      , SL.PERIOD_NAME  
+;
+-- 1. 결산분개 삭제.
+
+
+-- 원재료 기초.
+SELECT CEA.PERIOD_NAME
+     , CEA.ACCOUNT_CONTROL_ID
+     , CEA.SOB_ID
+     , CEA.ENDING_AMOUNT
+     , CEA.REMARK
+  FROM FI_CLOSING_ENDING_AMOUNT CEA
+    , FI_CLOSING_ACCOUNT CA
+WHERE CEA.ACCOUNT_CONTROL_ID      = CA.ACCOUNT_CONTROL_ID
+  AND CEA.SOB_ID                  = CA.SOB_ID
+  AND CEA.PERIOD_NAME             = TO_CHAR(ADD_MONTHS(TO_DATE(&W_PERIOD_NAME, 'YYYY-MM'), -1), 'YYYY-MM')
+  AND CEA.SOB_ID                  = &W_SOB_ID
+  AND CA.CLOSING_GROUP            = '101'
+;
+
+-- 원재료 당기 입고(차변)
+SELECT SL.ACCOUNT_CONTROL_ID
+     , SL.ACCOUNT_CODE
+     , SL.PERIOD_NAME
+     , SUM(DECODE(SL.ACCOUNT_DR_CR, '1', SL.GL_AMOUNT, 0)) AS DR_AMOUNT
+     , SUM(DECODE(SL.ACCOUNT_DR_CR, '2', SL.GL_AMOUNT, 0)) AS CR_AMOUNT
+  FROM FI_SLIP_LINE SL
+    , FI_SLIP_HEADER SH    
+WHERE SL.SLIP_HEADER_ID           = SH.SLIP_HEADER_ID
+  AND SL.PERIOD_NAME              = &W_PERIOD_NAME
+  AND SL.SOB_ID                   = &W_SOB_ID
+  AND SL.CONFIRM_YN               = 'Y'
+  AND SH.SLIP_TYPE                <> 'CL'
+  AND EXISTS (SELECT 'X'
+                FROM FI_CLOSING_ACCOUNT CA
+              WHERE CA.ACCOUNT_CONTROL_ID         = SL.ACCOUNT_CONTROL_ID
+                AND CA.SOB_ID                     = SL.SOB_ID
+                AND CA.CLOSING_GROUP              = '101'
+                AND CA.CLOSING_ACCOUNT_TYPE       = '20'        -- 당기입고.
+              )
+GROUP BY SL.ACCOUNT_CONTROL_ID
+      , SL.ACCOUNT_CODE
+      , SL.PERIOD_NAME 
+;
+
+-- 원재료 당기타계정 출고(대변)
+SELECT SL.ACCOUNT_CONTROL_ID
+     , SL.ACCOUNT_CODE
+     , SL.PERIOD_NAME
+     , SUM(DECODE(SL.ACCOUNT_DR_CR, '1', SL.GL_AMOUNT, 0)) AS DR_AMOUNT
+     , SUM(DECODE(SL.ACCOUNT_DR_CR, '2', SL.GL_AMOUNT, 0)) AS CR_AMOUNT
+  FROM FI_SLIP_LINE SL
+    , FI_SLIP_HEADER SH    
+WHERE SL.SLIP_HEADER_ID           = SH.SLIP_HEADER_ID
+  AND SL.PERIOD_NAME              = &W_PERIOD_NAME
+  AND SL.SOB_ID                   = &W_SOB_ID
+  AND SL.CONFIRM_YN               = 'Y'
+  AND SH.SLIP_TYPE                <> 'CL'
+  AND EXISTS (SELECT 'X'
+                FROM FI_CLOSING_ACCOUNT CA
+              WHERE CA.ACCOUNT_CONTROL_ID         = SL.ACCOUNT_CONTROL_ID
+                AND CA.SOB_ID                     = SL.SOB_ID
+                AND CA.CLOSING_GROUP              = '101'
+                AND CA.CLOSING_ACCOUNT_TYPE       = '30'        -- 당기출고.
+              )
+GROUP BY SL.ACCOUNT_CONTROL_ID
+      , SL.ACCOUNT_CODE
+      , SL.PERIOD_NAME 
+;
+
+-- 원재료 기말(차변).
+SELECT CEA.PERIOD_NAME
+     , CEA.ACCOUNT_CONTROL_ID
+     , CEA.SOB_ID
+     , CEA.ENDING_AMOUNT
+     , CEA.REMARK
+  FROM FI_CLOSING_ENDING_AMOUNT CEA
+    , FI_CLOSING_ACCOUNT CA
+WHERE CEA.ACCOUNT_CONTROL_ID      = CA.ACCOUNT_CONTROL_ID
+  AND CEA.SOB_ID                  = CA.SOB_ID
+  AND CEA.PERIOD_NAME             = &W_PERIOD_NAME
+  AND CEA.SOB_ID                  = &W_SOB_ID
+  AND CA.CLOSING_GROUP            = '101'
+;
+
+-- 원재료 출고 금액 계산(기초 + 입고 - 타계정 출고 - 기말).
+
+
+-- 당기 비용 ;
+SELECT CA.CLOSING_GROUP
+     , CA.ACCOUNT_CONTROL_ID
+     , CA.ACCOUNT_CODE
+  FROM FI_CLOSING_ACCOUNT CA
+WHERE CA.CLOSING_ACCOUNT_TYPE       = '21'        -- 당기비용.
+;  
+
+-- 당기 비용 집계(잔액).
+SELECT SL.ACCOUNT_CONTROL_ID
+     , SL.ACCOUNT_CODE
+     , SL.PERIOD_NAME
+     , SUM(DECODE(SL.ACCOUNT_DR_CR, '1', SL.GL_AMOUNT, 0)) AS DR_AMOUNT
+     , SUM(DECODE(SL.ACCOUNT_DR_CR, '2', SL.GL_AMOUNT, 0)) AS CR_AMOUNT
+  FROM FI_SLIP_LINE SL
+    , FI_SLIP_HEADER SH    
+WHERE SL.SLIP_HEADER_ID           = SH.SLIP_HEADER_ID
+  AND SL.PERIOD_NAME              = &W_PERIOD_NAME
+  AND SL.SOB_ID                   = &W_SOB_ID
+  AND SL.CONFIRM_YN               = 'Y'
+  AND SH.SLIP_TYPE                <> 'CL'
+  AND EXISTS (SELECT 'X'
+                FROM FI_CLOSING_ACCOUNT CA
+              WHERE CA.ACCOUNT_CONTROL_ID         = SL.ACCOUNT_CONTROL_ID
+                AND CA.SOB_ID                     = SL.SOB_ID
+                AND CA.CLOSING_ACCOUNT_TYPE       = '21'        -- 당기비용.
+              )
+GROUP BY SL.ACCOUNT_CONTROL_ID
+      , SL.ACCOUNT_CODE
+      , SL.PERIOD_NAME  
+;

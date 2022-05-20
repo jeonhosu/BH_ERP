@@ -1,0 +1,28 @@
+CREATE OR REPLACE VIEW HRM_DEPT_MASTER_V1
+AS
+SELECT DM.DEPT_ID
+     , DM.CORP_ID
+		 , DM.DEPT_CODE
+		 , DM.DEPT_NAME
+		 , DM.DEPT_NAME_S
+		 , DM.DEPT_LEVEL
+		 , DM.DEPT_SORT_NUM
+		 , DM.T_O
+		 , DM.DEPT_GROUP
+		 , DM.VALUER_1
+		 , DM.VALUER_2
+		 , DM.DESCRIPTION
+		 , DM.USABLE
+		 , DM.START_DATE
+		 , DM.END_DATE
+		 , DM.SOB_ID
+		 , DM.ORG_ID
+FROM HRM_DEPT_MASTER DM
+WHERE EXISTS ( SELECT 'X'
+                 FROM HRM_CORP_MASTER CM
+								WHERE CM.CORP_ID                  = DM.CORP_ID
+								  AND CM.DEPT_CONTROL_LEVEL       = DM.DEPT_LEVEL
+									AND CM.SOB_ID                   = DM.SOB_ID
+									AND CM.ORG_ID                   = DM.ORG_ID
+						 )
+;

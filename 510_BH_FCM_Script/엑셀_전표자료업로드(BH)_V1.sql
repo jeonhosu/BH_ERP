@@ -1,0 +1,124 @@
+select *
+  from fi_slip_line_interface_temp
+FOR UPDATE
+;
+
+select *
+  from fi_slip_line_interface_temp X
+WHERE X.SLIP_NUM                   = 'GL-20101231-00078'
+
+order by 2
+;
+
+
+SELECT *
+  FROM FI_SLIP_HEADER_INTERFACE X  
+WHERE X.SLIP_DATE               = &W_SLIP_DATE
+FOR UPDATE
+;
+-- 헤더 생성.
+SELECT SLT.SLIP_DATE
+     , SLT.SLIP_NUM     
+     , SLT.SOB_ID
+     , SLT.ORG_ID
+     , PM.DEPT_ID
+     , PM.PERSON_ID
+     , NULL AS BUDGET_DEPT_ID
+     , FI_ACCOUNT_BOOK_G.OPERATING_ACCOUNT_BOOK_F(SLT.SOB_ID) AS ACCOUNT_BOOK_ID
+     , SLT.SLIP_TYPE
+     , SLT.JOURNAL_HEADER_ID
+     , SUM(SLT.GL_AMOUNT) AS GL_AMOUNT
+     , SLT.CURRENCY_CODE
+     , MAX(SLT.EXCHANGE_RATE) EXCHANGE_RATE
+     , SUM(SLT.GL_CURRENCY_AMOUNT) AS GL_CURRENCY_AMOUNT
+     , SYSDATE, EU.USER_ID
+     , SYSDATE, EU.USER_ID     
+  FROM FI_SLIP_LINE_INTERFACE_TEMP SLT
+    , HRM_PERSON_MASTER PM
+    , EAPP_USER EU
+WHERE SLT.PERSON_NUM                = PM.PERSON_NUM
+  AND SLT.SOB_ID                    = PM.SOB_ID
+  AND PM.PERSON_ID                  = EU.PERSON_ID
+GROUP BY SLT.SLIP_DATE
+     , SLT.SLIP_NUM     
+     , SLT.SOB_ID
+     , SLT.ORG_ID
+     , PM.DEPT_ID
+     , PM.PERSON_ID
+     , FI_ACCOUNT_BOOK_G.OPERATING_ACCOUNT_BOOK_F(SLT.SOB_ID)
+     , SLT.SLIP_TYPE
+     , SLT.JOURNAL_HEADER_ID
+     , SLT.SLIP_DATE
+     , SLT.SLIP_NUM
+     , SLT.CURRENCY_CODE
+     , EU.USER_ID
+;
+
+SELECT *
+  FROM FI_SLIP_LINE_INTERFACE X
+WHERE X.SLIP_DATE               = &W_SLIP_DATE
+FOR UPDATE
+;
+
+-- 라인 생성.
+SELECT SLT.SLIP_DATE
+     , SLT.SLIP_NUM
+     , SLT.SLIP_LINE_SEQ
+     , SLT.HEADER_INTERFACE_ID
+     , SLT.SOB_ID
+     , SLT.ORG_ID
+     , AC.ACCOUNT_CONTROL_ID
+     , SLT.ACCOUNT_CODE
+     , SLT.ACCOUNT_DR_CR     
+     , SLT.GL_AMOUNT AS GL_AMOUNT
+     , SLT.CURRENCY_CODE
+     , SLT.EXCHANGE_RATE EXCHANGE_RATE
+     , SLT.GL_CURRENCY_AMOUNT AS GL_CURRENCY_AMOUNT
+     , SLT.MANAGEMENT1
+     , SLT.MANAGEMENT2
+     , SLT.REFER1
+     , SLT.REFER2
+     , SLT.REFER3
+     , SLT.REFER4
+     , SLT.REFER5
+     , SLT.REFER6
+     , SLT.REFER7
+     , SLT.REFER8
+     , SLT.REFER9
+     , SLT.REMARK
+  FROM FI_SLIP_LINE_INTERFACE_TEMP SLT
+     , FI_ACCOUNT_CONTROL AC
+WHERE SLT.ACCOUNT_CODE              = AC.ACCOUNT_CODE
+  AND SLT.SOB_ID                    = AC.SOB_ID
+  AND SLT.SLIP_DATE                 = &W_SLIP_DATE
+  AND SLT.HEADER_INTERFACE_ID       = &W_HEADER_INTERFACE_ID
+ORDER BY SLT.SLIP_LINE_SEQ  
+;
+
+
+SELECT *
+  FROM HRM_PERSON_MASTER X
+WHERE X.NAME = '서인철'
+;
+
+select *
+  from hrm_dept_mapping x
+where x.hr_dept_id      = 266
+;
+
+select *
+  from fi_dept_master x
+where x.dept_id       = 97
+;
+
+UPDATE FI_SLIP_LINE_INTERFACE X 
+  SET X.REMARK                = X.REFER9
+    , X.REFER9                = NULL
+WHERE X.SLIP_DATE               = &W_SLIP_DATE
+;
+
+
+SELECT  *
+FROM  FI_SLIP_LINE_INTERFACE X
+WHERE X.SLIP_DATE               = &W_SLIP_DATE
+;

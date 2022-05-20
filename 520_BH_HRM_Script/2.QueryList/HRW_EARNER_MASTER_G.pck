@@ -1,0 +1,596 @@
+CREATE OR REPLACE PACKAGE HRW_EARNER_MASTER_G
+AS
+
+-- 소득자등록(거주자사업소득).
+  PROCEDURE SELECT_RESIDENT_BUSINESS
+            ( P_CURSOR            OUT TYPES.TCURSOR
+            , P_CORP_ID           IN NUMBER
+            , P_STD_DATE          IN DATE
+            , P_SOB_ID            IN NUMBER
+            , P_ORG_ID            IN NUMBER
+            );
+
+  PROCEDURE INSERT_RESIDENT_BUSINESS
+            ( P_EARNER_ID            OUT HRW_EARNER_MASTER.EARNER_ID%TYPE
+            , P_EARNER_NUM           OUT HRW_EARNER_MASTER.EARNER_NUM%TYPE
+            , P_SOB_ID               IN HRW_EARNER_MASTER.SOB_ID%TYPE
+            , P_ORG_ID               IN HRW_EARNER_MASTER.ORG_ID%TYPE
+            , P_NAME                 IN HRW_EARNER_MASTER.NAME%TYPE
+            , P_CORP_ID              IN HRW_EARNER_MASTER.CORP_ID%TYPE
+            , P_DEPT_ID              IN HRW_EARNER_MASTER.DEPT_ID%TYPE
+            , P_FLOOR_ID             IN HRW_EARNER_MASTER.FLOOR_ID%TYPE
+            , P_REPRE_NUM            IN HRW_EARNER_MASTER.REPRE_NUM%TYPE
+            , P_COMPANY_NAME         IN HRW_EARNER_MASTER.COMPANY_NAME%TYPE
+            , P_TAX_REG_NO           IN HRW_EARNER_MASTER.TAX_REG_NO%TYPE
+            , P_NATIONALITY_TYPE     IN HRW_EARNER_MASTER.NATIONALITY_TYPE%TYPE
+            , P_BUSINESS_CODE        IN HRW_EARNER_MASTER.BUSINESS_CODE%TYPE
+            , P_YEAR_ADJUST_YN       IN HRW_EARNER_MASTER.YEAR_ADJUST_YN%TYPE
+            , P_INCOME_DATE_FR       IN HRW_EARNER_MASTER.INCOME_DATE_FR%TYPE
+            , P_INCOME_DATE_TO       IN HRW_EARNER_MASTER.INCOME_DATE_TO%TYPE
+            , P_BANK_ID              IN HRW_EARNER_MASTER.BANK_ID%TYPE
+            , P_ACCOUNT_NUM          IN HRW_EARNER_MASTER.ACCOUNT_NUM%TYPE
+            , P_ACCOUNT_HOLDER       IN HRW_EARNER_MASTER.ACCOUNT_HOLDER%TYPE
+            , P_EMAIL                IN HRW_EARNER_MASTER.EMAIL%TYPE
+            , P_TEL_NUM              IN HRW_EARNER_MASTER.TEL_NUM%TYPE
+            , P_HP_NUM               IN HRW_EARNER_MASTER.HP_NUM%TYPE
+            , P_ZIP_CODE             IN HRW_EARNER_MASTER.ZIP_CODE%TYPE
+            , P_ADDRESS1             IN HRW_EARNER_MASTER.ADDRESS1%TYPE
+            , P_ADDRESS2             IN HRW_EARNER_MASTER.ADDRESS2%TYPE
+            , P_ACCOUNT_CONTROL_ID   IN HRW_EARNER_MASTER.ACCOUNT_CONTROL_ID%TYPE
+            , P_SCH_EXP_REPAY_DED_YN IN HRW_EARNER_MASTER.SCH_EXP_REPAY_DED_YN%TYPE
+            , P_SCH_EXP_REPAY_AMT    IN HRW_EARNER_MASTER.SCH_EXP_REPAY_AMT%TYPE
+            , P_USER_ID              IN HRW_EARNER_MASTER.CREATED_BY%TYPE 
+            );
+
+  PROCEDURE UPDATE_RESIDENT_BUSINESS
+            ( W_EARNER_ID            IN HRW_EARNER_MASTER.EARNER_ID%TYPE
+            , P_SOB_ID               IN HRW_EARNER_MASTER.SOB_ID%TYPE
+            , P_ORG_ID               IN HRW_EARNER_MASTER.ORG_ID%TYPE
+            , P_NAME                 IN HRW_EARNER_MASTER.NAME%TYPE
+            , P_DEPT_ID              IN HRW_EARNER_MASTER.DEPT_ID%TYPE
+            , P_FLOOR_ID             IN HRW_EARNER_MASTER.FLOOR_ID%TYPE
+            , P_REPRE_NUM            IN HRW_EARNER_MASTER.REPRE_NUM%TYPE
+            , P_COMPANY_NAME         IN HRW_EARNER_MASTER.COMPANY_NAME%TYPE
+            , P_TAX_REG_NO           IN HRW_EARNER_MASTER.TAX_REG_NO%TYPE
+            , P_NATIONALITY_TYPE     IN HRW_EARNER_MASTER.NATIONALITY_TYPE%TYPE
+            , P_BUSINESS_CODE        IN HRW_EARNER_MASTER.BUSINESS_CODE%TYPE
+            , P_YEAR_ADJUST_YN       IN HRW_EARNER_MASTER.YEAR_ADJUST_YN%TYPE
+            , P_INCOME_DATE_FR       IN HRW_EARNER_MASTER.INCOME_DATE_FR%TYPE
+            , P_INCOME_DATE_TO       IN HRW_EARNER_MASTER.INCOME_DATE_TO%TYPE
+            , P_BANK_ID              IN HRW_EARNER_MASTER.BANK_ID%TYPE
+            , P_ACCOUNT_NUM          IN HRW_EARNER_MASTER.ACCOUNT_NUM%TYPE
+            , P_ACCOUNT_HOLDER       IN HRW_EARNER_MASTER.ACCOUNT_HOLDER%TYPE
+            , P_EMAIL                IN HRW_EARNER_MASTER.EMAIL%TYPE
+            , P_TEL_NUM              IN HRW_EARNER_MASTER.TEL_NUM%TYPE
+            , P_HP_NUM               IN HRW_EARNER_MASTER.HP_NUM%TYPE
+            , P_ZIP_CODE             IN HRW_EARNER_MASTER.ZIP_CODE%TYPE
+            , P_ADDRESS1             IN HRW_EARNER_MASTER.ADDRESS1%TYPE
+            , P_ADDRESS2             IN HRW_EARNER_MASTER.ADDRESS2%TYPE
+            , P_ACCOUNT_CONTROL_ID   IN HRW_EARNER_MASTER.ACCOUNT_CONTROL_ID%TYPE
+            , P_SCH_EXP_REPAY_DED_YN IN HRW_EARNER_MASTER.SCH_EXP_REPAY_DED_YN%TYPE
+            , P_SCH_EXP_REPAY_AMT    IN HRW_EARNER_MASTER.SCH_EXP_REPAY_AMT%TYPE
+            , P_USER_ID              IN HRW_EARNER_MASTER.CREATED_BY%TYPE 
+            );
+            
+---------------------------------------------------------------------------------------------------
+-- 소득자(거주자사업소득)-부양가족 관리.
+  PROCEDURE SELECT_RESIDENT_BSN_FAMILY
+            ( P_CURSOR1           OUT TYPES.TCURSOR1
+            , P_EARNER_ID         IN NUMBER
+            , P_SOB_ID            IN NUMBER
+            , P_ORG_ID            IN NUMBER
+            );
+            
+  PROCEDURE INSERT_RESIDENT_BSN_FAMILY
+            ( P_EARNER_FAMILY_ID OUT HRW_EARNER_FAMILY.EARNER_FAMILY_ID%TYPE
+            , P_EARNER_ID        IN HRW_EARNER_FAMILY.EARNER_ID%TYPE
+            , P_SOB_ID           IN HRW_EARNER_FAMILY.SOB_ID%TYPE
+            , P_ORG_ID           IN HRW_EARNER_FAMILY.ORG_ID%TYPE
+            , P_NAME             IN HRW_EARNER_FAMILY.NAME%TYPE
+            , P_REPRE_NUM        IN HRW_EARNER_FAMILY.REPRE_NUM%TYPE
+            , P_RELATION_ID      IN HRW_EARNER_FAMILY.RELATION_ID%TYPE
+            , P_NATIONALITY_TYPE IN HRW_EARNER_FAMILY.NATIONALITY_TYPE%TYPE
+            , P_DISABILITY_YN    IN HRW_EARNER_FAMILY.DISABILITY_YN%TYPE
+            , P_SUPPORT_YN       IN HRW_EARNER_FAMILY.SUPPORT_YN%TYPE
+            , P_DESCRIPTION      IN HRW_EARNER_FAMILY.DESCRIPTION%TYPE
+            , P_USER_ID          IN HRW_EARNER_FAMILY.CREATED_BY%TYPE 
+            );
+
+  PROCEDURE UPDATE_RESIDENT_BSN_FAMILY
+            ( W_EARNER_FAMILY_ID IN HRW_EARNER_FAMILY.EARNER_FAMILY_ID%TYPE
+            , P_SOB_ID           IN HRW_EARNER_FAMILY.SOB_ID%TYPE
+            , P_ORG_ID           IN HRW_EARNER_FAMILY.ORG_ID%TYPE
+            , P_NAME             IN HRW_EARNER_FAMILY.NAME%TYPE
+            , P_REPRE_NUM        IN HRW_EARNER_FAMILY.REPRE_NUM%TYPE
+            , P_RELATION_ID      IN HRW_EARNER_FAMILY.RELATION_ID%TYPE
+            , P_NATIONALITY_TYPE IN HRW_EARNER_FAMILY.NATIONALITY_TYPE%TYPE
+            , P_DISABILITY_YN    IN HRW_EARNER_FAMILY.DISABILITY_YN%TYPE
+            , P_SUPPORT_YN       IN HRW_EARNER_FAMILY.SUPPORT_YN%TYPE
+            , P_DESCRIPTION      IN HRW_EARNER_FAMILY.DESCRIPTION%TYPE
+            , P_USER_ID          IN HRW_EARNER_FAMILY.CREATED_BY%TYPE 
+            );
+
+  PROCEDURE DELETE_RESIDENT_BSN_FAMILY
+            ( W_EARNER_FAMILY_ID IN HRW_EARNER_FAMILY.EARNER_FAMILY_ID%TYPE
+            , P_SOB_ID           IN HRW_EARNER_FAMILY.SOB_ID%TYPE
+            , P_ORG_ID           IN HRW_EARNER_FAMILY.ORG_ID%TYPE
+            );
+            
+END HRW_EARNER_MASTER_G;
+/
+CREATE OR REPLACE PACKAGE BODY HRW_EARNER_MASTER_G
+AS
+/******************************************************************************/
+/* PROJECT      : FPCB ERP
+/* MODULE       : EAPP
+/* PROGRAM NAME : HRW_EARNER_MASTER_G
+/* DESCRIPTION  : 원천세 소득자 관리
+/* REFERENCE BY :
+/* PROGRAM HISTORY :
+/*------------------------------------------------------------------------------
+/*   DATE       IN CHARGE          DESCRIPTION
+/*------------------------------------------------------------------------------
+/* 20-JUN-2010  JEON HO SU          INITIALIZE
+/******************************************************************************/
+-- 소득자등록(거주자사업소득).
+  PROCEDURE SELECT_RESIDENT_BUSINESS
+            ( P_CURSOR            OUT TYPES.TCURSOR
+            , P_CORP_ID           IN NUMBER
+            , P_STD_DATE          IN DATE
+            , P_SOB_ID            IN NUMBER
+            , P_ORG_ID            IN NUMBER
+            )
+  AS
+  BEGIN
+    OPEN P_CURSOR FOR
+      SELECT EM.EARNER_ID
+          , EM.EARNER_NUM
+          , EM.NAME
+          , EM.REPRE_NUM
+          , EM.NATIONALITY_TYPE
+          , HRM_COMMON_G.CODE_NAME_F('NATIONALITY_TYPE', EM.NATIONALITY_TYPE, EM.SOB_ID, EM.ORG_ID) AS NATIONALITY_TYPE_DESC
+          , EM.BUSINESS_CODE
+          , HRM_COMMON_G.CODE_NAME_F('BUSINESS_CODE', EM.BUSINESS_CODE, EM.SOB_ID, EM.ORG_ID) AS BUSINESS_DESC
+          , EM.YEAR_ADJUST_YN
+          , EM.INCOME_DATE_FR
+          , EM.INCOME_DATE_TO
+          , EM.BANK_ID
+          , HRM_COMMON_G.ID_NAME_F(EM.BANK_ID) AS BANK_DESC
+          , EM.ACCOUNT_NUM
+          , EM.ACCOUNT_HOLDER
+          , EM.EMAIL
+          , EM.TEL_NUM
+          , EM.HP_NUM
+          , EM.ZIP_CODE
+          , EM.ADDRESS1
+          , EM.ADDRESS2
+          , EM.DEPT_ID
+          , HRM_DEPT_MASTER_G.DEPT_NAME_F(EM.DEPT_ID) AS DEPT_DESC
+          , EM.FLOOR_ID
+          , HRM_COMMON_G.ID_NAME_F(EM.FLOOR_ID) AS FLOOR_DESC
+          , EM.ACCOUNT_CONTROL_ID
+          , AC.ACCOUNT_DESC
+          , EM.SCH_EXP_REPAY_DED_YN
+          , EM.SCH_EXP_REPAY_AMT
+          , EM.COMPANY_NAME
+          , EM.TAX_REG_NO
+        FROM HRW_EARNER_MASTER EM
+          , FI_ACCOUNT_CONTROL AC
+       WHERE EM.ACCOUNT_CONTROL_ID  = AC.ACCOUNT_CONTROL_ID(+)
+         AND EM.EARNER_TYPE         = '10'  --거주자사업소득자.
+         AND EM.CORP_ID             = P_CORP_ID
+         AND EM.SOB_ID              = P_SOB_ID
+         AND EM.ORG_ID              = P_ORG_ID
+      ORDER BY EM.EARNER_NUM
+      ;
+  END SELECT_RESIDENT_BUSINESS;
+
+  PROCEDURE INSERT_RESIDENT_BUSINESS
+            ( P_EARNER_ID            OUT HRW_EARNER_MASTER.EARNER_ID%TYPE
+            , P_EARNER_NUM           OUT HRW_EARNER_MASTER.EARNER_NUM%TYPE
+            , P_SOB_ID               IN HRW_EARNER_MASTER.SOB_ID%TYPE
+            , P_ORG_ID               IN HRW_EARNER_MASTER.ORG_ID%TYPE
+            , P_NAME                 IN HRW_EARNER_MASTER.NAME%TYPE
+            , P_CORP_ID              IN HRW_EARNER_MASTER.CORP_ID%TYPE
+            , P_DEPT_ID              IN HRW_EARNER_MASTER.DEPT_ID%TYPE
+            , P_FLOOR_ID             IN HRW_EARNER_MASTER.FLOOR_ID%TYPE
+            , P_REPRE_NUM            IN HRW_EARNER_MASTER.REPRE_NUM%TYPE
+            , P_COMPANY_NAME         IN HRW_EARNER_MASTER.COMPANY_NAME%TYPE
+            , P_TAX_REG_NO           IN HRW_EARNER_MASTER.TAX_REG_NO%TYPE
+            , P_NATIONALITY_TYPE     IN HRW_EARNER_MASTER.NATIONALITY_TYPE%TYPE
+            , P_BUSINESS_CODE        IN HRW_EARNER_MASTER.BUSINESS_CODE%TYPE
+            , P_YEAR_ADJUST_YN       IN HRW_EARNER_MASTER.YEAR_ADJUST_YN%TYPE
+            , P_INCOME_DATE_FR       IN HRW_EARNER_MASTER.INCOME_DATE_FR%TYPE
+            , P_INCOME_DATE_TO       IN HRW_EARNER_MASTER.INCOME_DATE_TO%TYPE
+            , P_BANK_ID              IN HRW_EARNER_MASTER.BANK_ID%TYPE
+            , P_ACCOUNT_NUM          IN HRW_EARNER_MASTER.ACCOUNT_NUM%TYPE
+            , P_ACCOUNT_HOLDER       IN HRW_EARNER_MASTER.ACCOUNT_HOLDER%TYPE
+            , P_EMAIL                IN HRW_EARNER_MASTER.EMAIL%TYPE
+            , P_TEL_NUM              IN HRW_EARNER_MASTER.TEL_NUM%TYPE
+            , P_HP_NUM               IN HRW_EARNER_MASTER.HP_NUM%TYPE
+            , P_ZIP_CODE             IN HRW_EARNER_MASTER.ZIP_CODE%TYPE
+            , P_ADDRESS1             IN HRW_EARNER_MASTER.ADDRESS1%TYPE
+            , P_ADDRESS2             IN HRW_EARNER_MASTER.ADDRESS2%TYPE
+            , P_ACCOUNT_CONTROL_ID   IN HRW_EARNER_MASTER.ACCOUNT_CONTROL_ID%TYPE
+            , P_SCH_EXP_REPAY_DED_YN IN HRW_EARNER_MASTER.SCH_EXP_REPAY_DED_YN%TYPE
+            , P_SCH_EXP_REPAY_AMT    IN HRW_EARNER_MASTER.SCH_EXP_REPAY_AMT%TYPE
+            , P_USER_ID              IN HRW_EARNER_MASTER.CREATED_BY%TYPE 
+            )
+  AS
+    V_SYSDATE       DATE := GET_LOCAL_DATE(P_SOB_ID);
+    V_REPRE_NUM     VARCHAR2(20);
+    V_COUNT         NUMBER := 0;
+  BEGIN
+    BEGIN
+      SELECT MAX(NVL(SUBSTR(EM.EARNER_NUM, 7, 3), 0)) + 1 AS LAST_EARNER_COUNT
+        INTO V_COUNT
+        FROM HRW_EARNER_MASTER EM
+      WHERE EM.EARNER_TYPE        = '10'
+        AND EM.EARNER_NUM         LIKE '10' || TO_CHAR(V_SYSDATE, 'YYYY') || '%'
+      ; 
+    EXCEPTION WHEN OTHERS THEN
+      V_COUNT := 1;
+    END;
+    -- 소득자코드 생성.
+    P_EARNER_NUM := '10' || TO_CHAR(V_SYSDATE, 'YYYY') || LPAD(V_COUNT, 3, '0');
+
+/*--------------------------------------------------------------------------------------*/
+-- 주민번호 형식 적용.
+    IF P_REPRE_NUM IS NULL THEN
+      V_REPRE_NUM := NULL;
+    ELSE
+      IF EAPP_NUM_DIGIT_CHECKER_G.CHECK_REPRE_NUM_F(P_REPRE_NUM) = 'N' THEN
+        RAISE_APPLICATION_ERROR(-20001, EAPP_MESSAGE_G.RETURN_MSG_F('FCM_10026'));
+        RETURN;
+      END IF;
+      
+      V_REPRE_NUM := SUBSTR(RPAD(REPLACE(P_REPRE_NUM, '-', ''), 13, '*'), 1, 6) || '-' || SUBSTR(RPAD(REPLACE(P_REPRE_NUM, '-', ''), 13, '*'), 7, 13);
+    END IF;
+    
+    -- 주민번호 중복 검증 --
+    BEGIN
+      SELECT COUNT(EM.EARNER_ID) AS CNT
+        INTO V_COUNT
+        FROM HRW_EARNER_MASTER EM
+       WHERE EM.SOB_ID          = P_SOB_ID
+         AND EM.ORG_ID          = P_ORG_ID
+         AND EM.REPRE_NUM       = V_REPRE_NUM
+       ;
+    EXCEPTION
+      WHEN OTHERS THEN
+        V_COUNT := 0;
+    END;
+    IF V_COUNT > 0 THEN
+      RAISE_APPLICATION_ERROR(-20001, EAPP_MESSAGE_G.RETURN_MSG_F('EAPP_10057'));
+      RETURN;
+    END IF;
+    
+    SELECT HRW_EARNER_MASTER_S1.NEXTVAL
+      INTO P_EARNER_ID
+      FROM DUAL;
+
+    INSERT INTO HRW_EARNER_MASTER
+    ( EARNER_ID
+    , EARNER_TYPE 
+    , EARNER_NUM 
+    , SOB_ID 
+    , ORG_ID 
+    , NAME 
+    , CORP_ID
+    , DEPT_ID 
+    , FLOOR_ID 
+    , REPRE_NUM 
+    , COMPANY_NAME
+    , TAX_REG_NO 
+    , NATIONALITY_TYPE 
+    , BUSINESS_CODE 
+    , YEAR_ADJUST_YN 
+    , INCOME_DATE_FR 
+    , INCOME_DATE_TO 
+    , BANK_ID 
+    , ACCOUNT_NUM 
+    , ACCOUNT_HOLDER 
+    , EMAIL 
+    , TEL_NUM 
+    , HP_NUM 
+    , ZIP_CODE 
+    , ADDRESS1 
+    , ADDRESS2 
+    , ACCOUNT_CONTROL_ID 
+    , SCH_EXP_REPAY_DED_YN 
+    , SCH_EXP_REPAY_AMT 
+    , CREATION_DATE 
+    , CREATED_BY 
+    , LAST_UPDATE_DATE 
+    , LAST_UPDATED_BY )
+    VALUES
+    ( P_EARNER_ID
+    , '10'  -- EARNER_TYPE : 소득자등록(거주사업소득).
+    , P_EARNER_NUM
+    , P_SOB_ID
+    , P_ORG_ID
+    , P_NAME
+    , P_CORP_ID
+    , P_DEPT_ID
+    , P_FLOOR_ID
+    , V_REPRE_NUM
+    , P_COMPANY_NAME
+    , P_TAX_REG_NO
+    , P_NATIONALITY_TYPE
+    , P_BUSINESS_CODE
+    , NVL(P_YEAR_ADJUST_YN, 'N')
+    , P_INCOME_DATE_FR
+    , P_INCOME_DATE_TO
+    , P_BANK_ID
+    , P_ACCOUNT_NUM
+    , P_ACCOUNT_HOLDER
+    , P_EMAIL
+    , P_TEL_NUM
+    , P_HP_NUM
+    , P_ZIP_CODE
+    , P_ADDRESS1
+    , P_ADDRESS2
+    , P_ACCOUNT_CONTROL_ID
+    , NVL(P_SCH_EXP_REPAY_DED_YN, 'N')
+    , NVL(P_SCH_EXP_REPAY_AMT, 0)
+    , V_SYSDATE
+    , P_USER_ID
+    , V_SYSDATE
+    , P_USER_ID );
+  END INSERT_RESIDENT_BUSINESS;
+
+  PROCEDURE UPDATE_RESIDENT_BUSINESS
+            ( W_EARNER_ID            IN HRW_EARNER_MASTER.EARNER_ID%TYPE
+            , P_SOB_ID               IN HRW_EARNER_MASTER.SOB_ID%TYPE
+            , P_ORG_ID               IN HRW_EARNER_MASTER.ORG_ID%TYPE
+            , P_NAME                 IN HRW_EARNER_MASTER.NAME%TYPE
+            , P_DEPT_ID              IN HRW_EARNER_MASTER.DEPT_ID%TYPE
+            , P_FLOOR_ID             IN HRW_EARNER_MASTER.FLOOR_ID%TYPE
+            , P_REPRE_NUM            IN HRW_EARNER_MASTER.REPRE_NUM%TYPE
+            , P_COMPANY_NAME         IN HRW_EARNER_MASTER.COMPANY_NAME%TYPE
+            , P_TAX_REG_NO           IN HRW_EARNER_MASTER.TAX_REG_NO%TYPE
+            , P_NATIONALITY_TYPE     IN HRW_EARNER_MASTER.NATIONALITY_TYPE%TYPE
+            , P_BUSINESS_CODE        IN HRW_EARNER_MASTER.BUSINESS_CODE%TYPE
+            , P_YEAR_ADJUST_YN       IN HRW_EARNER_MASTER.YEAR_ADJUST_YN%TYPE
+            , P_INCOME_DATE_FR       IN HRW_EARNER_MASTER.INCOME_DATE_FR%TYPE
+            , P_INCOME_DATE_TO       IN HRW_EARNER_MASTER.INCOME_DATE_TO%TYPE
+            , P_BANK_ID              IN HRW_EARNER_MASTER.BANK_ID%TYPE
+            , P_ACCOUNT_NUM          IN HRW_EARNER_MASTER.ACCOUNT_NUM%TYPE
+            , P_ACCOUNT_HOLDER       IN HRW_EARNER_MASTER.ACCOUNT_HOLDER%TYPE
+            , P_EMAIL                IN HRW_EARNER_MASTER.EMAIL%TYPE
+            , P_TEL_NUM              IN HRW_EARNER_MASTER.TEL_NUM%TYPE
+            , P_HP_NUM               IN HRW_EARNER_MASTER.HP_NUM%TYPE
+            , P_ZIP_CODE             IN HRW_EARNER_MASTER.ZIP_CODE%TYPE
+            , P_ADDRESS1             IN HRW_EARNER_MASTER.ADDRESS1%TYPE
+            , P_ADDRESS2             IN HRW_EARNER_MASTER.ADDRESS2%TYPE
+            , P_ACCOUNT_CONTROL_ID   IN HRW_EARNER_MASTER.ACCOUNT_CONTROL_ID%TYPE
+            , P_SCH_EXP_REPAY_DED_YN IN HRW_EARNER_MASTER.SCH_EXP_REPAY_DED_YN%TYPE
+            , P_SCH_EXP_REPAY_AMT    IN HRW_EARNER_MASTER.SCH_EXP_REPAY_AMT%TYPE
+            , P_USER_ID              IN HRW_EARNER_MASTER.CREATED_BY%TYPE 
+            )
+  AS
+    V_SYSDATE       DATE := GET_LOCAL_DATE(P_SOB_ID);
+    V_REPRE_NUM     VARCHAR2(20);
+    V_COUNT         NUMBER := 0;
+  BEGIN
+/*--------------------------------------------------------------------------------------*/
+-- 주민번호 형식 적용.
+    IF P_REPRE_NUM IS NULL THEN
+      V_REPRE_NUM := NULL;
+    ELSE
+      IF EAPP_NUM_DIGIT_CHECKER_G.CHECK_REPRE_NUM_F(P_REPRE_NUM) = 'N' THEN
+        RAISE_APPLICATION_ERROR(-20001, EAPP_MESSAGE_G.RETURN_MSG_F('FCM_10026'));
+        RETURN;
+      END IF;
+      
+      V_REPRE_NUM := SUBSTR(RPAD(REPLACE(P_REPRE_NUM, '-', ''), 13, '*'), 1, 6) || '-' || SUBSTR(RPAD(REPLACE(P_REPRE_NUM, '-', ''), 13, '*'), 7, 13);
+    END IF;
+    
+    UPDATE HRW_EARNER_MASTER
+      SET NAME                 = P_NAME
+        , DEPT_ID              = P_DEPT_ID
+        , FLOOR_ID             = P_FLOOR_ID
+        , REPRE_NUM            = V_REPRE_NUM
+        , COMPANY_NAME         = P_COMPANY_NAME
+        , TAX_REG_NO           = P_TAX_REG_NO
+        , NATIONALITY_TYPE     = P_NATIONALITY_TYPE
+        , BUSINESS_CODE        = P_BUSINESS_CODE
+        , YEAR_ADJUST_YN       = NVL(P_YEAR_ADJUST_YN, 'N')
+        , INCOME_DATE_FR       = P_INCOME_DATE_FR
+        , INCOME_DATE_TO       = P_INCOME_DATE_TO
+        , BANK_ID              = P_BANK_ID
+        , ACCOUNT_NUM          = P_ACCOUNT_NUM
+        , ACCOUNT_HOLDER       = P_ACCOUNT_HOLDER
+        , EMAIL                = P_EMAIL
+        , TEL_NUM              = P_TEL_NUM
+        , HP_NUM               = P_HP_NUM
+        , ZIP_CODE             = P_ZIP_CODE
+        , ADDRESS1             = P_ADDRESS1
+        , ADDRESS2             = P_ADDRESS2
+        , ACCOUNT_CONTROL_ID   = P_ACCOUNT_CONTROL_ID
+        , SCH_EXP_REPAY_DED_YN = NVL(P_SCH_EXP_REPAY_DED_YN, 'N')
+        , SCH_EXP_REPAY_AMT    = NVL(P_SCH_EXP_REPAY_AMT, 0)
+        , LAST_UPDATE_DATE     = V_SYSDATE
+        , LAST_UPDATED_BY      = P_USER_ID
+    WHERE EARNER_ID            = W_EARNER_ID;
+  END UPDATE_RESIDENT_BUSINESS;
+    
+---------------------------------------------------------------------------------------------------
+-- 소득자(거주자사업소득)-부양가족 관리.
+  PROCEDURE SELECT_RESIDENT_BSN_FAMILY
+            ( P_CURSOR1           OUT TYPES.TCURSOR1
+            , P_EARNER_ID         IN NUMBER
+            , P_SOB_ID            IN NUMBER
+            , P_ORG_ID            IN NUMBER
+            )
+  AS
+  BEGIN
+    OPEN P_CURSOR1 FOR
+      SELECT EF.EARNER_ID
+          , EF.NAME
+          , EF.REPRE_NUM
+          , EF.RELATION_ID
+          , HR.RELATION_NAME
+          , EF.NATIONALITY_TYPE
+          , HRM_COMMON_G.CODE_NAME_F('NATIONALITY_TYPE', EF.NATIONALITY_TYPE, EF.SOB_ID, EF.ORG_ID) AS NATIONALITY_TYPE_DESC
+          , EF.DISABILITY_YN
+          , EF.SUPPORT_YN
+          , EF.DESCRIPTION
+          , EF.EARNER_FAMILY_ID
+        FROM HRW_EARNER_FAMILY EF
+          , HRM_RELATION_V HR
+      WHERE EF.RELATION_ID        = HR.RELATION_ID
+        AND EF.EARNER_ID          = P_EARNER_ID
+        AND EF.SOB_ID             = P_SOB_ID
+        AND EF.ORG_ID             = P_ORG_ID
+      ORDER BY HR.RELATION_CODE
+      ;  
+  END SELECT_RESIDENT_BSN_FAMILY;
+  
+  PROCEDURE INSERT_RESIDENT_BSN_FAMILY
+            ( P_EARNER_FAMILY_ID OUT HRW_EARNER_FAMILY.EARNER_FAMILY_ID%TYPE
+            , P_EARNER_ID        IN HRW_EARNER_FAMILY.EARNER_ID%TYPE
+            , P_SOB_ID           IN HRW_EARNER_FAMILY.SOB_ID%TYPE
+            , P_ORG_ID           IN HRW_EARNER_FAMILY.ORG_ID%TYPE
+            , P_NAME             IN HRW_EARNER_FAMILY.NAME%TYPE
+            , P_REPRE_NUM        IN HRW_EARNER_FAMILY.REPRE_NUM%TYPE
+            , P_RELATION_ID      IN HRW_EARNER_FAMILY.RELATION_ID%TYPE
+            , P_NATIONALITY_TYPE IN HRW_EARNER_FAMILY.NATIONALITY_TYPE%TYPE
+            , P_DISABILITY_YN    IN HRW_EARNER_FAMILY.DISABILITY_YN%TYPE
+            , P_SUPPORT_YN       IN HRW_EARNER_FAMILY.SUPPORT_YN%TYPE
+            , P_DESCRIPTION      IN HRW_EARNER_FAMILY.DESCRIPTION%TYPE
+            , P_USER_ID          IN HRW_EARNER_FAMILY.CREATED_BY%TYPE 
+            )
+  AS
+    V_SYSDATE       DATE := GET_LOCAL_DATE(P_SOB_ID);
+    V_REPRE_NUM     VARCHAR2(20);
+    V_COUNT         NUMBER := 0;
+  BEGIN
+/*--------------------------------------------------------------------------------------*/
+-- 주민번호 형식 적용.
+    IF P_REPRE_NUM IS NULL THEN
+      V_REPRE_NUM := NULL;
+    ELSE
+      IF EAPP_NUM_DIGIT_CHECKER_G.CHECK_REPRE_NUM_F(P_REPRE_NUM) = 'N' THEN
+        RAISE_APPLICATION_ERROR(-20001, EAPP_MESSAGE_G.RETURN_MSG_F('FCM_10026'));
+        RETURN;
+      END IF;
+      
+      V_REPRE_NUM := SUBSTR(RPAD(REPLACE(P_REPRE_NUM, '-', ''), 13, '*'), 1, 6) || '-' || SUBSTR(RPAD(REPLACE(P_REPRE_NUM, '-', ''), 13, '*'), 7, 13);
+    END IF;
+    
+    -- 주민번호 중복 검증 --
+    BEGIN
+      SELECT COUNT(EF.EARNER_ID) AS CNT
+        INTO V_COUNT
+        FROM HRW_EARNER_FAMILY EF
+       WHERE EF.EARNER_ID       = P_EARNER_ID
+         AND EF.SOB_ID          = P_SOB_ID
+         AND EF.ORG_ID          = P_ORG_ID
+         AND EF.REPRE_NUM       = V_REPRE_NUM
+       ;
+    EXCEPTION
+      WHEN OTHERS THEN
+        V_COUNT := 0;
+    END;
+    IF V_COUNT > 0 THEN
+      RAISE_APPLICATION_ERROR(-20001, EAPP_MESSAGE_G.RETURN_MSG_F('EAPP_10057'));
+      RETURN;
+    END IF;
+    
+    SELECT HRW_EARNER_FAMILY_S1.NEXTVAL
+      INTO P_EARNER_FAMILY_ID
+      FROM DUAL;
+      
+    INSERT INTO HRW_EARNER_FAMILY
+    ( EARNER_FAMILY_ID
+    , EARNER_ID
+    , SOB_ID 
+    , ORG_ID 
+    , NAME 
+    , REPRE_NUM 
+    , RELATION_ID 
+    , NATIONALITY_TYPE 
+    , DISABILITY_YN 
+    , SUPPORT_YN 
+    , DESCRIPTION 
+    , CREATION_DATE 
+    , CREATED_BY 
+    , LAST_UPDATE_DATE 
+    , LAST_UPDATED_BY )
+    VALUES
+    ( P_EARNER_FAMILY_ID
+    , P_EARNER_ID
+    , P_SOB_ID
+    , P_ORG_ID
+    , P_NAME
+    , V_REPRE_NUM
+    , P_RELATION_ID
+    , P_NATIONALITY_TYPE
+    , NVL(P_DISABILITY_YN, 'N')
+    , NVL(P_SUPPORT_YN, 'N')
+    , P_DESCRIPTION
+    , V_SYSDATE
+    , P_USER_ID
+    , V_SYSDATE
+    , P_USER_ID );
+  END INSERT_RESIDENT_BSN_FAMILY;
+
+  PROCEDURE UPDATE_RESIDENT_BSN_FAMILY
+            ( W_EARNER_FAMILY_ID IN HRW_EARNER_FAMILY.EARNER_FAMILY_ID%TYPE
+            , P_SOB_ID           IN HRW_EARNER_FAMILY.SOB_ID%TYPE
+            , P_ORG_ID           IN HRW_EARNER_FAMILY.ORG_ID%TYPE
+            , P_NAME             IN HRW_EARNER_FAMILY.NAME%TYPE
+            , P_REPRE_NUM        IN HRW_EARNER_FAMILY.REPRE_NUM%TYPE
+            , P_RELATION_ID      IN HRW_EARNER_FAMILY.RELATION_ID%TYPE
+            , P_NATIONALITY_TYPE IN HRW_EARNER_FAMILY.NATIONALITY_TYPE%TYPE
+            , P_DISABILITY_YN    IN HRW_EARNER_FAMILY.DISABILITY_YN%TYPE
+            , P_SUPPORT_YN       IN HRW_EARNER_FAMILY.SUPPORT_YN%TYPE
+            , P_DESCRIPTION      IN HRW_EARNER_FAMILY.DESCRIPTION%TYPE
+            , P_USER_ID          IN HRW_EARNER_FAMILY.CREATED_BY%TYPE 
+            )
+  AS
+    V_SYSDATE       DATE := GET_LOCAL_DATE(P_SOB_ID);
+    V_REPRE_NUM     VARCHAR2(20);
+  BEGIN
+/*--------------------------------------------------------------------------------------*/
+-- 주민번호 형식 적용.
+    IF P_REPRE_NUM IS NULL THEN
+      V_REPRE_NUM := NULL;
+    ELSE
+      IF EAPP_NUM_DIGIT_CHECKER_G.CHECK_REPRE_NUM_F(P_REPRE_NUM) = 'N' THEN
+        RAISE_APPLICATION_ERROR(-20001, EAPP_MESSAGE_G.RETURN_MSG_F('FCM_10026'));
+        RETURN;
+      END IF;
+      
+      V_REPRE_NUM := SUBSTR(RPAD(REPLACE(P_REPRE_NUM, '-', ''), 13, '*'), 1, 6) || '-' || SUBSTR(RPAD(REPLACE(P_REPRE_NUM, '-', ''), 13, '*'), 7, 13);
+    END IF;
+    
+    UPDATE HRW_EARNER_FAMILY
+      SET NAME             = P_NAME
+        , REPRE_NUM        = V_REPRE_NUM
+        , RELATION_ID      = P_RELATION_ID
+        , NATIONALITY_TYPE = P_NATIONALITY_TYPE
+        , DISABILITY_YN    = NVL(P_DISABILITY_YN, 'N')
+        , SUPPORT_YN       = NVL(P_SUPPORT_YN, 'N')
+        , DESCRIPTION      = P_DESCRIPTION
+        , LAST_UPDATE_DATE = V_SYSDATE
+        , LAST_UPDATED_BY  = P_USER_ID
+    WHERE EARNER_FAMILY_ID = W_EARNER_FAMILY_ID
+    ;
+  END UPDATE_RESIDENT_BSN_FAMILY;
+
+  PROCEDURE DELETE_RESIDENT_BSN_FAMILY
+            ( W_EARNER_FAMILY_ID IN HRW_EARNER_FAMILY.EARNER_FAMILY_ID%TYPE
+            , P_SOB_ID           IN HRW_EARNER_FAMILY.SOB_ID%TYPE
+            , P_ORG_ID           IN HRW_EARNER_FAMILY.ORG_ID%TYPE
+            )
+  AS
+  BEGIN
+    DELETE FROM HRW_EARNER_FAMILY
+    WHERE EARNER_FAMILY_ID = W_EARNER_FAMILY_ID
+    ;
+  END DELETE_RESIDENT_BSN_FAMILY;
+  
+END HRW_EARNER_MASTER_G;
+/

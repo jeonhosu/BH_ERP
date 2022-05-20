@@ -1,0 +1,252 @@
+CREATE OR REPLACE PACKAGE HRT_PAYMENT_RULE_G
+AS
+
+-- SELECT_PAYMENT_RULE
+  PROCEDURE SELECT_PAYMENT_RULE
+            ( P_CURSOR            OUT TYPES.TCURSOR
+            , W_CORP_ID           IN HRT_PAYMENT_RULE.CORP_ID%TYPE
+            , W_STD_YYYYMM        IN HRT_PAYMENT_RULE.EFFECTIVE_YYYYMM_FR%TYPE
+            , W_WAGE_TYPE         IN HRT_PAYMENT_RULE.WAGE_TYPE%TYPE
+            , W_JOIN_ID           IN HRT_PAYMENT_RULE.JOIN_ID%TYPE
+            , W_PAY_TYPE          IN HRT_PAYMENT_RULE.PAY_TYPE%TYPE
+            , W_SOB_ID            IN HRT_PAYMENT_RULE.SOB_ID%TYPE
+            , W_ORG_ID            IN HRT_PAYMENT_RULE.ORG_ID%TYPE
+            );
+
+---------------------------------------------------------------------------------------------------
+-- PAYMENT_RULE_INSERT
+  PROCEDURE PAYMENT_RULE_INSERT
+            ( P_RULE_ID             OUT HRT_PAYMENT_RULE.RULE_ID%TYPE
+            , P_CORP_ID             IN HRT_PAYMENT_RULE.CORP_ID%TYPE
+            , P_WAGE_TYPE           IN HRT_PAYMENT_RULE.WAGE_TYPE%TYPE
+            , P_JOIN_ID             IN HRT_PAYMENT_RULE.JOIN_ID%TYPE
+            , P_PAY_TYPE            IN HRT_PAYMENT_RULE.PAY_TYPE%TYPE
+            , P_STD_START_DATE      IN HRT_PAYMENT_RULE.STD_START_DATE%TYPE
+            , P_STD_END_DATE        IN HRT_PAYMENT_RULE.STD_END_DATE%TYPE
+            , P_START_MONTH         IN HRT_PAYMENT_RULE.START_MONTH%TYPE
+            , P_END_MONTH           IN HRT_PAYMENT_RULE.END_MONTH%TYPE
+            , P_PAYMENT_RATE        IN HRT_PAYMENT_RULE.PAYMENT_RATE%TYPE
+            , P_DESCRIPTION         IN HRT_PAYMENT_RULE.DESCRIPTION%TYPE
+            , P_ENABLED_FLAG        IN HRT_PAYMENT_RULE.ENABLED_FLAG%TYPE
+            , P_EFFECTIVE_YYYYMM_FR IN HRT_PAYMENT_RULE.EFFECTIVE_YYYYMM_FR%TYPE
+            , P_EFFECTIVE_YYYYMM_TO IN HRT_PAYMENT_RULE.EFFECTIVE_YYYYMM_TO%TYPE
+            , P_SOB_ID              IN HRT_PAYMENT_RULE.SOB_ID%TYPE
+            , P_ORG_ID              IN HRT_PAYMENT_RULE.ORG_ID%TYPE
+            , P_USER_ID             IN HRT_PAYMENT_RULE.CREATED_BY%TYPE
+            );
+
+-- PAYMENT_RULE_UPDATE.
+  PROCEDURE PAYMENT_RULE_UPDATE
+            ( W_RULE_ID             IN HRT_PAYMENT_RULE.RULE_ID%TYPE
+            , P_CORP_ID             IN HRT_PAYMENT_RULE.CORP_ID%TYPE
+            , P_WAGE_TYPE           IN HRT_PAYMENT_RULE.WAGE_TYPE%TYPE
+            , P_JOIN_ID             IN HRT_PAYMENT_RULE.JOIN_ID%TYPE
+            , P_PAY_TYPE            IN HRT_PAYMENT_RULE.PAY_TYPE%TYPE
+            , P_STD_START_DATE      IN HRT_PAYMENT_RULE.STD_START_DATE%TYPE
+            , P_STD_END_DATE        IN HRT_PAYMENT_RULE.STD_END_DATE%TYPE
+            , P_START_MONTH         IN HRT_PAYMENT_RULE.START_MONTH%TYPE
+            , P_END_MONTH           IN HRT_PAYMENT_RULE.END_MONTH%TYPE
+            , P_PAYMENT_RATE        IN HRT_PAYMENT_RULE.PAYMENT_RATE%TYPE
+            , P_DESCRIPTION         IN HRT_PAYMENT_RULE.DESCRIPTION%TYPE
+            , P_ENABLED_FLAG        IN HRT_PAYMENT_RULE.ENABLED_FLAG%TYPE
+            , P_EFFECTIVE_YYYYMM_FR IN HRT_PAYMENT_RULE.EFFECTIVE_YYYYMM_FR%TYPE
+            , P_EFFECTIVE_YYYYMM_TO IN HRT_PAYMENT_RULE.EFFECTIVE_YYYYMM_TO%TYPE
+            , P_SOB_ID              IN HRT_PAYMENT_RULE.SOB_ID%TYPE
+            , P_ORG_ID              IN HRT_PAYMENT_RULE.ORG_ID%TYPE
+            , P_USER_ID             IN HRT_PAYMENT_RULE.CREATED_BY%TYPE
+            );
+
+END HRT_PAYMENT_RULE_G;
+/
+CREATE OR REPLACE PACKAGE BODY HRT_PAYMENT_RULE_G
+AS
+/******************************************************************************/
+/* PROJECT      : FPCB ERP
+/* MODULE       : EAPP
+/* PROGRAM NAME : HRT_PAYMENT_RULE_G
+/* DESCRIPTION  : (파견직)급상여 지급율 관리.
+/* REFERENCE BY :
+/* PROGRAM HISTORY : 신규 생성
+/*------------------------------------------------------------------------------
+/*   DATE       IN CHARGE          DESCRIPTION
+/*------------------------------------------------------------------------------
+/* 20-JUN-2010  JEON HO SU          INITIALIZE
+/******************************************************************************/
+-- SELECT_PAYMENT_RULE
+  PROCEDURE SELECT_PAYMENT_RULE
+            ( P_CURSOR            OUT TYPES.TCURSOR
+            , W_CORP_ID           IN HRT_PAYMENT_RULE.CORP_ID%TYPE
+            , W_STD_YYYYMM        IN HRT_PAYMENT_RULE.EFFECTIVE_YYYYMM_FR%TYPE
+            , W_WAGE_TYPE         IN HRT_PAYMENT_RULE.WAGE_TYPE%TYPE
+            , W_JOIN_ID           IN HRT_PAYMENT_RULE.JOIN_ID%TYPE
+            , W_PAY_TYPE          IN HRT_PAYMENT_RULE.PAY_TYPE%TYPE
+            , W_SOB_ID            IN HRT_PAYMENT_RULE.SOB_ID%TYPE
+            , W_ORG_ID            IN HRT_PAYMENT_RULE.ORG_ID%TYPE
+            )
+  AS
+  BEGIN
+    OPEN P_CURSOR FOR
+      SELECT PR.RULE_ID
+           , PR.CORP_ID
+           , PR.WAGE_TYPE
+           , HRM_COMMON_G.CODE_NAME_F('CLOSING_TYPE', PR.WAGE_TYPE, PR.SOB_ID, PR.ORG_ID) AS WAGE_TYPE_NAME
+           , PR.JOIN_ID
+           , HRM_COMMON_G.ID_NAME_F(PR.JOIN_ID) AS JOIN_NAME
+           , PR.PAY_TYPE
+           , HRM_COMMON_G.CODE_NAME_F('PAY_TYPE', PR.PAY_TYPE, PR.SOB_ID, PR.ORG_ID) AS PAY_TYPE_NAME
+           , PR.STD_START_DATE
+           , S_DI.DATE_ITEM_NAME AS STD_START_DATE_NAME
+           , PR.STD_END_DATE
+           , E_DI.DATE_ITEM_NAME AS STD_END_DATE_NAME
+           , PR.START_MONTH
+           , PR.END_MONTH
+           , PR.PAYMENT_RATE
+           , PR.DESCRIPTION
+           , PR.ENABLED_FLAG
+           , PR.EFFECTIVE_YYYYMM_FR
+           , PR.EFFECTIVE_YYYYMM_TO
+        FROM HRT_PAYMENT_RULE PR
+          , HRM_DATE_ITEM_V S_DI
+          , HRM_DATE_ITEM_V E_DI
+       WHERE PR.STD_START_DATE          = S_DI.DATE_COLUMN
+         AND PR.SOB_ID                  = S_DI.SOB_ID
+         AND PR.STD_END_DATE            = E_DI.DATE_COLUMN
+         AND PR.SOB_ID                  = E_DI.SOB_ID
+         AND PR.CORP_ID                 = NVL(W_CORP_ID, PR.CORP_ID)
+         AND PR.WAGE_TYPE               = NVL(W_WAGE_TYPE, PR.WAGE_TYPE)
+         AND PR.JOIN_ID                 = NVL(W_JOIN_ID, PR.JOIN_ID)
+         AND PR.PAY_TYPE                = NVL(W_PAY_TYPE, PR.PAY_TYPE)
+         AND PR.EFFECTIVE_YYYYMM_FR     <= W_STD_YYYYMM
+         AND (PR.EFFECTIVE_YYYYMM_TO IS NULL OR PR.EFFECTIVE_YYYYMM_TO >= W_STD_YYYYMM)
+         AND PR.SOB_ID                  = W_SOB_ID
+         AND PR.ORG_ID                  = W_ORG_ID
+      ORDER BY PR.WAGE_TYPE, PR.JOIN_ID, PR.PAY_TYPE
+      ;
+  END SELECT_PAYMENT_RULE;
+
+---------------------------------------------------------------------------------------------------
+-- PAYMENT_RULE_INSERT
+  PROCEDURE PAYMENT_RULE_INSERT
+            ( P_RULE_ID             OUT HRT_PAYMENT_RULE.RULE_ID%TYPE
+            , P_CORP_ID             IN HRT_PAYMENT_RULE.CORP_ID%TYPE
+            , P_WAGE_TYPE           IN HRT_PAYMENT_RULE.WAGE_TYPE%TYPE
+            , P_JOIN_ID             IN HRT_PAYMENT_RULE.JOIN_ID%TYPE
+            , P_PAY_TYPE            IN HRT_PAYMENT_RULE.PAY_TYPE%TYPE
+            , P_STD_START_DATE      IN HRT_PAYMENT_RULE.STD_START_DATE%TYPE
+            , P_STD_END_DATE        IN HRT_PAYMENT_RULE.STD_END_DATE%TYPE
+            , P_START_MONTH         IN HRT_PAYMENT_RULE.START_MONTH%TYPE
+            , P_END_MONTH           IN HRT_PAYMENT_RULE.END_MONTH%TYPE
+            , P_PAYMENT_RATE        IN HRT_PAYMENT_RULE.PAYMENT_RATE%TYPE
+            , P_DESCRIPTION         IN HRT_PAYMENT_RULE.DESCRIPTION%TYPE
+            , P_ENABLED_FLAG        IN HRT_PAYMENT_RULE.ENABLED_FLAG%TYPE
+            , P_EFFECTIVE_YYYYMM_FR IN HRT_PAYMENT_RULE.EFFECTIVE_YYYYMM_FR%TYPE
+            , P_EFFECTIVE_YYYYMM_TO IN HRT_PAYMENT_RULE.EFFECTIVE_YYYYMM_TO%TYPE
+            , P_SOB_ID              IN HRT_PAYMENT_RULE.SOB_ID%TYPE
+            , P_ORG_ID              IN HRT_PAYMENT_RULE.ORG_ID%TYPE
+            , P_USER_ID             IN HRT_PAYMENT_RULE.CREATED_BY%TYPE
+            )
+  AS
+    V_SYSDATE                     DATE := GET_LOCAL_DATE(P_SOB_ID);
+
+  BEGIN
+    BEGIN
+      SELECT HRT_PAYMENT_RULE_S1.NEXTVAL
+       INTO P_RULE_ID
+       FROM DUAL;
+    EXCEPTION WHEN OTHERS THEN
+       RAISE_APPLICATION_ERROR(ERRNUMS.INVALID_SEQUENCE_CODE, ERRNUMS.INVALID_SEQUENCE_DESC);
+       RETURN;
+    END;
+
+    INSERT INTO HRT_PAYMENT_RULE
+    ( RULE_ID
+    , CORP_ID
+    , WAGE_TYPE
+    , JOIN_ID
+    , PAY_TYPE
+    , STD_START_DATE
+    , STD_END_DATE
+    , START_MONTH
+    , END_MONTH
+    , PAYMENT_RATE
+    , DESCRIPTION
+    , ENABLED_FLAG
+    , EFFECTIVE_YYYYMM_FR
+    , EFFECTIVE_YYYYMM_TO
+    , SOB_ID
+    , ORG_ID
+    , CREATION_DATE
+    , CREATED_BY
+    , LAST_UPDATE_DATE
+    , LAST_UPDATED_BY
+    ) VALUES
+    ( P_RULE_ID
+    , P_CORP_ID
+    , P_WAGE_TYPE
+    , P_JOIN_ID
+    , P_PAY_TYPE
+    , P_STD_START_DATE
+    , P_STD_END_DATE
+    , P_START_MONTH
+    , P_END_MONTH
+    , P_PAYMENT_RATE
+    , P_DESCRIPTION
+    , P_ENABLED_FLAG
+    , P_EFFECTIVE_YYYYMM_FR
+    , P_EFFECTIVE_YYYYMM_TO
+    , P_SOB_ID
+    , P_ORG_ID
+    , V_SYSDATE
+    , P_USER_ID
+    , V_SYSDATE
+    , P_USER_ID
+    );
+  END PAYMENT_RULE_INSERT;
+
+-- PAYMENT_RULE_UPDATE.
+  PROCEDURE PAYMENT_RULE_UPDATE
+            ( W_RULE_ID             IN HRT_PAYMENT_RULE.RULE_ID%TYPE
+            , P_CORP_ID             IN HRT_PAYMENT_RULE.CORP_ID%TYPE
+            , P_WAGE_TYPE           IN HRT_PAYMENT_RULE.WAGE_TYPE%TYPE
+            , P_JOIN_ID             IN HRT_PAYMENT_RULE.JOIN_ID%TYPE
+            , P_PAY_TYPE            IN HRT_PAYMENT_RULE.PAY_TYPE%TYPE
+            , P_STD_START_DATE      IN HRT_PAYMENT_RULE.STD_START_DATE%TYPE
+            , P_STD_END_DATE        IN HRT_PAYMENT_RULE.STD_END_DATE%TYPE
+            , P_START_MONTH         IN HRT_PAYMENT_RULE.START_MONTH%TYPE
+            , P_END_MONTH           IN HRT_PAYMENT_RULE.END_MONTH%TYPE
+            , P_PAYMENT_RATE        IN HRT_PAYMENT_RULE.PAYMENT_RATE%TYPE
+            , P_DESCRIPTION         IN HRT_PAYMENT_RULE.DESCRIPTION%TYPE
+            , P_ENABLED_FLAG        IN HRT_PAYMENT_RULE.ENABLED_FLAG%TYPE
+            , P_EFFECTIVE_YYYYMM_FR IN HRT_PAYMENT_RULE.EFFECTIVE_YYYYMM_FR%TYPE
+            , P_EFFECTIVE_YYYYMM_TO IN HRT_PAYMENT_RULE.EFFECTIVE_YYYYMM_TO%TYPE
+            , P_SOB_ID              IN HRT_PAYMENT_RULE.SOB_ID%TYPE
+            , P_ORG_ID              IN HRT_PAYMENT_RULE.ORG_ID%TYPE
+            , P_USER_ID             IN HRT_PAYMENT_RULE.CREATED_BY%TYPE
+            )
+  AS
+   V_SYSDATE DATE := GET_LOCAL_DATE(P_SOB_ID);
+  BEGIN
+    UPDATE HRT_PAYMENT_RULE
+      SET CORP_ID             = P_CORP_ID
+        , WAGE_TYPE           = P_WAGE_TYPE
+        , JOIN_ID             = P_JOIN_ID
+        , PAY_TYPE            = P_PAY_TYPE
+        , STD_START_DATE      = P_STD_START_DATE
+        , STD_END_DATE        = P_STD_END_DATE
+        , START_MONTH         = P_START_MONTH
+        , END_MONTH           = P_END_MONTH
+        , PAYMENT_RATE        = P_PAYMENT_RATE
+        , DESCRIPTION         = P_DESCRIPTION
+        , ENABLED_FLAG        = P_ENABLED_FLAG
+        , EFFECTIVE_YYYYMM_FR = P_EFFECTIVE_YYYYMM_FR
+        , EFFECTIVE_YYYYMM_TO = P_EFFECTIVE_YYYYMM_TO
+        , SOB_ID              = P_SOB_ID
+        , ORG_ID              = P_ORG_ID
+        , LAST_UPDATE_DATE    = V_SYSDATE
+        , LAST_UPDATED_BY     = P_USER_ID
+    WHERE RULE_ID             = W_RULE_ID;
+
+  END PAYMENT_RULE_UPDATE;
+
+END HRT_PAYMENT_RULE_G;
+/

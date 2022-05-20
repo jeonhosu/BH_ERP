@@ -1,0 +1,329 @@
+CREATE OR REPLACE PACKAGE HRR_CONTINUOUS_DEDUCTION_G
+AS
+
+-- SELECT_CONTINUOUS_DEDUCTION
+  PROCEDURE SELECT_CONTINUOUS_DEDUCTION
+            ( P_CURSOR                            OUT TYPES.TCURSOR
+            , W_STD_YYYY                          IN HRR_CONTINUOUS_DEDUCTION.STD_YYYY%TYPE
+            , W_SOB_ID                            IN HRR_CONTINUOUS_DEDUCTION.SOB_ID%TYPE
+            , W_ORG_ID                            IN HRR_CONTINUOUS_DEDUCTION.ORG_ID%TYPE
+            );
+
+---------------------------------------------------------------------------------------------------
+-- INSERT_CONTINUOUS_DEDUCTION
+  PROCEDURE INSERT_CONTINUOUS_DEDUCTION
+            ( P_STD_YYYY          IN HRR_CONTINUOUS_DEDUCTION.STD_YYYY%TYPE
+            , P_START_YEAR        IN HRR_CONTINUOUS_DEDUCTION.START_YEAR%TYPE
+            , P_END_YEAR          IN HRR_CONTINUOUS_DEDUCTION.END_YEAR%TYPE
+            , P_DED_YEAR          IN HRR_CONTINUOUS_DEDUCTION.DED_YEAR%TYPE
+            , P_DED_AMOUNT        IN HRR_CONTINUOUS_DEDUCTION.DED_AMOUNT%TYPE
+            , P_DED_ADD_AMOUNT    IN HRR_CONTINUOUS_DEDUCTION.DED_ADD_AMOUNT%TYPE
+            , P_DESCRIPTION       IN HRR_CONTINUOUS_DEDUCTION.DESCRIPTION%TYPE
+            , P_SOB_ID            IN HRR_CONTINUOUS_DEDUCTION.SOB_ID%TYPE
+            , P_ORG_ID            IN HRR_CONTINUOUS_DEDUCTION.ORG_ID%TYPE
+            , P_USER_ID           IN HRR_CONTINUOUS_DEDUCTION.CREATED_BY%TYPE 
+            );
+
+-- UPDATE_CONTINUOUS_DEDUCTION.
+  PROCEDURE UPDATE_CONTINUOUS_DEDUCTION
+            ( W_STD_YYYY       IN HRR_CONTINUOUS_DEDUCTION.STD_YYYY%TYPE
+            , W_START_YEAR     IN HRR_CONTINUOUS_DEDUCTION.START_YEAR%TYPE
+            , W_END_YEAR       IN HRR_CONTINUOUS_DEDUCTION.END_YEAR%TYPE
+            , P_DED_YEAR       IN HRR_CONTINUOUS_DEDUCTION.DED_YEAR%TYPE
+            , P_DED_AMOUNT     IN HRR_CONTINUOUS_DEDUCTION.DED_AMOUNT%TYPE
+            , P_DED_ADD_AMOUNT IN HRR_CONTINUOUS_DEDUCTION.DED_ADD_AMOUNT%TYPE
+            , P_DESCRIPTION    IN HRR_CONTINUOUS_DEDUCTION.DESCRIPTION%TYPE
+            , W_SOB_ID         IN HRR_CONTINUOUS_DEDUCTION.SOB_ID%TYPE
+            , W_ORG_ID         IN HRR_CONTINUOUS_DEDUCTION.ORG_ID%TYPE
+            , P_USER_ID        IN HRR_CONTINUOUS_DEDUCTION.CREATED_BY%TYPE
+            );
+
+-- DELETE_CONTINUOUS_DEDUCTION.
+  PROCEDURE DELETE_CONTINUOUS_DEDUCTION
+            ( W_STD_YYYY       IN HRR_CONTINUOUS_DEDUCTION.STD_YYYY%TYPE
+            , W_START_YEAR     IN HRR_CONTINUOUS_DEDUCTION.START_YEAR%TYPE
+            , W_END_YEAR       IN HRR_CONTINUOUS_DEDUCTION.END_YEAR%TYPE
+            , W_SOB_ID         IN HRR_CONTINUOUS_DEDUCTION.SOB_ID%TYPE
+            , W_ORG_ID         IN HRR_CONTINUOUS_DEDUCTION.ORG_ID%TYPE
+            );
+
+---------------------------------------------------------------------------------------------------
+-- 해당 년도 기준 정보 존재 여부 체크.
+  PROCEDURE CHECK_CONTINUOUS_DEDUCTION_YN
+            ( W_STD_YYYY       IN HRR_CONTINUOUS_DEDUCTION.STD_YYYY%TYPE
+            , W_SOB_ID         IN HRR_CONTINUOUS_DEDUCTION.SOB_ID%TYPE
+            , W_ORG_ID         IN HRR_CONTINUOUS_DEDUCTION.ORG_ID%TYPE
+            , O_CHECK_YN       OUT VARCHAR2
+            );
+
+-- 전년도 기준 정보 COPY
+  PROCEDURE COPY_CONTINUOUS_DEDUCTION
+            ( W_STD_YYYY       IN HRR_CONTINUOUS_DEDUCTION.STD_YYYY%TYPE
+            , W_SOB_ID         IN HRR_CONTINUOUS_DEDUCTION.SOB_ID%TYPE
+            , W_ORG_ID         IN HRR_CONTINUOUS_DEDUCTION.ORG_ID%TYPE
+            , P_USER_ID        IN HRR_CONTINUOUS_DEDUCTION.CREATED_BY%TYPE
+            , O_STATUS         OUT VARCHAR2
+            , O_MESSAGE        OUT VARCHAR2
+            );
+            
+END HRR_CONTINUOUS_DEDUCTION_G;
+
+ 
+/
+CREATE OR REPLACE PACKAGE BODY HRR_CONTINUOUS_DEDUCTION_G
+AS
+/******************************************************************************/
+/* PROJECT      : FPCB ERP
+/* MODULE       : EAPP
+/* PROGRAM NAME : HRR_CONTINUOUS_DEDUCTION_G
+/* DESCRIPTION  : 퇴직정산 근속공제 관리
+/* REFERENCE BY :
+/* PROGRAM HISTORY : 신규 생성
+/*------------------------------------------------------------------------------
+/*   DATE       IN CHARGE          DESCRIPTION
+/*------------------------------------------------------------------------------
+/* 20-JUN-2010  JEON HO SU          INITIALIZE
+/******************************************************************************/
+-- SELECT_CONTINUOUS_DEDUCTION
+  PROCEDURE SELECT_CONTINUOUS_DEDUCTION
+            ( P_CURSOR                            OUT TYPES.TCURSOR
+            , W_STD_YYYY                          IN HRR_CONTINUOUS_DEDUCTION.STD_YYYY%TYPE
+            , W_SOB_ID                            IN HRR_CONTINUOUS_DEDUCTION.SOB_ID%TYPE
+            , W_ORG_ID                            IN HRR_CONTINUOUS_DEDUCTION.ORG_ID%TYPE
+            )
+  AS
+  BEGIN
+    OPEN P_CURSOR FOR
+      SELECT CD.STD_YYYY
+           , CD.START_YEAR
+           , CD.END_YEAR
+           , CD.DED_YEAR
+           , CD.DED_AMOUNT
+           , CD.DED_ADD_AMOUNT
+           , CD.DESCRIPTION
+        FROM HRR_CONTINUOUS_DEDUCTION CD
+      WHERE CD.STD_YYYY                   = W_STD_YYYY
+        AND CD.SOB_ID                     = W_SOB_ID
+        AND CD.ORG_ID                     = W_ORG_ID
+      ;
+      
+  END SELECT_CONTINUOUS_DEDUCTION;
+
+
+---------------------------------------------------------------------------------------------------
+-- INSERT_CONTINUOUS_DEDUCTION
+  PROCEDURE INSERT_CONTINUOUS_DEDUCTION
+            ( P_STD_YYYY          IN HRR_CONTINUOUS_DEDUCTION.STD_YYYY%TYPE
+            , P_START_YEAR        IN HRR_CONTINUOUS_DEDUCTION.START_YEAR%TYPE
+            , P_END_YEAR          IN HRR_CONTINUOUS_DEDUCTION.END_YEAR%TYPE
+            , P_DED_YEAR          IN HRR_CONTINUOUS_DEDUCTION.DED_YEAR%TYPE
+            , P_DED_AMOUNT        IN HRR_CONTINUOUS_DEDUCTION.DED_AMOUNT%TYPE
+            , P_DED_ADD_AMOUNT    IN HRR_CONTINUOUS_DEDUCTION.DED_ADD_AMOUNT%TYPE
+            , P_DESCRIPTION       IN HRR_CONTINUOUS_DEDUCTION.DESCRIPTION%TYPE
+            , P_SOB_ID            IN HRR_CONTINUOUS_DEDUCTION.SOB_ID%TYPE
+            , P_ORG_ID            IN HRR_CONTINUOUS_DEDUCTION.ORG_ID%TYPE
+            , P_USER_ID           IN HRR_CONTINUOUS_DEDUCTION.CREATED_BY%TYPE 
+            )
+  AS
+    V_SYSDATE                     DATE := GET_LOCAL_DATE(P_SOB_ID);
+    V_RECORD_COUNT                NUMBER := 0;
+    
+  BEGIN
+    -- 같은 시작년월 데이터 Insert --> Error 발생.
+    BEGIN
+      SELECT COUNT(CD.STD_YYYY) AS RECORD_COUNT
+        INTO V_RECORD_COUNT
+        FROM HRR_CONTINUOUS_DEDUCTION CD
+       WHERE CD.STD_YYYY          = P_STD_YYYY
+         AND CD.END_YEAR          >= P_START_YEAR
+         AND CD.SOB_ID            = P_SOB_ID
+         AND CD.ORG_ID            = P_ORG_ID
+       ;
+    EXCEPTION WHEN OTHERS THEN
+      V_RECORD_COUNT := 0;
+    END;
+    IF V_RECORD_COUNT <> 0 THEN
+      RAISE ERRNUMS.Exist_Data;
+    END IF;
+    
+    INSERT INTO HRR_CONTINUOUS_DEDUCTION
+    ( STD_YYYY
+    , START_YEAR 
+    , END_YEAR 
+    , DED_YEAR 
+    , DED_AMOUNT 
+    , DED_ADD_AMOUNT 
+    , DESCRIPTION 
+    , SOB_ID 
+    , ORG_ID 
+    , CREATION_DATE 
+    , CREATED_BY 
+    , LAST_UPDATE_DATE 
+    , LAST_UPDATED_BY 
+    )VALUES
+    ( P_STD_YYYY
+    , P_START_YEAR
+    , P_END_YEAR
+    , P_DED_YEAR
+    , P_DED_AMOUNT
+    , P_DED_ADD_AMOUNT
+    , P_DESCRIPTION
+    , P_SOB_ID
+    , P_ORG_ID
+    , V_SYSDATE
+    , P_USER_ID
+    , V_SYSDATE
+    , P_USER_ID 
+    );
+
+  EXCEPTION
+    WHEN ERRNUMS.Exist_Data THEN
+      RAISE_APPLICATION_ERROR(ERRNUMS.Exist_Data_Code, ERRNUMS.Exist_Data_Desc);
+  END INSERT_CONTINUOUS_DEDUCTION;
+
+-- UPDATE_CONTINUOUS_DEDUCTION.
+  PROCEDURE UPDATE_CONTINUOUS_DEDUCTION
+            ( W_STD_YYYY       IN HRR_CONTINUOUS_DEDUCTION.STD_YYYY%TYPE
+            , W_START_YEAR     IN HRR_CONTINUOUS_DEDUCTION.START_YEAR%TYPE
+            , W_END_YEAR       IN HRR_CONTINUOUS_DEDUCTION.END_YEAR%TYPE
+            , P_DED_YEAR       IN HRR_CONTINUOUS_DEDUCTION.DED_YEAR%TYPE
+            , P_DED_AMOUNT     IN HRR_CONTINUOUS_DEDUCTION.DED_AMOUNT%TYPE
+            , P_DED_ADD_AMOUNT IN HRR_CONTINUOUS_DEDUCTION.DED_ADD_AMOUNT%TYPE
+            , P_DESCRIPTION    IN HRR_CONTINUOUS_DEDUCTION.DESCRIPTION%TYPE
+            , W_SOB_ID         IN HRR_CONTINUOUS_DEDUCTION.SOB_ID%TYPE
+            , W_ORG_ID         IN HRR_CONTINUOUS_DEDUCTION.ORG_ID%TYPE
+            , P_USER_ID        IN HRR_CONTINUOUS_DEDUCTION.CREATED_BY%TYPE
+            )
+  AS
+    V_SYSDATE DATE := GET_LOCAL_DATE(W_SOB_ID);
+    
+  BEGIN
+    UPDATE HRR_CONTINUOUS_DEDUCTION
+      SET DED_YEAR         = P_DED_YEAR
+        , DED_AMOUNT       = P_DED_AMOUNT
+        , DED_ADD_AMOUNT   = P_DED_ADD_AMOUNT
+        , DESCRIPTION      = P_DESCRIPTION
+        , LAST_UPDATE_DATE = V_SYSDATE
+        , LAST_UPDATED_BY  = P_USER_ID
+    WHERE STD_YYYY         = W_STD_YYYY
+      AND START_YEAR       = W_START_YEAR
+      AND END_YEAR         = W_END_YEAR
+      AND SOB_ID           = W_SOB_ID
+      AND ORG_ID           = W_ORG_ID
+      ;
+
+  END UPDATE_CONTINUOUS_DEDUCTION;
+
+-- DELETE_CONTINUOUS_DEDUCTION.
+  PROCEDURE DELETE_CONTINUOUS_DEDUCTION
+            ( W_STD_YYYY       IN HRR_CONTINUOUS_DEDUCTION.STD_YYYY%TYPE
+            , W_START_YEAR     IN HRR_CONTINUOUS_DEDUCTION.START_YEAR%TYPE
+            , W_END_YEAR       IN HRR_CONTINUOUS_DEDUCTION.END_YEAR%TYPE
+            , W_SOB_ID         IN HRR_CONTINUOUS_DEDUCTION.SOB_ID%TYPE
+            , W_ORG_ID         IN HRR_CONTINUOUS_DEDUCTION.ORG_ID%TYPE
+            )
+  AS
+  BEGIN
+    DELETE FROM HRR_CONTINUOUS_DEDUCTION
+    WHERE STD_YYYY         = W_STD_YYYY
+      AND START_YEAR       = W_START_YEAR
+      AND END_YEAR         = W_END_YEAR
+      AND SOB_ID           = W_SOB_ID
+      AND ORG_ID           = W_ORG_ID
+      ;
+  
+  END DELETE_CONTINUOUS_DEDUCTION;
+  
+---------------------------------------------------------------------------------------------------
+-- 해당 년도 기준 정보 존재 여부 체크.
+  PROCEDURE CHECK_CONTINUOUS_DEDUCTION_YN
+            ( W_STD_YYYY       IN HRR_CONTINUOUS_DEDUCTION.STD_YYYY%TYPE
+            , W_SOB_ID         IN HRR_CONTINUOUS_DEDUCTION.SOB_ID%TYPE
+            , W_ORG_ID         IN HRR_CONTINUOUS_DEDUCTION.ORG_ID%TYPE
+            , O_CHECK_YN       OUT VARCHAR2
+            )
+  AS
+  BEGIN
+    SELECT DECODE(COUNT(CD.STD_YYYY), 0, 'N', 'Y') AS RECORD_COUNT
+      INTO O_CHECK_YN
+      FROM HRR_CONTINUOUS_DEDUCTION CD
+     WHERE CD.STD_YYYY              = W_STD_YYYY
+       AND CD.SOB_ID                = W_SOB_ID
+       AND CD.ORG_ID                = W_ORG_ID
+    ;
+  EXCEPTION WHEN OTHERS THEN
+    O_CHECK_YN := 'N';
+  END CHECK_CONTINUOUS_DEDUCTION_YN;
+  
+-- 전년도 기준 정보 COPY
+  PROCEDURE COPY_CONTINUOUS_DEDUCTION
+            ( W_STD_YYYY       IN HRR_CONTINUOUS_DEDUCTION.STD_YYYY%TYPE
+            , W_SOB_ID         IN HRR_CONTINUOUS_DEDUCTION.SOB_ID%TYPE
+            , W_ORG_ID         IN HRR_CONTINUOUS_DEDUCTION.ORG_ID%TYPE
+            , P_USER_ID        IN HRR_CONTINUOUS_DEDUCTION.CREATED_BY%TYPE
+            , O_STATUS         OUT VARCHAR2
+            , O_MESSAGE        OUT VARCHAR2
+            )
+  AS
+    V_SYSDATE                     DATE := GET_LOCAL_DATE(W_SOB_ID);
+    V_PRE_STD_YYYY                HRR_RETIRE_STANDARD.STD_YYYY%TYPE;
+  BEGIN
+    O_STATUS := 'F';
+    V_PRE_STD_YYYY := W_STD_YYYY - 1;
+    
+    -- 같은 시작년월 데이터 Insert --> Error 발생.
+    BEGIN
+      DELETE FROM HRR_CONTINUOUS_DEDUCTION
+      WHERE STD_YYYY         = W_STD_YYYY
+        AND SOB_ID           = W_SOB_ID
+        AND ORG_ID           = W_ORG_ID
+        ;
+    EXCEPTION WHEN OTHERS THEN
+      O_STATUS := 'F';
+      O_MESSAGE := 'Delete Error : ' || SUBSTR(SQLERRM, 1, 150);
+      RETURN;
+    END;
+    
+    BEGIN
+      INSERT INTO HRR_CONTINUOUS_DEDUCTION
+      ( STD_YYYY
+      , START_YEAR 
+      , END_YEAR 
+      , DED_YEAR 
+      , DED_AMOUNT 
+      , DED_ADD_AMOUNT 
+      , DESCRIPTION 
+      , SOB_ID 
+      , ORG_ID 
+      , CREATION_DATE 
+      , CREATED_BY 
+      , LAST_UPDATE_DATE 
+      , LAST_UPDATED_BY 
+      )  
+      SELECT W_STD_YYYY
+           , CD.START_YEAR
+           , CD.END_YEAR
+           , CD.DED_YEAR
+           , CD.DED_AMOUNT
+           , CD.DED_ADD_AMOUNT
+           , CD.DESCRIPTION
+           , W_SOB_ID
+           , W_ORG_ID
+           , V_SYSDATE, P_USER_ID, V_SYSDATE, P_USER_ID
+        FROM HRR_CONTINUOUS_DEDUCTION CD
+      WHERE CD.STD_YYYY                   = V_PRE_STD_YYYY
+        AND CD.SOB_ID                     = W_SOB_ID
+        AND CD.ORG_ID                     = W_ORG_ID
+      ;
+    EXCEPTION
+      WHEN OTHERS THEN
+        O_STATUS := 'F';
+        O_MESSAGE := 'Insert Error : ' || SUBSTR(SQLERRM, 1, 150);
+        RETURN;
+    END;
+    O_STATUS := 'S';
+    O_MESSAGE := EAPP_MESSAGE_G.RETURN_TEXT_F(USERENV_G.GET_TERRITORY_S_F, 'SDM_10027', NULL);
+  END COPY_CONTINUOUS_DEDUCTION;
+            
+END HRR_CONTINUOUS_DEDUCTION_G;
+/

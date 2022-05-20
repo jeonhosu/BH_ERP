@@ -1,0 +1,515 @@
+CREATE OR REPLACE PACKAGE HRP_GRADE_G
+AS
+
+-- GRADE HEADER SELECT
+  PROCEDURE DATA_SELECT_HEADER
+            ( P_CURSOR                            OUT TYPES.TCURSOR
+            , W_CORP_ID                           IN HRP_GRADE_HEADER.CORP_ID%TYPE
+            , W_STD_YYYYMM                        IN HRP_GRADE_HEADER.START_YYYYMM%TYPE
+            , W_PAY_TYPE                          IN HRP_GRADE_HEADER.PAY_TYPE%TYPE
+            , W_PAY_GRADE_ID                      IN HRP_GRADE_HEADER.PAY_GRADE_ID%TYPE
+            , W_SOB_ID                            IN HRP_GRADE_HEADER.SOB_ID%TYPE
+            , W_ORG_ID                            IN HRP_GRADE_HEADER.ORG_ID%TYPE
+            );
+
+-- GRADE - PAY_STEP별 월급여, 년급여 SELECT.
+  PROCEDURE DATA_SELECT_STEP
+            ( P_CURSOR2                           OUT TYPES.TCURSOR2
+            , W_GRADE_HEADER_ID                   IN HRP_GRADE_HEADER.GRADE_HEADER_ID%TYPE
+            );
+
+
+-- GRADE LINE SELECT
+  PROCEDURE DATA_SELECT_LINE
+            ( P_CURSOR3                           OUT TYPES.TCURSOR3
+            , W_GRADE_HEADER_ID                   IN HRP_GRADE_HEADER.GRADE_HEADER_ID%TYPE
+            , W_GRADE_STEP                        IN HRP_GRADE_LINE.GRADE_STEP%TYPE
+            );
+
+---------------------------------------------------------------------------------------------------
+-- GRADE_HEADER_INSERT
+  PROCEDURE GRADE_HEADER_INSERT
+            ( P_GRADE_HEADER_ID OUT HRP_GRADE_HEADER.GRADE_HEADER_ID%TYPE
+            , P_CORP_ID         IN HRP_GRADE_HEADER.CORP_ID%TYPE
+            , P_START_YYYYMM    IN HRP_GRADE_HEADER.START_YYYYMM%TYPE
+            , P_PAY_TYPE        IN HRP_GRADE_HEADER.PAY_TYPE%TYPE
+            , P_PAY_GRADE_ID    IN HRP_GRADE_HEADER.PAY_GRADE_ID%TYPE
+            , P_DESCRIPTION     IN HRP_GRADE_HEADER.DESCRIPTION%TYPE
+            , P_ENABLED_FLAG    IN HRP_GRADE_HEADER.ENABLED_FLAG%TYPE
+            , P_SOB_ID          IN HRP_GRADE_HEADER.SOB_ID%TYPE
+            , P_ORG_ID          IN HRP_GRADE_HEADER.ORG_ID%TYPE
+            , P_USER_ID         IN HRP_GRADE_HEADER.CREATED_BY%TYPE 
+            );
+            
+-- GRADE_HEADER_UPDATE.
+  PROCEDURE GRADE_HEADER_UPDATE
+            ( W_GRADE_HEADER_ID IN HRP_GRADE_HEADER.GRADE_HEADER_ID%TYPE
+            , P_PAY_TYPE        IN HRP_GRADE_HEADER.PAY_TYPE%TYPE
+            , P_PAY_GRADE_ID    IN HRP_GRADE_HEADER.PAY_GRADE_ID%TYPE
+            , P_DESCRIPTION     IN HRP_GRADE_HEADER.DESCRIPTION%TYPE
+            , P_ENABLED_FLAG    IN HRP_GRADE_HEADER.ENABLED_FLAG%TYPE
+            , P_USER_ID         IN HRP_GRADE_HEADER.CREATED_BY%TYPE 
+            );
+            
+-- GRADE_STEP_INSERT
+  PROCEDURE GRADE_STEP_INSERT
+            ( P_GRADE_STEP       IN HRP_GRADE_LINE.GRADE_STEP%TYPE
+            , O_GRADE_STEP       OUT HRP_GRADE_LINE.GRADE_STEP%TYPE
+            );
+
+-- GRADE_LINE_UPDATE.
+  PROCEDURE GRADE_STEP_UPDATE
+            ( W_GRADE_STEP       IN HRP_GRADE_LINE.GRADE_STEP%TYPE
+            );
+
+-- GRADE_LINE_INSERT
+  PROCEDURE GRADE_LINE_INSERT
+            ( P_GRADE_LINE_ID    OUT HRP_GRADE_LINE.GRADE_LINE_ID%TYPE
+            , P_GRADE_HEADER_ID  IN HRP_GRADE_LINE.GRADE_HEADER_ID%TYPE
+            , P_GRADE_STEP       IN HRP_GRADE_LINE.GRADE_STEP%TYPE
+            , P_ALLOWANCE_ID     IN HRP_GRADE_LINE.ALLOWANCE_ID%TYPE
+            , P_ALLOWANCE_AMOUNT IN HRP_GRADE_LINE.ALLOWANCE_AMOUNT%TYPE
+            , P_ENABLED_FLAG     IN HRP_GRADE_LINE.ENABLED_FLAG%TYPE
+            , P_SOB_ID           IN HRP_GRADE_HEADER.SOB_ID%TYPE
+            , P_USER_ID          IN HRP_GRADE_LINE.CREATED_BY%TYPE 
+            );
+
+-- GRADE_LINE_UPDATE.
+  PROCEDURE GRADE_LINE_UPDATE
+            ( W_GRADE_LINE_ID    IN HRP_GRADE_LINE.GRADE_LINE_ID%TYPE
+            , P_ALLOWANCE_ID     IN HRP_GRADE_LINE.ALLOWANCE_ID%TYPE
+            , P_ALLOWANCE_AMOUNT IN HRP_GRADE_LINE.ALLOWANCE_AMOUNT%TYPE
+            , P_ENABLED_FLAG     IN HRP_GRADE_LINE.ENABLED_FLAG%TYPE
+            , P_SOB_ID           IN HRP_GRADE_HEADER.SOB_ID%TYPE
+            , P_USER_ID          IN HRP_GRADE_LINE.CREATED_BY%TYPE 
+            );
+
+-- 직급에 따른 호봉.
+  PROCEDURE LU_GRADE_STEP
+            ( P_CURSOR3          OUT TYPES.TCURSOR3
+            , W_CORP_ID          IN HRP_GRADE_HEADER.CORP_ID%TYPE
+            , W_STD_YYYYMM       IN HRP_GRADE_HEADER.START_YYYYMM%TYPE
+            , W_PAY_GRADE_ID     IN HRP_GRADE_HEADER.PAY_GRADE_ID%TYPE
+            , W_PAY_TYPE         IN HRP_GRADE_HEADER.PAY_TYPE%TYPE
+            , W_SOB_ID           IN HRP_GRADE_HEADER.SOB_ID%TYPE
+            , W_ORG_ID           IN HRP_GRADE_HEADER.ORG_ID%TYPE
+            , W_ENABLED_FLAG     IN HRP_GRADE_HEADER.ENABLED_FLAG%TYPE
+            );
+                        
+-- 직급에 따른 호봉별 수당.
+  PROCEDURE LU_GRADE_STEP_ALLOWANCE
+            ( P_CURSOR3          OUT TYPES.TCURSOR3
+            , W_CORP_ID          IN HRP_GRADE_HEADER.CORP_ID%TYPE
+            , W_STD_YYYYMM       IN HRP_GRADE_HEADER.START_YYYYMM%TYPE
+            , W_PAY_GRADE_ID     IN HRP_GRADE_HEADER.PAY_GRADE_ID%TYPE
+            , W_PAY_TYPE         IN HRP_GRADE_HEADER.PAY_TYPE%TYPE
+            , W_SOB_ID           IN HRP_GRADE_HEADER.SOB_ID%TYPE
+            , W_ORG_ID           IN HRP_GRADE_HEADER.ORG_ID%TYPE
+            , W_ENABLED_FLAG     IN HRP_GRADE_HEADER.ENABLED_FLAG%TYPE
+            );
+            
+END HRP_GRADE_G;
+/
+CREATE OR REPLACE PACKAGE BODY HRP_GRADE_G
+AS
+/******************************************************************************/
+/* PROJECT      : FPCB ERP
+/* MODULE       : EAPP
+/* PROGRAM NAME : HHRP_GRADE_G
+/* DESCRIPTION  : 호봉 관리 - HEADER/LINE 관리.
+/* REFERENCE BY :
+/* PROGRAM HISTORY : 신규 생성
+/*------------------------------------------------------------------------------
+/*   DATE       IN CHARGE          DESCRIPTION
+/*------------------------------------------------------------------------------
+/* 20-JUN-2010  JEON HO SU          INITIALIZE
+/******************************************************************************/
+-- GRADE HEADER SELECT
+  PROCEDURE DATA_SELECT_HEADER
+            ( P_CURSOR                            OUT TYPES.TCURSOR
+            , W_CORP_ID                           IN HRP_GRADE_HEADER.CORP_ID%TYPE
+            , W_STD_YYYYMM                        IN HRP_GRADE_HEADER.START_YYYYMM%TYPE
+            , W_PAY_TYPE                          IN HRP_GRADE_HEADER.PAY_TYPE%TYPE
+            , W_PAY_GRADE_ID                      IN HRP_GRADE_HEADER.PAY_GRADE_ID%TYPE
+            , W_SOB_ID                            IN HRP_GRADE_HEADER.SOB_ID%TYPE
+            , W_ORG_ID                            IN HRP_GRADE_HEADER.ORG_ID%TYPE
+            )
+  AS
+  BEGIN
+    OPEN P_CURSOR FOR
+      SELECT GH.PAY_TYPE
+           , HRM_COMMON_G.CODE_NAME_F('PAY_TYPE', GH.PAY_TYPE, GH.SOB_ID, GH.ORG_ID) AS PAY_TYPE_NAME
+           , GH.PAY_GRADE_ID
+           , HRM_COMMON_G.ID_NAME_F(GH.PAY_GRADE_ID) AS PAY_GRADE_NAME
+           , GH.DESCRIPTION
+           , GH.ENABLED_FLAG
+           , GH.GRADE_HEADER_ID
+           , GH.CORP_ID
+           , GH.START_YYYYMM
+           , GH.END_YYYYMM
+        FROM HRP_GRADE_HEADER GH
+       WHERE GH.CORP_ID               = W_CORP_ID
+         AND GH.START_YYYYMM          <= W_STD_YYYYMM
+         AND (GH.END_YYYYMM IS NULL OR GH.END_YYYYMM >= W_STD_YYYYMM)
+         AND GH.PAY_TYPE              = NVL(W_PAY_TYPE, GH.PAY_TYPE)
+         AND GH.PAY_GRADE_ID          = NVL(W_PAY_GRADE_ID, GH.PAY_GRADE_ID)
+         AND GH.SOB_ID                = W_SOB_ID
+         AND GH.ORG_ID                = W_ORG_ID
+      ;
+  END DATA_SELECT_HEADER;
+
+-- GRADE - PAY_STEP별 월급여, 년급여 SELECT.
+  PROCEDURE DATA_SELECT_STEP
+            ( P_CURSOR2                           OUT TYPES.TCURSOR2
+            , W_GRADE_HEADER_ID                   IN HRP_GRADE_HEADER.GRADE_HEADER_ID%TYPE
+            )
+  AS
+  BEGIN
+    -- 호봉 합계.
+    OPEN P_CURSOR2 FOR 
+      SELECT GL.GRADE_HEADER_ID
+           , GL.GRADE_STEP
+           , NVL(SUM(DECODE(HA.ALLOWANCE_TYPE, 'BASIC', GL.ALLOWANCE_AMOUNT, 0)), 0) *
+             CASE 
+               WHEN PT.PAY_LEVEL IN('MONTH', 'YEAR') THEN 1
+               ELSE TO_NUMBER(NVL(HRM_COMMON_G.CODE_VALUE_F('PAYMENT_SET', 'P12', 'VALUE2', GH.SOB_ID, GH.ORG_ID), 0))
+             END AS MONTH_BASIC_AMOUNT
+           , NVL(SUM(DECODE(HA.ALLOWANCE_TYPE, 'BASIC', 0, GL.ALLOWANCE_AMOUNT)), 0) AS MONTH_ETC_AMOUNT
+           , NVL(SUM(DECODE(HA.ALLOWANCE_TYPE, 'BASIC', GL.ALLOWANCE_AMOUNT, 0)), 0) * 12 *
+             CASE 
+               WHEN PT.PAY_LEVEL IN('MONTH', 'YEAR') THEN 1
+               ELSE TO_NUMBER(NVL(HRM_COMMON_G.CODE_VALUE_F('PAYMENT_SET', 'P12', 'VALUE2', GH.SOB_ID, GH.ORG_ID), 0))
+             END AS YEAR_BASIC_AMOUNT
+           , NVL(SUM(DECODE(HA.ALLOWANCE_TYPE, 'BASIC', 0, GL.ALLOWANCE_AMOUNT)), 0) * 12 AS YEAR_ETC_AMOUNT
+        FROM HRP_GRADE_LINE GL
+          , HRP_GRADE_HEADER GH
+          , HRM_PAY_TYPE_V PT
+          , HRM_ALLOWANCE_V HA
+       WHERE GL.GRADE_HEADER_ID       = GH.GRADE_HEADER_ID
+         AND GL.ALLOWANCE_ID          = HA.ALLOWANCE_ID
+         AND GH.PAY_TYPE              = PT.PAY_TYPE
+         AND GH.SOB_ID                = PT.SOB_ID
+         AND GH.ORG_ID                = PT.ORG_ID
+         AND GL.GRADE_HEADER_ID       = W_GRADE_HEADER_ID         
+      GROUP BY GL.GRADE_HEADER_ID
+           , GL.GRADE_STEP
+           , PT.PAY_LEVEL
+           , GH.SOB_ID
+           , GH.ORG_ID
+      ORDER BY GL.GRADE_STEP     
+      ;
+      
+  END DATA_SELECT_STEP;
+  
+  
+-- GRADE LINE SELECT
+  PROCEDURE DATA_SELECT_LINE
+            ( P_CURSOR3                           OUT TYPES.TCURSOR3
+            , W_GRADE_HEADER_ID                   IN HRP_GRADE_HEADER.GRADE_HEADER_ID%TYPE
+            , W_GRADE_STEP                        IN HRP_GRADE_LINE.GRADE_STEP%TYPE
+            )
+  AS
+  BEGIN
+    OPEN P_CURSOR3 FOR
+      SELECT GL.GRADE_LINE_ID
+           , GL.GRADE_HEADER_ID
+           , GL.GRADE_STEP
+           , GL.ALLOWANCE_ID
+           , HRM_COMMON_G.ID_NAME_F(GL.ALLOWANCE_ID) AS ALLOWANCE_NAME
+           , GL.ALLOWANCE_AMOUNT
+           , GL.ENABLED_FLAG
+        FROM HRP_GRADE_LINE GL
+       WHERE GL.GRADE_HEADER_ID       = W_GRADE_HEADER_ID
+         AND GL.GRADE_STEP            = W_GRADE_STEP
+      ;
+  END DATA_SELECT_LINE;
+
+---------------------------------------------------------------------------------------------------
+-- GRADE_HEADER_INSERT
+  PROCEDURE GRADE_HEADER_INSERT
+            ( P_GRADE_HEADER_ID OUT HRP_GRADE_HEADER.GRADE_HEADER_ID%TYPE
+            , P_CORP_ID         IN HRP_GRADE_HEADER.CORP_ID%TYPE
+            , P_START_YYYYMM    IN HRP_GRADE_HEADER.START_YYYYMM%TYPE
+            , P_PAY_TYPE        IN HRP_GRADE_HEADER.PAY_TYPE%TYPE
+            , P_PAY_GRADE_ID    IN HRP_GRADE_HEADER.PAY_GRADE_ID%TYPE
+            , P_DESCRIPTION     IN HRP_GRADE_HEADER.DESCRIPTION%TYPE
+            , P_ENABLED_FLAG    IN HRP_GRADE_HEADER.ENABLED_FLAG%TYPE
+            , P_SOB_ID          IN HRP_GRADE_HEADER.SOB_ID%TYPE
+            , P_ORG_ID          IN HRP_GRADE_HEADER.ORG_ID%TYPE
+            , P_USER_ID         IN HRP_GRADE_HEADER.CREATED_BY%TYPE 
+            )
+  AS
+    V_SYSDATE                     DATE := GET_LOCAL_DATE(P_SOB_ID);
+    V_GRADE_HEADER_ID             HRP_GRADE_HEADER.GRADE_HEADER_ID%TYPE;
+        
+  BEGIN
+    -- 같은 시작년월 데이터 Insert --> Error 발생.
+    BEGIN
+      SELECT GH.GRADE_HEADER_ID
+        INTO V_GRADE_HEADER_ID
+        FROM HRP_GRADE_HEADER GH
+       WHERE GH.CORP_ID         = P_CORP_ID
+         AND GH.START_YYYYMM    >= P_START_YYYYMM
+         AND GH.PAY_TYPE        = P_PAY_TYPE
+         AND GH.PAY_GRADE_ID    = P_PAY_GRADE_ID
+         AND GH.SOB_ID          = P_SOB_ID
+         AND GH.ORG_ID          = P_ORG_ID
+       ;
+    EXCEPTION WHEN OTHERS THEN
+      V_GRADE_HEADER_ID := 0;
+    END;
+    IF V_GRADE_HEADER_ID <> 0 THEN
+      RAISE ERRNUMS.Exist_Data;
+    END IF;
+    
+    -- 기존 자료 존재시 BACKUP 후 INSERT.
+    BEGIN
+      UPDATE HRP_GRADE_HEADER GH
+        SET GH.END_YYYYMM       = P_START_YYYYMM - 1
+       WHERE GH.CORP_ID         = P_CORP_ID
+         AND GH.START_YYYYMM    <= P_START_YYYYMM
+         AND (GH.END_YYYYMM IS NULL OR GH.END_YYYYMM >= P_START_YYYYMM)
+         AND GH.PAY_TYPE        = P_PAY_TYPE
+         AND GH.PAY_GRADE_ID    = P_PAY_GRADE_ID
+         AND GH.SOB_ID          = P_SOB_ID
+         AND GH.ORG_ID          = P_ORG_ID
+       ;
+    END;
+    
+    BEGIN
+      SELECT HRP_GRADE_HEADER_S1.NEXTVAL
+       INTO P_GRADE_HEADER_ID
+       FROM DUAL;
+    EXCEPTION WHEN OTHERS THEN
+      RAISE ERRNUMS.Invalid_Sequence_ID;   
+    END;
+    
+    INSERT INTO HRP_GRADE_HEADER
+    ( GRADE_HEADER_ID
+    , CORP_ID 
+    , START_YYYYMM 
+    , PAY_TYPE 
+    , PAY_GRADE_ID 
+    , DESCRIPTION 
+    , ENABLED_FLAG 
+    , SOB_ID 
+    , ORG_ID 
+    , CREATION_DATE 
+    , CREATED_BY 
+    , LAST_UPDATE_DATE 
+    , LAST_UPDATED_BY )
+    VALUES
+    ( P_GRADE_HEADER_ID
+    , P_CORP_ID
+    , P_START_YYYYMM
+    , P_PAY_TYPE
+    , P_PAY_GRADE_ID
+    , P_DESCRIPTION
+    , P_ENABLED_FLAG
+    , P_SOB_ID
+    , P_ORG_ID
+    , V_SYSDATE
+    , P_USER_ID
+    , V_SYSDATE
+    , P_USER_ID 
+    );
+
+  EXCEPTION 
+    WHEN ERRNUMS.Invalid_Sequence_ID THEN
+      RAISE_APPLICATION_ERROR(ERRNUMS.Invalid_Sequence_Code, ERRNUMS.Invalid_Sequence_Desc);
+    WHEN ERRNUMS.Exist_Data THEN
+      RAISE_APPLICATION_ERROR(ERRNUMS.Exist_Data_Code, ERRNUMS.Exist_Data_Desc);
+  END GRADE_HEADER_INSERT;
+
+-- GRADE_HEADER_UPDATE.
+  PROCEDURE GRADE_HEADER_UPDATE
+            ( W_GRADE_HEADER_ID IN HRP_GRADE_HEADER.GRADE_HEADER_ID%TYPE
+            , P_PAY_TYPE        IN HRP_GRADE_HEADER.PAY_TYPE%TYPE
+            , P_PAY_GRADE_ID    IN HRP_GRADE_HEADER.PAY_GRADE_ID%TYPE
+            , P_DESCRIPTION     IN HRP_GRADE_HEADER.DESCRIPTION%TYPE
+            , P_ENABLED_FLAG    IN HRP_GRADE_HEADER.ENABLED_FLAG%TYPE
+            , P_USER_ID         IN HRP_GRADE_HEADER.CREATED_BY%TYPE 
+            )
+  AS
+  BEGIN
+   UPDATE HRP_GRADE_HEADER
+      SET PAY_TYPE         = P_PAY_TYPE
+        , PAY_GRADE_ID     = P_PAY_GRADE_ID
+        , DESCRIPTION      = P_DESCRIPTION
+        , ENABLED_FLAG     = P_ENABLED_FLAG
+        , LAST_UPDATE_DATE = GET_LOCAL_DATE(SOB_ID)
+        , LAST_UPDATED_BY  = P_USER_ID
+    WHERE GRADE_HEADER_ID  = W_GRADE_HEADER_ID
+    ;
+   
+  END GRADE_HEADER_UPDATE;
+
+-- GRADE_STEP_INSERT
+  PROCEDURE GRADE_STEP_INSERT
+            ( P_GRADE_STEP       IN HRP_GRADE_LINE.GRADE_STEP%TYPE
+            , O_GRADE_STEP       OUT HRP_GRADE_LINE.GRADE_STEP%TYPE
+            )
+  AS
+  BEGIN
+    O_GRADE_STEP := P_GRADE_STEP;
+  
+  END GRADE_STEP_INSERT;
+
+-- GRADE_LINE_UPDATE.
+  PROCEDURE GRADE_STEP_UPDATE
+            ( W_GRADE_STEP       IN HRP_GRADE_LINE.GRADE_STEP%TYPE
+            )
+  AS
+  BEGIN
+    NULL;
+    
+  END GRADE_STEP_UPDATE;
+
+-- GRADE_LINE_INSERT
+  PROCEDURE GRADE_LINE_INSERT
+            ( P_GRADE_LINE_ID    OUT HRP_GRADE_LINE.GRADE_LINE_ID%TYPE
+            , P_GRADE_HEADER_ID  IN HRP_GRADE_LINE.GRADE_HEADER_ID%TYPE
+            , P_GRADE_STEP       IN HRP_GRADE_LINE.GRADE_STEP%TYPE
+            , P_ALLOWANCE_ID     IN HRP_GRADE_LINE.ALLOWANCE_ID%TYPE
+            , P_ALLOWANCE_AMOUNT IN HRP_GRADE_LINE.ALLOWANCE_AMOUNT%TYPE
+            , P_ENABLED_FLAG     IN HRP_GRADE_LINE.ENABLED_FLAG%TYPE
+            , P_SOB_ID           IN HRP_GRADE_HEADER.SOB_ID%TYPE
+            , P_USER_ID          IN HRP_GRADE_LINE.CREATED_BY%TYPE 
+            )
+  AS
+    V_SYSDATE DATE := GET_LOCAL_DATE(P_SOB_ID);
+    
+  BEGIN
+    BEGIN
+      SELECT HRP_GRADE_LINE_S1.NEXTVAL
+       INTO P_GRADE_LINE_ID
+       FROM DUAL;
+    EXCEPTION WHEN OTHERS THEN
+      RAISE ERRNUMS.Invalid_Sequence_ID;   
+    END;
+
+    INSERT INTO HRP_GRADE_LINE
+    ( GRADE_LINE_ID
+    , GRADE_HEADER_ID 
+    , GRADE_STEP 
+    , ALLOWANCE_ID 
+    , ALLOWANCE_AMOUNT 
+    , ENABLED_FLAG 
+    , CREATION_DATE 
+    , CREATED_BY 
+    , LAST_UPDATE_DATE 
+    , LAST_UPDATED_BY )
+    VALUES
+    ( P_GRADE_LINE_ID
+    , P_GRADE_HEADER_ID
+    , P_GRADE_STEP
+    , P_ALLOWANCE_ID
+    , P_ALLOWANCE_AMOUNT
+    , P_ENABLED_FLAG
+    , V_SYSDATE
+    , P_USER_ID
+    , V_SYSDATE
+    , P_USER_ID );
+  
+  EXCEPTION 
+    WHEN ERRNUMS.Invalid_Sequence_ID THEN
+    RAISE_APPLICATION_ERROR(ERRNUMS.Invalid_Sequence_Code, ERRNUMS.Invalid_Sequence_Desc);
+  END GRADE_LINE_INSERT;
+    
+-- GRADE_LINE_UPDATE.
+  PROCEDURE GRADE_LINE_UPDATE
+            ( W_GRADE_LINE_ID    IN HRP_GRADE_LINE.GRADE_LINE_ID%TYPE
+            , P_ALLOWANCE_ID     IN HRP_GRADE_LINE.ALLOWANCE_ID%TYPE
+            , P_ALLOWANCE_AMOUNT IN HRP_GRADE_LINE.ALLOWANCE_AMOUNT%TYPE
+            , P_ENABLED_FLAG     IN HRP_GRADE_LINE.ENABLED_FLAG%TYPE
+            , P_SOB_ID           IN HRP_GRADE_HEADER.SOB_ID%TYPE
+            , P_USER_ID          IN HRP_GRADE_LINE.CREATED_BY%TYPE 
+            )
+  AS
+  BEGIN
+    UPDATE HRP_GRADE_LINE
+      SET ALLOWANCE_ID     = P_ALLOWANCE_ID
+        , ALLOWANCE_AMOUNT = P_ALLOWANCE_AMOUNT
+        , ENABLED_FLAG     = P_ENABLED_FLAG
+        , LAST_UPDATE_DATE = GET_LOCAL_DATE(P_SOB_ID)
+        , LAST_UPDATED_BY  = P_USER_ID
+    WHERE GRADE_LINE_ID    = W_GRADE_LINE_ID;
+  
+  END GRADE_LINE_UPDATE;
+
+-- 직급에 따른 호봉별 수당.
+  PROCEDURE LU_GRADE_STEP
+            ( P_CURSOR3          OUT TYPES.TCURSOR3
+            , W_CORP_ID          IN HRP_GRADE_HEADER.CORP_ID%TYPE
+            , W_STD_YYYYMM       IN HRP_GRADE_HEADER.START_YYYYMM%TYPE
+            , W_PAY_GRADE_ID     IN HRP_GRADE_HEADER.PAY_GRADE_ID%TYPE
+            , W_PAY_TYPE         IN HRP_GRADE_HEADER.PAY_TYPE%TYPE
+            , W_SOB_ID           IN HRP_GRADE_HEADER.SOB_ID%TYPE
+            , W_ORG_ID           IN HRP_GRADE_HEADER.ORG_ID%TYPE
+            , W_ENABLED_FLAG     IN HRP_GRADE_HEADER.ENABLED_FLAG%TYPE
+            )
+  AS
+  BEGIN
+    OPEN P_CURSOR3 FOR
+      SELECT GL.GRADE_STEP
+           , SUM(DECODE(HA.ALLOWANCE_TYPE, 'BASIC', GL.ALLOWANCE_AMOUNT, 0)) AS BASIC_AMOUNT
+           , SUM(DECODE(HA.ALLOWANCE_TYPE, 'BASIC', 0, GL.ALLOWANCE_AMOUNT)) AS ETC_AMOUNT
+        FROM HRP_GRADE_HEADER GH
+          , HRP_GRADE_LINE GL
+          , HRM_ALLOWANCE_V HA
+      WHERE GH.GRADE_HEADER_ID        = GL.GRADE_HEADER_ID
+        AND GL.ALLOWANCE_ID           = HA.ALLOWANCE_ID
+        AND GH.CORP_ID                = W_CORP_ID
+        AND GH.PAY_GRADE_ID           = W_PAY_GRADE_ID
+        AND GH.PAY_TYPE               = W_PAY_TYPE
+        AND GH.SOB_ID                 = W_SOB_ID
+        AND GH.ORG_ID                 = W_ORG_ID
+        AND GH.START_YYYYMM           <= W_STD_YYYYMM
+        AND (GH.END_YYYYMM IS NULL OR GH.END_YYYYMM >= W_STD_YYYYMM)
+        AND GH.ENABLED_FLAG           = NVL(W_ENABLED_FLAG, GH.ENABLED_FLAG)
+        AND GL.ENABLED_FLAG           = NVL(W_ENABLED_FLAG, GL.ENABLED_FLAG)
+      GROUP BY GL.GRADE_STEP
+      ORDER BY GL.GRADE_STEP
+      ;
+  
+  END LU_GRADE_STEP;
+    
+-- 직급에 따른 호봉별 수당.
+  PROCEDURE LU_GRADE_STEP_ALLOWANCE
+            ( P_CURSOR3          OUT TYPES.TCURSOR3
+            , W_CORP_ID          IN HRP_GRADE_HEADER.CORP_ID%TYPE
+            , W_STD_YYYYMM       IN HRP_GRADE_HEADER.START_YYYYMM%TYPE
+            , W_PAY_GRADE_ID     IN HRP_GRADE_HEADER.PAY_GRADE_ID%TYPE
+            , W_PAY_TYPE         IN HRP_GRADE_HEADER.PAY_TYPE%TYPE
+            , W_SOB_ID           IN HRP_GRADE_HEADER.SOB_ID%TYPE
+            , W_ORG_ID           IN HRP_GRADE_HEADER.ORG_ID%TYPE
+            , W_ENABLED_FLAG     IN HRP_GRADE_HEADER.ENABLED_FLAG%TYPE
+            )
+  AS
+  BEGIN
+    OPEN P_CURSOR3 FOR
+      SELECT GL.GRADE_STEP
+           , HA.ALLOWANCE_NAME AS ALLOWANCE_NAME
+           , GL.ALLOWANCE_AMOUNT
+           , GL.ALLOWANCE_ID     
+        FROM HRP_GRADE_HEADER GH
+          , HRP_GRADE_LINE GL
+          , HRM_ALLOWANCE_V HA
+      WHERE GH.GRADE_HEADER_ID        = GL.GRADE_HEADER_ID
+        AND GL.ALLOWANCE_ID           = HA.ALLOWANCE_ID
+        AND GH.CORP_ID                = W_CORP_ID
+        AND GH.PAY_GRADE_ID           = W_PAY_GRADE_ID
+        AND GH.PAY_TYPE               = W_PAY_TYPE
+        AND GH.SOB_ID                 = W_SOB_ID
+        AND GH.ORG_ID                 = W_ORG_ID
+        AND GH.START_YYYYMM           <= W_STD_YYYYMM
+        AND (GH.END_YYYYMM IS NULL OR GH.END_YYYYMM >= W_STD_YYYYMM)
+        AND GH.ENABLED_FLAG           = NVL(W_ENABLED_FLAG, GH.ENABLED_FLAG)
+        AND GL.ENABLED_FLAG           = NVL(W_ENABLED_FLAG, GL.ENABLED_FLAG)
+      ORDER BY GL.GRADE_STEP, HA.SORT_NUM   
+      ;
+  
+  END LU_GRADE_STEP_ALLOWANCE;
+    
+END HRP_GRADE_G;
+/

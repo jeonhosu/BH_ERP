@@ -1,0 +1,36 @@
+select * from fi_vat_master t
+;
+
+SELECT *
+  FROM FI_SLIP_MANAGEMENT_ITEM SMI
+WHERE SMI.MANAGEMENT_CODE IN ('10'/*, '33'*/)
+  AND SMI.MANAGEMENT_SEQ  = 3
+  AND SMI.SOB_ID          = 20
+  AND EXISTS
+        ( SELECT 'X'
+            FROM FI_SLIP_LINE SL
+          WHERE SL.SLIP_LINE_ID   = SMI.SLIP_LINE_ID
+            AND SL.ACCOUNT_CODE   IN('1111501', '2110301')
+        )
+;
+
+UPDATE FI_SLIP_MANAGEMENT_ITEM SMI
+  SET ( SMI.MANAGEMENT_ID
+      , SMI.MANAGEMENT_CODE
+      ) = 
+      ( SELECT MC.MANAGEMENT_ID
+             , MC.MANAGEMENT_CODE
+          FROM FI_MANAGEMENT_CODE_V MC
+        WHERE MC.MANAGEMENT_CODE    = '33'
+          AND MC.SOB_ID             = 20
+      )
+WHERE SMI.MANAGEMENT_CODE IN ('10')
+  AND SMI.SOB_ID          = 20
+  AND SMI.MANAGEMENT_SEQ  = 3
+  AND EXISTS
+        ( SELECT 'X'
+            FROM FI_SLIP_LINE SL
+          WHERE SL.SLIP_LINE_ID   = SMI.SLIP_LINE_ID
+            AND SL.ACCOUNT_CODE   IN('1111501', '2110301')
+        )
+;

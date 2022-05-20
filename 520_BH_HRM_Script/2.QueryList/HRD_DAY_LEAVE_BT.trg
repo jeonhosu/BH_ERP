@@ -1,0 +1,29 @@
+CREATE OR REPLACE TRIGGER HRD_DAY_LEAVE_BT
+BEFORE INSERT OR UPDATE OR DELETE ON HRD_DAY_LEAVE
+FOR EACH ROW
+
+DECLARE
+
+BEGIN
+  IF UPDATING THEN
+    UPDATE HRD_DAY_INTERFACE DI
+        SET DI.NEXT_DAY_YN        = :NEW.NEXT_DAY_YN
+          , DI.DANGJIK_YN         = :NEW.DANGJIK_YN
+          , DI.ALL_NIGHT_YN       = :NEW.ALL_NIGHT_YN
+      WHERE DI.WORK_DATE          = :NEW.WORK_DATE
+        AND DI.PERSON_ID          = :NEW.PERSON_ID
+        AND DI.SOB_ID             = :NEW.SOB_ID
+        AND DI.ORG_ID             = :NEW.ORG_ID
+      ;
+      
+    UPDATE HRD_WORK_CALENDAR WC
+        SET WC.DANGJIK_YN         = :NEW.DANGJIK_YN
+          , WC.ALL_NIGHT_YN       = :NEW.ALL_NIGHT_YN
+      WHERE WC.WORK_DATE          = :NEW.WORK_DATE
+        AND WC.PERSON_ID          = :NEW.PERSON_ID
+        AND WC.SOB_ID             = :NEW.SOB_ID
+        AND WC.ORG_ID             = :NEW.ORG_ID
+      ;  
+  END IF;
+END HRD_DAY_INTERFACE_BT;
+/

@@ -1,0 +1,2983 @@
+CREATE OR REPLACE PACKAGE HRR_RETIRE_ADJUSTMENT_G
+AS
+
+-- 퇴직정산 대상자 조회.
+  PROCEDURE SELECT_RETIRE_PERSON
+            ( P_CURSOR                            OUT TYPES.TCURSOR
+            , W_CORP_ID                           IN HRR_RETIRE_ADJUSTMENT.CORP_ID%TYPE
+            , W_ADJUSTMENT_TYPE                   IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_TYPE%TYPE
+            , W_PAY_GRADE_ID                      IN HRM_PERSON_MASTER.PAY_GRADE_ID%TYPE
+            , W_DEPT_ID                           IN HRM_PERSON_MASTER.DEPT_ID%TYPE
+            , W_PERSON_ID                         IN HRR_RETIRE_ADJUSTMENT.PERSON_ID%TYPE
+            , W_SOB_ID                            IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+            , W_ORG_ID                            IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+            );
+            
+-- SELECT_RETIRE_ADJUSTMENT
+  PROCEDURE SELECT_RETIRE_ADJUSTMENT
+            ( P_CURSOR                            OUT TYPES.TCURSOR
+            , W_CORP_ID                           IN HRR_RETIRE_ADJUSTMENT.CORP_ID%TYPE
+            , W_ADJUSTMENT_TYPE                   IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_TYPE%TYPE
+            , W_DEPT_ID                           IN HRM_DEPT_MASTER.DEPT_ID%TYPE
+            , W_PAY_GRADE_ID                      IN HRM_COMMON.COMMON_ID%TYPE
+            , W_PERSON_ID                         IN HRR_RETIRE_ADJUSTMENT.PERSON_ID%TYPE
+            , W_SOB_ID                            IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+            , W_ORG_ID                            IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+            );
+
+-- 퇴직정산 지급 처리 조회.
+  PROCEDURE SELECT_RETIRE_CLOSED_YN
+            ( P_CURSOR2                           OUT TYPES.TCURSOR2
+            , W_ADJUSTMENT_ID                     IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ADJUSTMENT_ID%TYPE
+            ); 
+            
+-- 퇴직정산 급상여 내역 조회.
+  PROCEDURE SELECT_RETIRE_PAYMENT
+            ( P_CURSOR2                           OUT TYPES.TCURSOR2
+            , W_ADJUSTMENT_ID                     IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ADJUSTMENT_ID%TYPE
+            , W_WAGE_TYPE                         IN HRR_RETIRE_ADJUSTMENT_PAYMENT.WAGE_TYPE%TYPE
+            );            
+
+-- 퇴직정산 급상여 상세 내역 조회.
+  PROCEDURE SELECT_RETIRE_PAY_DETAIL
+            ( P_CURSOR2                           OUT TYPES.TCURSOR2
+            , W_ADJUSTMENT_ID                     IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ADJUSTMENT_ID%TYPE
+            , W_WAGE_TYPE                         IN HRR_RETIRE_ADJUSTMENT_PAYMENT.WAGE_TYPE%TYPE
+            );
+
+-- 퇴직정산 급여 산정 기간 조회.
+  PROCEDURE SELECT_RETIRE_PAY_PERIOD
+            ( P_CURSOR3                           OUT TYPES.TCURSOR2
+            , W_ADJUSTMENT_ID                     IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ADJUSTMENT_ID%TYPE
+            , W_WAGE_TYPE                         IN HRR_RETIRE_ADJUSTMENT_PAYMENT.WAGE_TYPE%TYPE
+            );
+                        
+---------------------------------------------------------------------------------------------------
+-- 퇴직정산 내역 삽입.
+PROCEDURE INSERT_RETIRE_ADJUSTMENT
+          ( P_ADJUSTMENT_ID         OUT HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+          , P_ADJUSTMENT_TYPE       IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_TYPE%TYPE
+          , P_PERSON_ID             IN HRR_RETIRE_ADJUSTMENT.PERSON_ID%TYPE
+          , P_CORP_ID               IN HRR_RETIRE_ADJUSTMENT.CORP_ID%TYPE
+          , P_RETIRE_DATE_FR        IN HRR_RETIRE_ADJUSTMENT.RETIRE_DATE_FR%TYPE
+          , P_RETIRE_DATE_TO        IN HRR_RETIRE_ADJUSTMENT.RETIRE_DATE_TO%TYPE
+          , P_PAY_DATE_TO           IN HRR_RETIRE_ADJUSTMENT.PAY_DATE_TO%TYPE
+          , P_SOB_ID                IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+          , P_ORG_ID                IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+          , P_USER_ID               IN HRR_RETIRE_ADJUSTMENT.CREATED_BY%TYPE 
+          );
+                       
+-- 퇴직정산 내역 수정.
+  PROCEDURE UPDATE_RETIRE_ADJUSTMENT
+            ( W_ADJUSTMENT_ID         IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+            , P_TOTAL_PAY_AMOUNT      IN HRR_RETIRE_ADJUSTMENT.TOTAL_PAY_AMOUNT%TYPE
+            , P_TOTAL_BONUS_AMOUNT    IN HRR_RETIRE_ADJUSTMENT.TOTAL_BONUS_AMOUNT%TYPE
+            , P_YEAR_ALLOWANCE_AMOUNT IN HRR_RETIRE_ADJUSTMENT.YEAR_ALLOWANCE_AMOUNT%TYPE
+            , P_LONG_YEAR             IN HRR_RETIRE_ADJUSTMENT.LONG_YEAR%TYPE
+            , P_LONG_MONTH            IN HRR_RETIRE_ADJUSTMENT.LONG_MONTH%TYPE
+            , P_LONG_DAY              IN HRR_RETIRE_ADJUSTMENT.LONG_DAY%TYPE
+            , P_DAY_3RD_COUNT         IN HRR_RETIRE_ADJUSTMENT.DAY_3RD_COUNT%TYPE
+            , P_DAY_AVG_AMOUNT        IN HRR_RETIRE_ADJUSTMENT.DAY_AVG_AMOUNT%TYPE
+            , P_DED_DAY               IN HRR_RETIRE_ADJUSTMENT.DED_DAY%TYPE
+            , P_DED_DAY_DESCRIPTION   IN HRR_RETIRE_ADJUSTMENT.DED_DAY_DESCRIPTION%TYPE
+            , P_RETIRE_AMOUNT         IN HRR_RETIRE_ADJUSTMENT.RETIRE_AMOUNT%TYPE
+            , P_GLORY_AMOUNT          IN HRR_RETIRE_ADJUSTMENT.GLORY_AMOUNT%TYPE
+            , P_GLORY_DESCRIPTION     IN HRR_RETIRE_ADJUSTMENT.GLORY_DESCRIPTION%TYPE
+            , P_ETC_SUPP_AMOUNT       IN HRR_RETIRE_ADJUSTMENT.ETC_SUPP_AMOUNT%TYPE
+            , P_ETC_SUPP_DESCRIPTION  IN HRR_RETIRE_ADJUSTMENT.ETC_SUPP_DESCRIPTION%TYPE
+            , P_RETIRE_TOTAL_AMOUNT   IN HRR_RETIRE_ADJUSTMENT.RETIRE_TOTAL_AMOUNT%TYPE
+            , P_INCOME_DED_AMOUNT     IN HRR_RETIRE_ADJUSTMENT.INCOME_DED_AMOUNT%TYPE
+            , P_LONG_DED_AMOUNT       IN HRR_RETIRE_ADJUSTMENT.LONG_DED_AMOUNT%TYPE
+            , P_TAX_STD_AMOUNT        IN HRR_RETIRE_ADJUSTMENT.TAX_STD_AMOUNT%TYPE
+            , P_AVG_TAX_STD_AMOUNT    IN HRR_RETIRE_ADJUSTMENT.AVG_TAX_STD_AMOUNT%TYPE
+            , P_AVG_COMP_TAX_AMOUNT   IN HRR_RETIRE_ADJUSTMENT.AVG_COMP_TAX_AMOUNT%TYPE
+            , P_COMP_TAX_AMOUNT       IN HRR_RETIRE_ADJUSTMENT.COMP_TAX_AMOUNT%TYPE
+            , P_TAX_DED_AMOUNT        IN HRR_RETIRE_ADJUSTMENT.TAX_DED_AMOUNT%TYPE
+            , P_INCOME_TAX_AMOUNT     IN HRR_RETIRE_ADJUSTMENT.INCOME_TAX_AMOUNT%TYPE
+            , P_RESIDENT_TAX_AMOUNT   IN HRR_RETIRE_ADJUSTMENT.RESIDENT_TAX_AMOUNT%TYPE
+            , P_SP_TAX_AMOUNT         IN HRR_RETIRE_ADJUSTMENT.SP_TAX_AMOUNT%TYPE
+            , P_RETIRE_CVS_AMOUNT     IN HRR_RETIRE_ADJUSTMENT.RETIRE_CVS_AMOUNT%TYPE
+            , P_ETC_DED_AMOUNT        IN HRR_RETIRE_ADJUSTMENT.ETC_DED_AMOUNT%TYPE
+            , P_ETC_DED_DESCRIPTION   IN HRR_RETIRE_ADJUSTMENT.ETC_DED_DESCRIPTION%TYPE
+            , P_REAL_AMOUNT           IN HRR_RETIRE_ADJUSTMENT.REAL_AMOUNT%TYPE
+            , P_HONORARY_AMOUNT       IN HRR_RETIRE_ADJUSTMENT.HONORARY_AMOUNT%TYPE
+            , P_HONORARY_DESCRIPTION  IN HRR_RETIRE_ADJUSTMENT.HONORARY_DESCRIPTION%TYPE
+            , P_H_INCOME_DED_AMOUNT   IN HRR_RETIRE_ADJUSTMENT.H_INCOME_DED_AMOUNT%TYPE
+            , P_H_LONG_DED_AMOUNT     IN HRR_RETIRE_ADJUSTMENT.H_LONG_DED_AMOUNT%TYPE
+            , P_H_TAX_STD_AMOUNT      IN HRR_RETIRE_ADJUSTMENT.H_TAX_STD_AMOUNT%TYPE
+            , P_H_AVG_TAX_STD_AMOUNT  IN HRR_RETIRE_ADJUSTMENT.H_AVG_TAX_STD_AMOUNT%TYPE
+            , P_H_AVG_COMP_TAX_AMOUNT IN HRR_RETIRE_ADJUSTMENT.H_AVG_COMP_TAX_AMOUNT%TYPE
+            , P_H_COMP_TAX_AMOUNT     IN HRR_RETIRE_ADJUSTMENT.H_COMP_TAX_AMOUNT%TYPE
+            , P_H_TAX_DED_AMOUNT      IN HRR_RETIRE_ADJUSTMENT.H_TAX_DED_AMOUNT%TYPE
+            , P_H_INCOME_TAX_AMOUNT   IN HRR_RETIRE_ADJUSTMENT.H_INCOME_TAX_AMOUNT%TYPE
+            , P_H_RESIDENT_TAX_AMOUNT IN HRR_RETIRE_ADJUSTMENT.H_RESIDENT_TAX_AMOUNT%TYPE
+            , P_H_SP_TAX_AMOUNT       IN HRR_RETIRE_ADJUSTMENT.H_SP_TAX_AMOUNT%TYPE
+            , P_H_REAL_AMOUNT         IN HRR_RETIRE_ADJUSTMENT.H_REAL_AMOUNT%TYPE
+            , P_REAL_TOTAL_AMOUNT     IN HRR_RETIRE_ADJUSTMENT.REAL_TOTAL_AMOUNT%TYPE
+            , P_SOB_ID                IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+            , P_ORG_ID                IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+            , P_USER_ID               IN HRR_RETIRE_ADJUSTMENT.CREATED_BY%TYPE 
+            , P_HEALTH_INSUR_AMOUNT   IN HRR_RETIRE_ADJUSTMENT.HEALTH_INSUR_AMOUNT%TYPE
+            );
+
+-- 퇴직정산 내역 삭제.
+  PROCEDURE DELETE_RETIRE_ADJUSTMENT
+            ( W_ADJUSTMENT_ID         IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+            );
+
+-- SELECT_RETIRE_ADJUSTMENT : 지급정보.
+  PROCEDURE SELECT_ADJUSTMENT_CLOSED
+            ( P_CURSOR1             OUT TYPES.TCURSOR1
+            , W_ADJUSTMENT_ID       IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+            , W_SOB_ID              IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+            , W_ORG_ID              IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+            );
+                        
+-- 퇴직정산 지급여부 수정.
+  PROCEDURE UPDATE_CLOSED_YN
+            ( W_ADJUSTMENT_ID         IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+            , P_RETIRE_DATE_TO        IN HRR_RETIRE_ADJUSTMENT.RETIRE_DATE_TO%TYPE
+            , P_CLOSED_DATE           IN HRR_RETIRE_ADJUSTMENT.CLOSED_DATE%TYPE
+            , P_CLOSED_PERSON_ID      IN HRR_RETIRE_ADJUSTMENT.CLOSED_PERSON_ID%TYPE
+            , O_CLOSED_YN             OUT HRR_RETIRE_ADJUSTMENT.CLOSED_YN%TYPE
+            );
+            
+---------------------------------------------------------------------------------------------------
+-- 퇴직정산 급여/상여 내역 삽입.
+  PROCEDURE INSERT_ADJUSTMENT_PAYMENT
+            ( P_ADJUSTMENT_ID    IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ADJUSTMENT_ID%TYPE
+            , P_PAY_YYYYMM       IN HRR_RETIRE_ADJUSTMENT_PAYMENT.PAY_YYYYMM%TYPE
+            , P_WAGE_TYPE        IN HRR_RETIRE_ADJUSTMENT_PAYMENT.WAGE_TYPE%TYPE
+            , P_TOTAL_AMOUNT     IN HRR_RETIRE_ADJUSTMENT_PAYMENT.TOTAL_AMOUNT%TYPE
+            , P_MODIFY_PERSON_ID IN HRR_RETIRE_ADJUSTMENT_PAYMENT.MODIFY_PERSON_ID%TYPE
+            , P_PERSON_ID        IN HRR_RETIRE_ADJUSTMENT_PAYMENT.PERSON_ID%TYPE
+            , P_CORP_ID          IN HRR_RETIRE_ADJUSTMENT_PAYMENT.CORP_ID%TYPE
+            , P_SOB_ID           IN HRR_RETIRE_ADJUSTMENT_PAYMENT.SOB_ID%TYPE
+            , P_ORG_ID           IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ORG_ID%TYPE
+            , P_USER_ID          IN HRR_RETIRE_ADJUSTMENT_PAYMENT.CREATED_BY%TYPE
+            );
+                       
+-- 퇴직정산 급여/상여 내역 수정.
+  PROCEDURE UPDATE_ADJUSTMENT_PAYMENT
+            ( W_ADJUSTMENT_ID    IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ADJUSTMENT_ID%TYPE
+            , W_PAY_YYYYMM       IN HRR_RETIRE_ADJUSTMENT_PAYMENT.PAY_YYYYMM%TYPE
+            , W_WAGE_TYPE        IN HRR_RETIRE_ADJUSTMENT_PAYMENT.WAGE_TYPE%TYPE
+            , P_TOTAL_AMOUNT     IN HRR_RETIRE_ADJUSTMENT_PAYMENT.TOTAL_AMOUNT%TYPE
+            , P_MODIFY_PERSON_ID IN HRR_RETIRE_ADJUSTMENT_PAYMENT.MODIFY_PERSON_ID%TYPE
+            , P_SOB_ID           IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+            , P_USER_ID          IN HRR_RETIRE_ADJUSTMENT_PAYMENT.CREATED_BY%TYPE 
+            );
+
+---------------------------------------------------------------------------------------------------
+-- 급상여 지급기간 변경.
+  PROCEDURE UPDATE_PAY_PERIOD
+            ( W_ADJUSTMENT_ID    IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ADJUSTMENT_ID%TYPE
+            , W_PAY_YYYYMM       IN HRR_RETIRE_ADJUSTMENT_PAYMENT.PAY_YYYYMM%TYPE
+            , W_WAGE_TYPE        IN HRR_RETIRE_ADJUSTMENT_PAYMENT.WAGE_TYPE%TYPE
+            , P_NEW_PAY_YYYYMM   IN HRR_RETIRE_ADJUSTMENT_PAYMENT.PAY_YYYYMM%TYPE
+            , P_START_DATE       IN HRR_RETIRE_ADJUSTMENT_PAYMENT.START_DATE%TYPE
+            , P_END_DATE         IN HRR_RETIRE_ADJUSTMENT_PAYMENT.END_DATE%TYPE
+            , P_SOB_ID           IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+            , P_ORG_ID           IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+            , P_USER_ID          IN HRR_RETIRE_ADJUSTMENT_PAYMENT.CREATED_BY%TYPE 
+            );
+            
+---------------------------------------------------------------------------------------------------
+-- 퇴직정산 급여/상여 상세 내역 삽입.
+  PROCEDURE INSERT_ADJUST_PAY_DETAIL
+            ( P_ADJUSTMENT_ID    IN HRR_RETIRE_ADJUST_PAY_DETAIL.ADJUSTMENT_ID%TYPE
+            , P_PAY_YYYYMM       IN HRR_RETIRE_ADJUST_PAY_DETAIL.PAY_YYYYMM%TYPE
+            , P_WAGE_TYPE        IN HRR_RETIRE_ADJUST_PAY_DETAIL.WAGE_TYPE%TYPE
+            , P_ALLOWANCE_ID     IN HRR_RETIRE_ADJUST_PAY_DETAIL.ALLOWANCE_ID%TYPE
+            , P_ALLOWANCE_AMOUNT IN HRR_RETIRE_ADJUST_PAY_DETAIL.ALLOWANCE_AMOUNT%TYPE
+            , P_SOB_ID           IN HRR_RETIRE_ADJUST_PAY_DETAIL.SOB_ID%TYPE
+            , P_ORG_ID           IN HRR_RETIRE_ADJUST_PAY_DETAIL.ORG_ID%TYPE
+            , P_USER_ID          IN HRR_RETIRE_ADJUST_PAY_DETAIL.CREATED_BY%TYPE
+            );
+                       
+-- 퇴직정산 급여/상여 상세 내역 수정.
+  PROCEDURE UPDATE_ADJUST_PAY_DETAIL
+            ( W_ADJUSTMENT_ID    IN HRR_RETIRE_ADJUST_PAY_DETAIL.ADJUSTMENT_ID%TYPE
+            , W_PAY_YYYYMM       IN HRR_RETIRE_ADJUST_PAY_DETAIL.PAY_YYYYMM%TYPE
+            , W_WAGE_TYPE        IN HRR_RETIRE_ADJUST_PAY_DETAIL.WAGE_TYPE%TYPE
+            , W_ALLOWANCE_ID     IN HRR_RETIRE_ADJUST_PAY_DETAIL.ALLOWANCE_ID%TYPE
+            , P_ALLOWANCE_AMOUNT IN HRR_RETIRE_ADJUST_PAY_DETAIL.ALLOWANCE_AMOUNT%TYPE
+            , W_SOB_ID           IN HRR_RETIRE_ADJUST_PAY_DETAIL.SOB_ID%TYPE
+            , W_ORG_ID           IN HRR_RETIRE_ADJUST_PAY_DETAIL.ORG_ID%TYPE
+            , P_USER_ID          IN HRR_RETIRE_ADJUST_PAY_DETAIL.CREATED_BY%TYPE 
+            );
+
+-- 퇴직정산 급여/상여 상세 내역 삭제.
+  PROCEDURE DELETE_ADJUST_PAY_DETAIL
+            ( W_ADJUSTMENT_ID    IN HRR_RETIRE_ADJUST_PAY_DETAIL.ADJUSTMENT_ID%TYPE
+            , W_PAY_YYYYMM       IN HRR_RETIRE_ADJUST_PAY_DETAIL.PAY_YYYYMM%TYPE
+            , W_WAGE_TYPE        IN HRR_RETIRE_ADJUST_PAY_DETAIL.WAGE_TYPE%TYPE
+            , W_ALLOWANCE_ID     IN HRR_RETIRE_ADJUST_PAY_DETAIL.ALLOWANCE_ID%TYPE
+            , W_SOB_ID           IN HRR_RETIRE_ADJUST_PAY_DETAIL.SOB_ID%TYPE
+            , W_ORG_ID           IN HRR_RETIRE_ADJUST_PAY_DETAIL.ORG_ID%TYPE
+            );
+
+---------------------------------------------------------------------------------------------------
+-- 급상여 금액 수정에 따른 총합계 적용.
+  PROCEDURE SUMMARY_ADJUSTMENT_PAYMENT
+            ( W_ADJUSTMENT_ID    IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ADJUSTMENT_ID%TYPE
+            , W_PAY_YYYYMM       IN HRR_RETIRE_ADJUSTMENT_PAYMENT.PAY_YYYYMM%TYPE
+            , W_WAGE_TYPE        IN HRR_RETIRE_ADJUSTMENT_PAYMENT.WAGE_TYPE%TYPE
+            , W_PERSON_ID        IN HRR_RETIRE_ADJUSTMENT_PAYMENT.PERSON_ID%TYPE
+            , W_SOB_ID           IN HRR_RETIRE_ADJUSTMENT_PAYMENT.SOB_ID%TYPE
+            , W_ORG_ID           IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ORG_ID%TYPE
+            , P_USER_ID          IN HRR_RETIRE_ADJUSTMENT_PAYMENT.CREATED_BY%TYPE 
+            );
+
+---------------------------------------------------------------------------------------------------
+--                  퇴 직 금 정 산 내 역
+---------------------------------------------------------------------------------------------------
+ PROCEDURE SELECT_ADJUSTMENT_LIST
+              ( P_CURSOR                            OUT TYPES.TCURSOR
+              , W_CORP_ID                           IN HRR_RETIRE_ADJUSTMENT.CORP_ID%TYPE
+              , W_START_DATE                        IN DATE
+              , W_END_DATE                          IN DATE
+              , W_PERSON_ID                         IN HRR_RETIRE_ADJUSTMENT.PERSON_ID%TYPE
+              , W_DEPT_ID                           IN HRM_PERSON_MASTER.DEPT_ID%TYPE
+              , W_PAY_GRADE_ID                      IN HRM_PERSON_MASTER.PAY_GRADE_ID%TYPE           
+              , W_ADJUSTMENT_TYPE                   IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_TYPE%TYPE
+              , W_CLOSED_DATE_YN                    IN VARCHAR2
+              , W_SOB_ID                            IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+              , W_ORG_ID                            IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+              );
+              
+---------------------------------------------------------------------------------------------------
+-- 해당 퇴직정산에 대해 마감 여부 체크.
+  FUNCTION  CLOSE_CHECK_F
+            ( W_ADJUSTMENT_ID     IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+            ) RETURN VARCHAR2;
+
+---------------------------------------------------------------------------------------------------
+-- 퇴직금정산내역(REPORT).           
+  PROCEDURE SELECT_RETIRE_LIST
+              ( P_CURSOR                            OUT TYPES.TCURSOR
+              , W_ADJUSTMENT_ID                     IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+              , W_CORP_ID                           IN HRR_RETIRE_ADJUSTMENT.CORP_ID%TYPE
+              , W_PERSON_ID                         IN HRR_RETIRE_ADJUSTMENT.PERSON_ID%TYPE
+              , W_DEPT_ID                           IN HRM_PERSON_MASTER.DEPT_ID%TYPE
+              , W_PAY_GRADE_ID                      IN HRM_PERSON_MASTER.PAY_GRADE_ID%TYPE           
+              , W_ADJUSTMENT_TYPE                   IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_TYPE%TYPE
+              , W_SOB_ID                            IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+              , W_ORG_ID                            IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+              );
+
+-- 퇴직금정산내역(REPORT) : 급여 상세 내역.
+  PROCEDURE SELECT_RETIRE_PAYMENT_DETAIL
+              ( P_CURSOR1                           OUT TYPES.TCURSOR1
+              , W_ADJUSTMENT_ID                     IN NUMBER
+              , W_PAY_YYYYMM                        IN VARCHAR2
+              , W_SOB_ID                            IN NUMBER
+              , W_ORG_ID                            IN NUMBER
+              );
+
+-- 퇴직금정산내역(REPORT) : 급여 상세 내역 합계.
+  PROCEDURE SELECT_RETIRE_PAYMENT_SUM
+              ( P_CURSOR2                           OUT TYPES.TCURSOR2
+              , W_ADJUSTMENT_ID                     IN NUMBER
+              , W_SOB_ID                            IN NUMBER
+              , W_ORG_ID                            IN NUMBER
+              );
+                                          
+---------------------------------------------------------------------------------------------------
+-- 퇴직소득원천징수영수증/지급조서(REPORT)
+  PROCEDURE SELECT_RETIRE_WITHHOLDING_TAX
+              ( P_CURSOR                            OUT TYPES.TCURSOR
+              , W_ADJUSTMENT_ID                     IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+              , W_CORP_ID                           IN HRR_RETIRE_ADJUSTMENT.CORP_ID%TYPE
+              , W_PERSON_ID                         IN HRR_RETIRE_ADJUSTMENT.PERSON_ID%TYPE
+              , W_DEPT_ID                           IN HRM_PERSON_MASTER.DEPT_ID%TYPE
+              , W_PAY_GRADE_ID                      IN HRM_PERSON_MASTER.PAY_GRADE_ID%TYPE           
+              , W_ADJUSTMENT_TYPE                   IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_TYPE%TYPE
+              , W_SOB_ID                            IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+              , W_ORG_ID                            IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+              );
+              
+---------------------------------------------------------------------------------------------------
+-- 퇴직금정산내역 출력(GRID).           
+  PROCEDURE SELECT_RETIRE_AD_PRINT
+              ( P_CURSOR                            OUT TYPES.TCURSOR
+              , W_ADJUSTMENT_ID                     IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+              , W_CORP_ID                           IN HRR_RETIRE_ADJUSTMENT.CORP_ID%TYPE
+              , W_START_DATE                        IN DATE
+              , W_END_DATE                          IN DATE
+              , W_PERSON_ID                         IN HRR_RETIRE_ADJUSTMENT.PERSON_ID%TYPE
+              , W_DEPT_ID                           IN HRM_PERSON_MASTER.DEPT_ID%TYPE
+              , W_PAY_GRADE_ID                      IN HRM_PERSON_MASTER.PAY_GRADE_ID%TYPE           
+              , W_ADJUSTMENT_TYPE                   IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_TYPE%TYPE
+              , W_SOB_ID                            IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+              , W_ORG_ID                            IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+              );
+
+---------------------------------------------------------------------------------------------------
+-- 퇴직소득원천징수영수증/지급조서 REPORT 2013년 --신상희 추가
+--------------------------------------------------------------------------------------------------
+  PROCEDURE PRINT_RETIRE_TAX_2013
+              ( P_CURSOR                            OUT TYPES.TCURSOR
+              , W_ADJUSTMENT_ID                     IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+              , W_CORP_ID                           IN HRR_RETIRE_ADJUSTMENT.CORP_ID%TYPE
+              , W_PERSON_ID                         IN HRR_RETIRE_ADJUSTMENT.PERSON_ID%TYPE
+              , W_DEPT_ID                           IN HRM_PERSON_MASTER.DEPT_ID%TYPE
+              , W_PAY_GRADE_ID                      IN HRM_PERSON_MASTER.PAY_GRADE_ID%TYPE           
+              , W_ADJUSTMENT_TYPE                   IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_TYPE%TYPE
+              , W_SOB_ID                            IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+              , W_ORG_ID                            IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+              );
+              
+END HRR_RETIRE_ADJUSTMENT_G;
+/
+CREATE OR REPLACE PACKAGE BODY HRR_RETIRE_ADJUSTMENT_G
+AS
+/******************************************************************************/
+/* PROJECT      : FPCB ERP
+/* MODULE       : EAPP
+/* PROGRAM NAME : HRR_RETIRE_STANDARD_G
+/* DESCRIPTION  : 퇴직정산 내역 조회.
+/* REFERENCE BY :
+/* PROGRAM HISTORY : 신규 생성
+/*------------------------------------------------------------------------------
+/*   DATE       IN CHARGE          DESCRIPTION
+/*------------------------------------------------------------------------------
+/* 20-JUN-2010  JEON HO SU          INITIALIZE
+/******************************************************************************/
+-- 퇴직정산 대상자 조회.
+   PROCEDURE SELECT_RETIRE_PERSON
+           ( P_CURSOR                            OUT TYPES.TCURSOR
+           , W_CORP_ID                           IN HRR_RETIRE_ADJUSTMENT.CORP_ID%TYPE
+           , W_ADJUSTMENT_TYPE                   IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_TYPE%TYPE
+           , W_PAY_GRADE_ID                      IN HRM_PERSON_MASTER.PAY_GRADE_ID%TYPE
+           , W_DEPT_ID                           IN HRM_PERSON_MASTER.DEPT_ID%TYPE
+           , W_PERSON_ID                         IN HRR_RETIRE_ADJUSTMENT.PERSON_ID%TYPE
+           , W_SOB_ID                            IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+           , W_ORG_ID                            IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+           )
+
+   AS
+
+   BEGIN
+             OPEN P_CURSOR FOR
+             SELECT HRM_DEPT_MASTER_G.DEPT_NAME_F(PM.DEPT_ID) AS DEPT_NAME
+                  , HRM_COMMON_G.ID_NAME_F(PM.POST_ID) AS POST_NAME
+                  , PM.NAME
+                  , HRM_COMMON_G.CODE_NAME_F('EMPLOYE_TYPE', PM.EMPLOYE_TYPE, PM.SOB_ID, PM.ORG_ID) AS EMPLOYE_TYPE_NAME
+                  , PM.ORI_JOIN_DATE
+                  , PM.JOIN_DATE
+                  , PM.EXPIRE_DATE
+                  , PM.RETIRE_DATE
+                  , PM.DISPLAY_NAME
+                  , PM.PERSON_ID 
+                  , PM.CORP_ID
+                  , NVL(T1.ADJUST_COUNT, 0) AS ADJUST_COUNT
+                  , PM.DEPT_ID
+                  , PM.PAY_GRADE_ID
+               FROM HRM_PERSON_MASTER PM
+                  , ( SELECT RA.PERSON_ID
+                           , COUNT(RA.ADJUSTMENT_TYPE) AS ADJUST_COUNT
+                        FROM HRR_RETIRE_ADJUSTMENT RA
+                       WHERE RA.ADJUSTMENT_TYPE    = W_ADJUSTMENT_TYPE
+                         AND RA.CORP_ID            = W_CORP_ID
+                    GROUP BY RA.PERSON_ID
+                    ) T1
+              WHERE PM.PERSON_ID     =  T1.PERSON_ID(+)
+                AND PM.CORP_ID       =  W_CORP_ID
+                AND PM.PERSON_ID     =  NVL(W_PERSON_ID, PM.PERSON_ID)
+                AND PM.DEPT_ID       =  NVL(W_DEPT_ID, PM.DEPT_ID)
+                AND PM.PAY_GRADE_ID  =  NVL(W_PAY_GRADE_ID, PM.PAY_GRADE_ID)
+                AND PM.SOB_ID        =  W_SOB_ID
+                AND PM.ORG_ID        =  W_ORG_ID
+                AND(PM.EMPLOYE_TYPE  =  DECODE(W_ADJUSTMENT_TYPE, 'R', '3', '1')
+                 OR PM.EMPLOYE_TYPE  =  DECODE(W_ADJUSTMENT_TYPE, 'R', '3', '2'))
+           ORDER BY PM.DEPT_ID
+                  , PM.POST_ID
+                  , PM.PERSON_ID
+                  ;  
+  
+   END SELECT_RETIRE_PERSON;
+  
+-- SELECT_RETIRE_ADJUSTMENT
+  PROCEDURE SELECT_RETIRE_ADJUSTMENT
+            ( P_CURSOR                            OUT TYPES.TCURSOR
+            , W_CORP_ID                           IN HRR_RETIRE_ADJUSTMENT.CORP_ID%TYPE
+            , W_ADJUSTMENT_TYPE                   IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_TYPE%TYPE
+            , W_DEPT_ID                           IN HRM_DEPT_MASTER.DEPT_ID%TYPE
+            , W_PAY_GRADE_ID                      IN HRM_COMMON.COMMON_ID%TYPE
+            , W_PERSON_ID                         IN HRR_RETIRE_ADJUSTMENT.PERSON_ID%TYPE
+            , W_SOB_ID                            IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+            , W_ORG_ID                            IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+            )
+  AS
+  BEGIN
+    OPEN P_CURSOR FOR
+      SELECT ROWNUM AS ROW_NUM
+           , RA.ADJUSTMENT_ID
+           , RA.ADJUSTMENT_TYPE
+           , RA.PERSON_ID
+           , RA.CORP_ID
+           , RA.RETIRE_DATE_FR
+           , RA.RETIRE_DATE_TO
+           , RA.TOTAL_PAY_AMOUNT
+           , RA.TOTAL_BONUS_AMOUNT
+           , RA.YEAR_ALLOWANCE_AMOUNT
+           , RA.LONG_YEAR
+           , RA.LONG_MONTH
+           , RA.LONG_DAY
+           , TRUNC(NVL(RA.TOTAL_PAY_AMOUNT, 0) + ((NVL(RA.TOTAL_BONUS_AMOUNT, 0) +  NVL(RA.YEAR_ALLOWANCE_AMOUNT, 0)) / 4)) AS PAY_SUM_AMOUNT
+           , RA.DAY_3RD_COUNT
+           , RA.DAY_AVG_AMOUNT
+           , RA.DED_DAY
+           , RA.DED_DAY_DESCRIPTION
+           , RA.RETIRE_AMOUNT
+           , RA.GLORY_AMOUNT
+           , RA.GLORY_DESCRIPTION
+           , RA.ETC_SUPP_AMOUNT
+           , RA.ETC_SUPP_DESCRIPTION
+           , RA.RETIRE_TOTAL_AMOUNT
+           , RA.INCOME_DED_AMOUNT
+           , RA.LONG_DED_AMOUNT
+           , NVL(RA.INCOME_DED_AMOUNT, 0) + NVL(RA.LONG_DED_AMOUNT, 0) AS DED_SUM_AMOUNT
+           , RA.TAX_STD_AMOUNT
+           , RA.AVG_TAX_STD_AMOUNT           
+           , RA.AVG_COMP_TAX_AMOUNT
+           , CASE
+               WHEN RA.ADJUSTMENT_YYYY < '2016' THEN RA.AVG_COMP_TAX_AMOUNT
+               ELSE RA.CHG_COMP_TAX_AMOUNT_3
+             END AS CHG_COMP_TAX_AMOUNT_3 
+           , CASE
+               WHEN RA.ADJUSTMENT_YYYY < '2016' THEN RA.COMP_TAX_AMOUNT
+               ELSE RA.REAL_COMP_TAX_AMOUNT_3
+             END AS COMP_TAX_AMOUNT 
+           , RA.TAX_DED_AMOUNT
+           , CASE
+               WHEN RA.ADJUSTMENT_YYYY < '2016' THEN RA.INCOME_TAX_AMOUNT 
+               ELSE RA.INCOME_TAX_AMOUNT_3 
+             END AS INCOME_TAX_AMOUNT
+           , CASE
+               WHEN RA.ADJUSTMENT_YYYY < '2016' THEN RA.RESIDENT_TAX_AMOUNT 
+               ELSE RA.RESIDENT_TAX_AMOUNT_3
+             END AS RESIDENT_TAX_AMOUNT
+           , CASE
+               WHEN RA.ADJUSTMENT_YYYY < '2016' THEN RA.SP_TAX_AMOUNT 
+               ELSE RA.SP_TAX_AMOUNT_3 
+             END AS SP_TAX_AMOUNT 
+           , RA.RETIRE_CVS_AMOUNT
+           , RA.ETC_DED_AMOUNT
+           , RA.ETC_DED_DESCRIPTION
+           , RA.REAL_AMOUNT
+           , RA.HONORARY_AMOUNT
+           , RA.HONORARY_DESCRIPTION
+           , RA.H_LONG_YEAR
+           , RA.H_INCOME_DED_AMOUNT
+           , RA.H_LONG_DED_AMOUNT
+           , NVL(RA.H_INCOME_DED_AMOUNT, 0) + NVL(RA.H_LONG_DED_AMOUNT, 0) AS H_DED_SUM_AMOUNT
+           , RA.H_TAX_STD_AMOUNT
+           , RA.H_AVG_TAX_STD_AMOUNT
+           , RA.H_AVG_COMP_TAX_AMOUNT
+           , RA.H_COMP_TAX_AMOUNT
+           , RA.H_TAX_DED_AMOUNT
+           , RA.H_INCOME_TAX_AMOUNT AS H_INCOME_TAX_AMOUNT 
+           , RA.H_RESIDENT_TAX_AMOUNT AS H_RESIDENT_TAX_AMOUNT 
+           , RA.H_SP_TAX_AMOUNT AS H_SP_TAX_AMOUNT 
+           , RA.H_REAL_AMOUNT
+           , RA.REAL_TOTAL_AMOUNT
+           , RA.CLOSED_YN
+           , RA.CLOSED_DATE
+           , HRM_PERSON_MASTER_G.NAME_F(RA.CLOSED_PERSON_ID) AS CLOSED_PERSON
+           , RA.DESCRIPTION
+           , RA.HEALTH_INSUR_AMOUNT
+           , RA.PAY_DATE_TO
+           , HRP.ACCOUNT_NUM
+        FROM HRR_RETIRE_ADJUSTMENT RA
+           , HRM_PERSON_MASTER PM
+           , HRR_RETIREMENT_PENSION HRP
+       WHERE RA.PERSON_ID               = PM.PERSON_ID
+         AND RA.PERSON_ID               = W_PERSON_ID
+         AND RA.CORP_ID                 = W_CORP_ID
+         AND RA.ADJUSTMENT_TYPE         = W_ADJUSTMENT_TYPE
+         AND PM.DEPT_ID                 = NVL(W_DEPT_ID, PM.DEPT_ID)
+         AND PM.PAY_GRADE_ID            = NVL(W_PAY_GRADE_ID, PM.PAY_GRADE_ID)
+         AND PM.PERSON_ID               = HRP.PERSON_ID(+)
+         AND PM.SOB_ID                  = W_SOB_ID
+         AND PM.ORG_ID                  = W_ORG_ID
+      ORDER BY RA.ADJUSTMENT_ID DESC
+      ;
+
+  END SELECT_RETIRE_ADJUSTMENT;
+
+-- 퇴직정산 지급 처리 조회.
+  PROCEDURE SELECT_RETIRE_CLOSED_YN
+            ( P_CURSOR2                           OUT TYPES.TCURSOR2
+            , W_ADJUSTMENT_ID                     IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ADJUSTMENT_ID%TYPE
+            )
+  AS
+  BEGIN
+    OPEN P_CURSOR2 FOR
+      SELECT RA.ADJUSTMENT_ID
+           , RA.CLOSED_YN
+           , RA.CLOSED_DATE
+           , HRM_PERSON_MASTER_G.NAME_F(RA.CLOSED_PERSON_ID) AS CLOSED_PERSON
+        FROM HRR_RETIRE_ADJUSTMENT RA
+       WHERE RA.ADJUSTMENT_ID       = W_ADJUSTMENT_ID
+      ;
+  
+  END SELECT_RETIRE_CLOSED_YN;
+  
+-- 퇴직정산 급상여 내역 조회.
+  PROCEDURE SELECT_RETIRE_PAYMENT
+            ( P_CURSOR2                           OUT TYPES.TCURSOR2
+            , W_ADJUSTMENT_ID                     IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ADJUSTMENT_ID%TYPE
+            , W_WAGE_TYPE                         IN HRR_RETIRE_ADJUSTMENT_PAYMENT.WAGE_TYPE%TYPE
+            )
+  AS
+  BEGIN
+    OPEN P_CURSOR2 FOR
+      SELECT RAP.ADJUSTMENT_ID
+           , RAP.PAY_YYYYMM
+           , RAP.WAGE_TYPE
+           , HRM_COMMON_G.CODE_NAME_F('CLOSING_TYPE', RAP.WAGE_TYPE, RA.SOB_ID, RA.ORG_ID) AS WAGE_TYPE_NAME
+           , RAP.TOTAL_AMOUNT
+        FROM HRR_RETIRE_ADJUSTMENT_PAYMENT RAP
+          , HRR_RETIRE_ADJUSTMENT RA
+       WHERE RAP.ADJUSTMENT_ID          = RA.ADJUSTMENT_ID
+         AND RAP.ADJUSTMENT_ID          = W_ADJUSTMENT_ID
+         AND (RAP.WAGE_TYPE             = W_WAGE_TYPE
+         OR (W_WAGE_TYPE                = 'P2'
+         AND RAP.WAGE_TYPE              IN('P3', 'P5')))
+       ORDER BY RAP.PAY_YYYYMM DESC
+       ;
+  
+  END SELECT_RETIRE_PAYMENT;
+
+-- 퇴직정산 급상여 상세 내역 조회.
+  PROCEDURE SELECT_RETIRE_PAY_DETAIL
+            ( P_CURSOR2                           OUT TYPES.TCURSOR2
+            , W_ADJUSTMENT_ID                     IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ADJUSTMENT_ID%TYPE
+            , W_WAGE_TYPE                         IN HRR_RETIRE_ADJUSTMENT_PAYMENT.WAGE_TYPE%TYPE
+            )
+  AS
+  BEGIN
+    OPEN P_CURSOR2 FOR
+      SELECT RAPD.ADJUSTMENT_ID
+           , RAPD.PAY_YYYYMM
+           , RAPD.WAGE_TYPE
+           , HRM_COMMON_G.CODE_NAME_F('CLOSING_TYPE', RAPD.WAGE_TYPE, RA.SOB_ID, RA.ORG_ID) AS WAGE_TYPE_NAME
+           , RAPD.ALLOWANCE_ID
+           , HRM_COMMON_G.ID_NAME_F(RAPD.ALLOWANCE_ID) AS ALLOWANCE_NAME
+           , RAPD.ALLOWANCE_AMOUNT     
+        FROM HRR_RETIRE_ADJUST_PAY_DETAIL RAPD
+          , HRM_ALLOWANCE_V HA
+          , HRR_RETIRE_ADJUSTMENT RA
+       WHERE RAPD.ALLOWANCE_ID          = HA.ALLOWANCE_ID
+         AND RAPD.ADJUSTMENT_ID         = RA.ADJUSTMENT_ID
+         AND RAPD.ADJUSTMENT_ID         = W_ADJUSTMENT_ID
+         AND (RAPD.WAGE_TYPE            = W_WAGE_TYPE
+         OR (W_WAGE_TYPE                = 'P2'
+         AND RAPD.WAGE_TYPE             IN('P3', 'P5')))
+       ORDER BY RAPD.PAY_YYYYMM DESC, HA.SORT_NUM
+       ;  
+  
+  END SELECT_RETIRE_PAY_DETAIL;
+
+-- 퇴직정산 급여 산정 기간 조회.
+  PROCEDURE SELECT_RETIRE_PAY_PERIOD
+            ( P_CURSOR3                           OUT TYPES.TCURSOR2
+            , W_ADJUSTMENT_ID                     IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ADJUSTMENT_ID%TYPE
+            , W_WAGE_TYPE                         IN HRR_RETIRE_ADJUSTMENT_PAYMENT.WAGE_TYPE%TYPE
+            )
+  AS
+  BEGIN
+    OPEN P_CURSOR3 FOR
+      SELECT RAP.PAY_YYYYMM
+           , RAP.START_DATE
+           , RAP.END_DATE
+           , HRM_COMMON_DATE_G.PERIOD_DAY_F(RAP.START_DATE, RAP.END_DATE, 1) AS DAY_COUNT
+           , RAP.TOTAL_AMOUNT
+           , HRM_COMMON_G.CODE_NAME_F('CLOSING_TYPE', RAP.WAGE_TYPE, RAP.SOB_ID, RAP.ORG_ID) AS WAGE_TYPE_DESC
+           , RAP.WAGE_TYPE
+           , RAP.ADJUSTMENT_ID
+           , RAP.PAY_YYYYMM AS OLD_PAY_YYYYMM
+        FROM HRR_RETIRE_ADJUSTMENT_PAYMENT RAP
+      WHERE RAP.ADJUSTMENT_ID           = W_ADJUSTMENT_ID
+        AND RAP.WAGE_TYPE               = W_WAGE_TYPE
+      ORDER BY RAP.PAY_YYYYMM DESC
+      ;
+  END SELECT_RETIRE_PAY_PERIOD;
+  
+---------------------------------------------------------------------------------------------------
+-- 퇴직정산 내역 삽입.
+  PROCEDURE INSERT_RETIRE_ADJUSTMENT
+          ( P_ADJUSTMENT_ID         OUT HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+          , P_ADJUSTMENT_TYPE       IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_TYPE%TYPE          
+          , P_PERSON_ID             IN HRR_RETIRE_ADJUSTMENT.PERSON_ID%TYPE
+          , P_CORP_ID               IN HRR_RETIRE_ADJUSTMENT.CORP_ID%TYPE
+          , P_RETIRE_DATE_FR        IN HRR_RETIRE_ADJUSTMENT.RETIRE_DATE_FR%TYPE
+          , P_RETIRE_DATE_TO        IN HRR_RETIRE_ADJUSTMENT.RETIRE_DATE_TO%TYPE
+          , P_PAY_DATE_TO           IN HRR_RETIRE_ADJUSTMENT.PAY_DATE_TO%TYPE
+          , P_SOB_ID                IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+          , P_ORG_ID                IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+          , P_USER_ID               IN HRR_RETIRE_ADJUSTMENT.CREATED_BY%TYPE 
+          )
+  AS
+    V_SYSDATE DATE := GET_LOCAL_DATE(P_SOB_ID);
+    V_ADJUSTMENT_YYYY       HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_YYYY%TYPE;
+    
+  BEGIN
+    V_ADJUSTMENT_YYYY := TO_CHAR(P_RETIRE_DATE_TO, 'YYYY');
+    
+    SELECT HRR_RETIRE_ADJUSTMENT_S1.NEXTVAL
+      INTO P_ADJUSTMENT_ID
+      FROM DUAL;
+
+    INSERT INTO HRR_RETIRE_ADJUSTMENT
+    ( ADJUSTMENT_ID
+    , ADJUSTMENT_TYPE 
+    , ADJUSTMENT_YYYY 
+    , PERSON_ID 
+    , CORP_ID 
+    , RETIRE_DATE_FR 
+    , RETIRE_DATE_TO 
+    , SOB_ID 
+    , ORG_ID 
+    , CREATION_DATE 
+    , CREATED_BY 
+    , LAST_UPDATE_DATE 
+    , LAST_UPDATED_BY
+    , PAY_DATE_TO )
+    VALUES
+    ( P_ADJUSTMENT_ID
+    , P_ADJUSTMENT_TYPE
+    , V_ADJUSTMENT_YYYY
+    , P_PERSON_ID
+    , P_CORP_ID
+    , P_RETIRE_DATE_FR
+    , P_RETIRE_DATE_TO    
+    , P_SOB_ID
+    , P_ORG_ID
+    , V_SYSDATE
+    , P_USER_ID
+    , V_SYSDATE
+    , P_USER_ID
+    , P_PAY_DATE_TO );  
+  
+  END INSERT_RETIRE_ADJUSTMENT;
+  
+-- 퇴직정산 내역 수정.
+  PROCEDURE UPDATE_RETIRE_ADJUSTMENT
+            ( W_ADJUSTMENT_ID         IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+            , P_TOTAL_PAY_AMOUNT      IN HRR_RETIRE_ADJUSTMENT.TOTAL_PAY_AMOUNT%TYPE
+            , P_TOTAL_BONUS_AMOUNT    IN HRR_RETIRE_ADJUSTMENT.TOTAL_BONUS_AMOUNT%TYPE
+            , P_YEAR_ALLOWANCE_AMOUNT IN HRR_RETIRE_ADJUSTMENT.YEAR_ALLOWANCE_AMOUNT%TYPE
+            , P_LONG_YEAR             IN HRR_RETIRE_ADJUSTMENT.LONG_YEAR%TYPE
+            , P_LONG_MONTH            IN HRR_RETIRE_ADJUSTMENT.LONG_MONTH%TYPE
+            , P_LONG_DAY              IN HRR_RETIRE_ADJUSTMENT.LONG_DAY%TYPE
+            , P_DAY_3RD_COUNT         IN HRR_RETIRE_ADJUSTMENT.DAY_3RD_COUNT%TYPE
+            , P_DAY_AVG_AMOUNT        IN HRR_RETIRE_ADJUSTMENT.DAY_AVG_AMOUNT%TYPE
+            , P_DED_DAY               IN HRR_RETIRE_ADJUSTMENT.DED_DAY%TYPE
+            , P_DED_DAY_DESCRIPTION   IN HRR_RETIRE_ADJUSTMENT.DED_DAY_DESCRIPTION%TYPE
+            , P_RETIRE_AMOUNT         IN HRR_RETIRE_ADJUSTMENT.RETIRE_AMOUNT%TYPE
+            , P_GLORY_AMOUNT          IN HRR_RETIRE_ADJUSTMENT.GLORY_AMOUNT%TYPE
+            , P_GLORY_DESCRIPTION     IN HRR_RETIRE_ADJUSTMENT.GLORY_DESCRIPTION%TYPE
+            , P_ETC_SUPP_AMOUNT       IN HRR_RETIRE_ADJUSTMENT.ETC_SUPP_AMOUNT%TYPE
+            , P_ETC_SUPP_DESCRIPTION  IN HRR_RETIRE_ADJUSTMENT.ETC_SUPP_DESCRIPTION%TYPE
+            , P_RETIRE_TOTAL_AMOUNT   IN HRR_RETIRE_ADJUSTMENT.RETIRE_TOTAL_AMOUNT%TYPE
+            , P_INCOME_DED_AMOUNT     IN HRR_RETIRE_ADJUSTMENT.INCOME_DED_AMOUNT%TYPE
+            , P_LONG_DED_AMOUNT       IN HRR_RETIRE_ADJUSTMENT.LONG_DED_AMOUNT%TYPE
+            , P_TAX_STD_AMOUNT        IN HRR_RETIRE_ADJUSTMENT.TAX_STD_AMOUNT%TYPE
+            , P_AVG_TAX_STD_AMOUNT    IN HRR_RETIRE_ADJUSTMENT.AVG_TAX_STD_AMOUNT%TYPE
+            , P_AVG_COMP_TAX_AMOUNT   IN HRR_RETIRE_ADJUSTMENT.AVG_COMP_TAX_AMOUNT%TYPE
+            , P_COMP_TAX_AMOUNT       IN HRR_RETIRE_ADJUSTMENT.COMP_TAX_AMOUNT%TYPE
+            , P_TAX_DED_AMOUNT        IN HRR_RETIRE_ADJUSTMENT.TAX_DED_AMOUNT%TYPE
+            , P_INCOME_TAX_AMOUNT     IN HRR_RETIRE_ADJUSTMENT.INCOME_TAX_AMOUNT%TYPE
+            , P_RESIDENT_TAX_AMOUNT   IN HRR_RETIRE_ADJUSTMENT.RESIDENT_TAX_AMOUNT%TYPE
+            , P_SP_TAX_AMOUNT         IN HRR_RETIRE_ADJUSTMENT.SP_TAX_AMOUNT%TYPE
+            , P_RETIRE_CVS_AMOUNT     IN HRR_RETIRE_ADJUSTMENT.RETIRE_CVS_AMOUNT%TYPE
+            , P_ETC_DED_AMOUNT        IN HRR_RETIRE_ADJUSTMENT.ETC_DED_AMOUNT%TYPE
+            , P_ETC_DED_DESCRIPTION   IN HRR_RETIRE_ADJUSTMENT.ETC_DED_DESCRIPTION%TYPE
+            , P_REAL_AMOUNT           IN HRR_RETIRE_ADJUSTMENT.REAL_AMOUNT%TYPE
+            , P_HONORARY_AMOUNT       IN HRR_RETIRE_ADJUSTMENT.HONORARY_AMOUNT%TYPE
+            , P_HONORARY_DESCRIPTION  IN HRR_RETIRE_ADJUSTMENT.HONORARY_DESCRIPTION%TYPE
+            , P_H_INCOME_DED_AMOUNT   IN HRR_RETIRE_ADJUSTMENT.H_INCOME_DED_AMOUNT%TYPE
+            , P_H_LONG_DED_AMOUNT     IN HRR_RETIRE_ADJUSTMENT.H_LONG_DED_AMOUNT%TYPE
+            , P_H_TAX_STD_AMOUNT      IN HRR_RETIRE_ADJUSTMENT.H_TAX_STD_AMOUNT%TYPE
+            , P_H_AVG_TAX_STD_AMOUNT  IN HRR_RETIRE_ADJUSTMENT.H_AVG_TAX_STD_AMOUNT%TYPE
+            , P_H_AVG_COMP_TAX_AMOUNT IN HRR_RETIRE_ADJUSTMENT.H_AVG_COMP_TAX_AMOUNT%TYPE
+            , P_H_COMP_TAX_AMOUNT     IN HRR_RETIRE_ADJUSTMENT.H_COMP_TAX_AMOUNT%TYPE
+            , P_H_TAX_DED_AMOUNT      IN HRR_RETIRE_ADJUSTMENT.H_TAX_DED_AMOUNT%TYPE
+            , P_H_INCOME_TAX_AMOUNT   IN HRR_RETIRE_ADJUSTMENT.H_INCOME_TAX_AMOUNT%TYPE
+            , P_H_RESIDENT_TAX_AMOUNT IN HRR_RETIRE_ADJUSTMENT.H_RESIDENT_TAX_AMOUNT%TYPE
+            , P_H_SP_TAX_AMOUNT       IN HRR_RETIRE_ADJUSTMENT.H_SP_TAX_AMOUNT%TYPE
+            , P_H_REAL_AMOUNT         IN HRR_RETIRE_ADJUSTMENT.H_REAL_AMOUNT%TYPE
+            , P_REAL_TOTAL_AMOUNT     IN HRR_RETIRE_ADJUSTMENT.REAL_TOTAL_AMOUNT%TYPE
+            , P_SOB_ID                IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+            , P_ORG_ID                IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+            , P_USER_ID               IN HRR_RETIRE_ADJUSTMENT.CREATED_BY%TYPE 
+            , P_HEALTH_INSUR_AMOUNT   IN HRR_RETIRE_ADJUSTMENT.HEALTH_INSUR_AMOUNT%TYPE
+            )
+  AS
+    V_SYSDATE                     DATE := GET_LOCAL_DATE(P_SOB_ID);
+
+  BEGIN
+    IF CLOSE_CHECK_F(W_ADJUSTMENT_ID) = 'Y' THEN
+      RAISE_APPLICATION_ERROR(-20001, EAPP_MESSAGE_G.RETURN_TEXT_F(USERENV_G.GET_TERRITORY_S_F, 'FCM_10168', NULL));
+      RETURN;
+    END IF;
+    
+    UPDATE HRR_RETIRE_ADJUSTMENT
+      SET TOTAL_PAY_AMOUNT      = P_TOTAL_PAY_AMOUNT
+        , TOTAL_BONUS_AMOUNT    = P_TOTAL_BONUS_AMOUNT
+        , YEAR_ALLOWANCE_AMOUNT = P_YEAR_ALLOWANCE_AMOUNT
+        , LONG_YEAR             = P_LONG_YEAR
+        , LONG_MONTH            = P_LONG_MONTH
+        , LONG_DAY              = P_LONG_DAY
+        , DAY_3RD_COUNT         = P_DAY_3RD_COUNT
+        , DAY_AVG_AMOUNT        = P_DAY_AVG_AMOUNT
+        , DED_DAY               = P_DED_DAY
+        , DED_DAY_DESCRIPTION   = P_DED_DAY_DESCRIPTION
+        , RETIRE_AMOUNT         = P_RETIRE_AMOUNT
+        , GLORY_AMOUNT          = P_GLORY_AMOUNT
+        , GLORY_DESCRIPTION     = P_GLORY_DESCRIPTION
+        , ETC_SUPP_AMOUNT       = P_ETC_SUPP_AMOUNT
+        , ETC_SUPP_DESCRIPTION  = P_ETC_SUPP_DESCRIPTION
+        , RETIRE_TOTAL_AMOUNT   = P_RETIRE_TOTAL_AMOUNT
+        , INCOME_DED_AMOUNT     = P_INCOME_DED_AMOUNT
+        , LONG_DED_AMOUNT       = P_LONG_DED_AMOUNT
+        , TAX_STD_AMOUNT        = P_TAX_STD_AMOUNT
+        , AVG_TAX_STD_AMOUNT    = P_AVG_TAX_STD_AMOUNT
+        , AVG_COMP_TAX_AMOUNT   = P_AVG_COMP_TAX_AMOUNT
+        , COMP_TAX_AMOUNT       = P_COMP_TAX_AMOUNT
+        , TAX_DED_AMOUNT        = P_TAX_DED_AMOUNT
+        , INCOME_TAX_AMOUNT     = P_INCOME_TAX_AMOUNT
+        , RESIDENT_TAX_AMOUNT   = P_RESIDENT_TAX_AMOUNT
+        , SP_TAX_AMOUNT         = P_SP_TAX_AMOUNT
+        , RETIRE_CVS_AMOUNT     = P_RETIRE_CVS_AMOUNT
+        , ETC_DED_AMOUNT        = P_ETC_DED_AMOUNT
+        , ETC_DED_DESCRIPTION   = P_ETC_DED_DESCRIPTION
+        , REAL_AMOUNT           = P_REAL_AMOUNT
+        , HONORARY_AMOUNT       = P_HONORARY_AMOUNT
+        , HONORARY_DESCRIPTION  = P_HONORARY_DESCRIPTION
+        , H_INCOME_DED_AMOUNT   = P_H_INCOME_DED_AMOUNT
+        , H_LONG_DED_AMOUNT     = P_H_LONG_DED_AMOUNT
+        , H_TAX_STD_AMOUNT      = P_H_TAX_STD_AMOUNT
+        , H_AVG_TAX_STD_AMOUNT  = P_H_AVG_TAX_STD_AMOUNT
+        , H_AVG_COMP_TAX_AMOUNT = P_H_AVG_COMP_TAX_AMOUNT
+        , H_COMP_TAX_AMOUNT     = P_H_COMP_TAX_AMOUNT
+        , H_TAX_DED_AMOUNT      = P_H_TAX_DED_AMOUNT
+        , H_INCOME_TAX_AMOUNT   = P_H_INCOME_TAX_AMOUNT
+        , H_RESIDENT_TAX_AMOUNT = P_H_RESIDENT_TAX_AMOUNT
+        , H_SP_TAX_AMOUNT       = P_H_SP_TAX_AMOUNT
+        , H_REAL_AMOUNT         = P_H_REAL_AMOUNT 
+        , REAL_TOTAL_AMOUNT     = P_REAL_TOTAL_AMOUNT
+        , SOB_ID                = P_SOB_ID
+        , ORG_ID                = P_ORG_ID
+        , LAST_UPDATE_DATE      = V_SYSDATE
+        , LAST_UPDATED_BY       = P_USER_ID
+        , HEALTH_INSUR_AMOUNT   = NVL(P_HEALTH_INSUR_AMOUNT, 0)
+    WHERE ADJUSTMENT_ID         = W_ADJUSTMENT_ID;
+         
+  END UPDATE_RETIRE_ADJUSTMENT;
+
+-- 퇴직정산 내역 삭제.
+  PROCEDURE DELETE_RETIRE_ADJUSTMENT
+            ( W_ADJUSTMENT_ID         IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+            )
+  AS
+  BEGIN
+    IF CLOSE_CHECK_F(W_ADJUSTMENT_ID) = 'Y' THEN
+      RAISE_APPLICATION_ERROR(-20001, EAPP_MESSAGE_G.RETURN_TEXT_F(USERENV_G.GET_TERRITORY_S_F, 'FCM_10168', NULL));
+      RETURN;
+    END IF;
+    -- 급상여 정보 삭제.
+    DELETE HRR_RETIRE_ADJUST_PAY_DETAIL APD
+    WHERE APD.ADJUSTMENT_ID     = W_ADJUSTMENT_ID      
+    ;
+    DELETE HRR_RETIRE_ADJUSTMENT_PAYMENT RAP      
+    WHERE RAP.ADJUSTMENT_ID     = W_ADJUSTMENT_ID
+    ;
+    -- 삭제.
+    DELETE HRR_RETIRE_ADJUSTMENT
+    WHERE ADJUSTMENT_ID         = W_ADJUSTMENT_ID
+    ;
+  END DELETE_RETIRE_ADJUSTMENT;
+
+-- SELECT_RETIRE_ADJUSTMENT : 지급정보.
+  PROCEDURE SELECT_ADJUSTMENT_CLOSED
+            ( P_CURSOR1             OUT TYPES.TCURSOR1
+            , W_ADJUSTMENT_ID       IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+            , W_SOB_ID              IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+            , W_ORG_ID              IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+            )
+  AS
+  BEGIN
+    OPEN P_CURSOR1 FOR
+      SELECT RA.ADJUSTMENT_ID
+           , RA.CLOSED_YN
+           , RA.CLOSED_DATE
+           , HRM_PERSON_MASTER_G.NAME_F(RA.CLOSED_PERSON_ID) AS CLOSED_PERSON
+        FROM HRR_RETIRE_ADJUSTMENT RA
+       WHERE RA.ADJUSTMENT_ID       = W_ADJUSTMENT_ID
+         AND RA.SOB_ID              = W_SOB_ID
+         AND RA.ORG_ID              = W_ORG_ID
+      ;
+  
+  END SELECT_ADJUSTMENT_CLOSED;
+  
+-- 퇴직정산 지급여부 수정.
+  PROCEDURE UPDATE_CLOSED_YN
+            ( W_ADJUSTMENT_ID         IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+            , P_RETIRE_DATE_TO        IN HRR_RETIRE_ADJUSTMENT.RETIRE_DATE_TO%TYPE
+            , P_CLOSED_DATE           IN HRR_RETIRE_ADJUSTMENT.CLOSED_DATE%TYPE
+            , P_CLOSED_PERSON_ID      IN HRR_RETIRE_ADJUSTMENT.CLOSED_PERSON_ID%TYPE
+            , O_CLOSED_YN             OUT HRR_RETIRE_ADJUSTMENT.CLOSED_YN%TYPE
+            )
+  AS
+    V_CLOSED_YN                       CHAR(1) := 'N';
+    V_EXPIRE_DATE                     DATE;
+    V_PERSON_ID                       NUMBER;
+    V_ADJUSTMENT_TYPE                 HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_TYPE%TYPE;
+    
+  BEGIN
+    BEGIN
+      SELECT DECODE(P_CLOSED_DATE, NULL, 'N', 'Y') AS CLOSE_YN
+        INTO V_CLOSED_YN 
+        FROM DUAL
+      ;
+    EXCEPTION WHEN OTHERS THEN
+      V_CLOSED_YN := 'N';
+    END;
+    
+    -- 지급처리.
+    UPDATE HRR_RETIRE_ADJUSTMENT
+      SET CLOSED_YN             = V_CLOSED_YN
+        , CLOSED_DATE           = P_CLOSED_DATE
+        , CLOSED_PERSON_ID      = P_CLOSED_PERSON_ID
+    WHERE ADJUSTMENT_ID         = W_ADJUSTMENT_ID
+    ;
+    BEGIN
+      SELECT RA.PERSON_ID, RA.ADJUSTMENT_TYPE
+        INTO V_PERSON_ID, V_ADJUSTMENT_TYPE
+        FROM HRR_RETIRE_ADJUSTMENT RA
+      WHERE RA.ADJUSTMENT_ID        = W_ADJUSTMENT_ID
+      ;
+    EXCEPTION WHEN OTHERS THEN
+      RETURN;
+    END;
+    
+    IF V_ADJUSTMENT_TYPE = 'M' THEN
+      IF V_CLOSED_YN = 'N' THEN
+        BEGIN
+          SELECT  MAX(RA.RETIRE_DATE_TO) AS LAST_RATIER_DATE_TO
+            INTO V_EXPIRE_DATE
+            FROM HRR_RETIRE_ADJUSTMENT RA
+          WHERE RA.ADJUSTMENT_TYPE    = 'M'
+            AND RA.ADJUSTMENT_ID      != W_ADJUSTMENT_ID
+            AND RA.CLOSED_YN          = 'Y'
+            AND RA.PERSON_ID          = V_PERSON_ID
+          ;
+        EXCEPTION WHEN OTHERS THEN
+          V_EXPIRE_DATE := NULL;  
+        END;
+      ELSE
+        V_EXPIRE_DATE := P_RETIRE_DATE_TO;       
+      END IF;
+      
+      -- 인사마스터 중도정산일자 UPDATE.
+      UPDATE HRM_PERSON_MASTER PM
+        SET PM.EXPIRE_DATE     = V_EXPIRE_DATE
+      WHERE PM.PERSON_ID       = V_PERSON_ID
+      ;
+    END IF;
+    O_CLOSED_YN := V_CLOSED_YN;
+    
+  END UPDATE_CLOSED_YN;
+
+---------------------------------------------------------------------------------------------------
+-- 퇴직정산 급여/상여 내역 삽입.
+  PROCEDURE INSERT_ADJUSTMENT_PAYMENT
+            ( P_ADJUSTMENT_ID    IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ADJUSTMENT_ID%TYPE
+            , P_PAY_YYYYMM       IN HRR_RETIRE_ADJUSTMENT_PAYMENT.PAY_YYYYMM%TYPE
+            , P_WAGE_TYPE        IN HRR_RETIRE_ADJUSTMENT_PAYMENT.WAGE_TYPE%TYPE
+            , P_TOTAL_AMOUNT     IN HRR_RETIRE_ADJUSTMENT_PAYMENT.TOTAL_AMOUNT%TYPE
+            , P_MODIFY_PERSON_ID IN HRR_RETIRE_ADJUSTMENT_PAYMENT.MODIFY_PERSON_ID%TYPE
+            , P_PERSON_ID        IN HRR_RETIRE_ADJUSTMENT_PAYMENT.PERSON_ID%TYPE
+            , P_CORP_ID          IN HRR_RETIRE_ADJUSTMENT_PAYMENT.CORP_ID%TYPE
+            , P_SOB_ID           IN HRR_RETIRE_ADJUSTMENT_PAYMENT.SOB_ID%TYPE
+            , P_ORG_ID           IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ORG_ID%TYPE
+            , P_USER_ID          IN HRR_RETIRE_ADJUSTMENT_PAYMENT.CREATED_BY%TYPE
+            )
+  AS
+    V_SYSDATE DATE := GET_LOCAL_DATE(P_SOB_ID);
+    
+  BEGIN
+    IF CLOSE_CHECK_F(P_ADJUSTMENT_ID) = 'Y' THEN
+      RAISE_APPLICATION_ERROR(-20001, EAPP_MESSAGE_G.RETURN_TEXT_F(USERENV_G.GET_TERRITORY_S_F, 'FCM_10168', NULL));
+      RETURN;
+    END IF;
+    
+    INSERT INTO HRR_RETIRE_ADJUSTMENT_PAYMENT
+    ( ADJUSTMENT_ID
+    , PAY_YYYYMM 
+    , WAGE_TYPE 
+    , TOTAL_AMOUNT 
+    , MODIFY_YN 
+    , MODIFY_DATE 
+    , MODIFY_PERSON_ID 
+    , PERSON_ID 
+    , CORP_ID 
+    , SOB_ID 
+    , ORG_ID 
+    , CREATION_DATE 
+    , CREATED_BY 
+    , LAST_UPDATE_DATE 
+    , LAST_UPDATED_BY )
+    VALUES
+    ( P_ADJUSTMENT_ID
+    , P_PAY_YYYYMM
+    , P_WAGE_TYPE
+    , P_TOTAL_AMOUNT
+    , 'Y'
+    , V_SYSDATE
+    , P_MODIFY_PERSON_ID
+    , P_PERSON_ID
+    , P_CORP_ID
+    , P_SOB_ID
+    , P_ORG_ID
+    , V_SYSDATE
+    , P_USER_ID
+    , V_SYSDATE
+    , P_USER_ID );
+  
+  
+  END INSERT_ADJUSTMENT_PAYMENT;
+            
+-- 퇴직정산 급여/상여 내역 수정.
+  PROCEDURE UPDATE_ADJUSTMENT_PAYMENT
+            ( W_ADJUSTMENT_ID    IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ADJUSTMENT_ID%TYPE
+            , W_PAY_YYYYMM       IN HRR_RETIRE_ADJUSTMENT_PAYMENT.PAY_YYYYMM%TYPE
+            , W_WAGE_TYPE        IN HRR_RETIRE_ADJUSTMENT_PAYMENT.WAGE_TYPE%TYPE
+            , P_TOTAL_AMOUNT     IN HRR_RETIRE_ADJUSTMENT_PAYMENT.TOTAL_AMOUNT%TYPE
+            , P_MODIFY_PERSON_ID IN HRR_RETIRE_ADJUSTMENT_PAYMENT.MODIFY_PERSON_ID%TYPE
+            , P_SOB_ID           IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+            , P_USER_ID          IN HRR_RETIRE_ADJUSTMENT_PAYMENT.CREATED_BY%TYPE 
+            )
+  AS
+    V_SYSDATE DATE := GET_LOCAL_DATE(P_SOB_ID);
+  BEGIN
+    IF CLOSE_CHECK_F(W_ADJUSTMENT_ID) = 'Y' THEN
+      RAISE_APPLICATION_ERROR(-20001, EAPP_MESSAGE_G.RETURN_TEXT_F(USERENV_G.GET_TERRITORY_S_F, 'FCM_10168', NULL));
+      RETURN;
+    END IF;
+    
+    UPDATE HRR_RETIRE_ADJUSTMENT_PAYMENT
+      SET TOTAL_AMOUNT     = P_TOTAL_AMOUNT
+        , MODIFY_YN        = 'Y'
+        , MODIFY_DATE      = V_SYSDATE
+        , MODIFY_PERSON_ID = P_MODIFY_PERSON_ID
+        , LAST_UPDATE_DATE = V_SYSDATE
+        , LAST_UPDATED_BY  = P_USER_ID
+    WHERE ADJUSTMENT_ID    = W_ADJUSTMENT_ID
+      AND PAY_YYYYMM       = W_PAY_YYYYMM
+      AND WAGE_TYPE        = W_WAGE_TYPE
+    ;
+
+  END UPDATE_ADJUSTMENT_PAYMENT;
+
+---------------------------------------------------------------------------------------------------
+-- 급상여 지급기간 변경.
+  PROCEDURE UPDATE_PAY_PERIOD
+            ( W_ADJUSTMENT_ID    IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ADJUSTMENT_ID%TYPE
+            , W_PAY_YYYYMM       IN HRR_RETIRE_ADJUSTMENT_PAYMENT.PAY_YYYYMM%TYPE
+            , W_WAGE_TYPE        IN HRR_RETIRE_ADJUSTMENT_PAYMENT.WAGE_TYPE%TYPE
+            , P_NEW_PAY_YYYYMM   IN HRR_RETIRE_ADJUSTMENT_PAYMENT.PAY_YYYYMM%TYPE
+            , P_START_DATE       IN HRR_RETIRE_ADJUSTMENT_PAYMENT.START_DATE%TYPE
+            , P_END_DATE         IN HRR_RETIRE_ADJUSTMENT_PAYMENT.END_DATE%TYPE
+            , P_SOB_ID           IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+            , P_ORG_ID           IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+            , P_USER_ID          IN HRR_RETIRE_ADJUSTMENT_PAYMENT.CREATED_BY%TYPE 
+            )
+  AS
+    V_SYSDATE       DATE := GET_LOCAL_DATE(P_SOB_ID);
+  BEGIN
+    IF CLOSE_CHECK_F(W_ADJUSTMENT_ID) = 'Y' THEN
+      RAISE_APPLICATION_ERROR(-20001, EAPP_MESSAGE_G.RETURN_TEXT_F(USERENV_G.GET_TERRITORY_S_F, 'FCM_10168', NULL));
+      RETURN;
+    END IF;
+    
+    UPDATE HRR_RETIRE_ADJUSTMENT_PAYMENT RAP
+      SET RAP.START_DATE        = P_START_DATE
+        , RAP.END_DATE          = P_END_DATE
+        , RAP.LAST_UPDATE_DATE  = V_SYSDATE
+        , RAP.LAST_UPDATED_BY   = P_USER_ID
+    WHERE RAP.ADJUSTMENT_ID     = W_ADJUSTMENT_ID
+      AND RAP.PAY_YYYYMM        = W_PAY_YYYYMM
+      AND RAP.WAGE_TYPE         = W_WAGE_TYPE
+      AND RAP.SOB_ID            = P_SOB_ID
+      AND RAP.ORG_ID            = P_ORG_ID
+    ;
+  END UPDATE_PAY_PERIOD;            
+
+---------------------------------------------------------------------------------------------------
+-- 퇴직정산 급여/상여 상세 내역 삽입.
+  PROCEDURE INSERT_ADJUST_PAY_DETAIL
+            ( P_ADJUSTMENT_ID    IN HRR_RETIRE_ADJUST_PAY_DETAIL.ADJUSTMENT_ID%TYPE
+            , P_PAY_YYYYMM       IN HRR_RETIRE_ADJUST_PAY_DETAIL.PAY_YYYYMM%TYPE
+            , P_WAGE_TYPE        IN HRR_RETIRE_ADJUST_PAY_DETAIL.WAGE_TYPE%TYPE
+            , P_ALLOWANCE_ID     IN HRR_RETIRE_ADJUST_PAY_DETAIL.ALLOWANCE_ID%TYPE
+            , P_ALLOWANCE_AMOUNT IN HRR_RETIRE_ADJUST_PAY_DETAIL.ALLOWANCE_AMOUNT%TYPE
+            , P_SOB_ID           IN HRR_RETIRE_ADJUST_PAY_DETAIL.SOB_ID%TYPE
+            , P_ORG_ID           IN HRR_RETIRE_ADJUST_PAY_DETAIL.ORG_ID%TYPE
+            , P_USER_ID          IN HRR_RETIRE_ADJUST_PAY_DETAIL.CREATED_BY%TYPE
+            )
+  AS
+    V_PERSON_ID                  HRR_RETIRE_ADJUST_PAY_DETAIL.PERSON_ID%TYPE;
+    V_CORP_ID                    HRR_RETIRE_ADJUST_PAY_DETAIL.CORP_ID%TYPE;
+  BEGIN
+    IF CLOSE_CHECK_F(P_ADJUSTMENT_ID) = 'Y' THEN
+      RAISE_APPLICATION_ERROR(-20001, EAPP_MESSAGE_G.RETURN_TEXT_F(USERENV_G.GET_TERRITORY_S_F, 'FCM_10168', NULL));
+      RETURN;
+    END IF;
+    
+    BEGIN
+      SELECT RA.PERSON_ID
+           , RA.CORP_ID
+        INTO V_PERSON_ID
+          , V_CORP_ID
+        FROM HRR_RETIRE_ADJUSTMENT RA
+      WHERE RA.ADJUSTMENT_ID       = P_ADJUSTMENT_ID
+      ;
+    EXCEPTION WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20001, EAPP_MESSAGE_G.RETURN_TEXT_F(USERENV_G.GET_TERRITORY_S_F, 'FCM_10028', NULL));
+    END;
+    INSERT INTO HRR_RETIRE_ADJUST_PAY_DETAIL
+    ( ADJUSTMENT_ID
+    , PAY_YYYYMM, WAGE_TYPE, ALLOWANCE_ID, ALLOWANCE_AMOUNT
+    , PERSON_ID, CORP_ID
+    , SOB_ID, ORG_ID
+    , CREATION_DATE, CREATED_BY, LAST_UPDATE_DATE, LAST_UPDATED_BY
+    ) VALUES
+    ( P_ADJUSTMENT_ID
+    , P_PAY_YYYYMM, P_WAGE_TYPE, P_ALLOWANCE_ID, P_ALLOWANCE_AMOUNT
+    , V_PERSON_ID, V_CORP_ID
+    , P_SOB_ID, P_ORG_ID
+    , SYSDATE, P_USER_ID, SYSDATE, P_USER_ID
+    );
+    
+    -- 합계 반영.
+    SUMMARY_ADJUSTMENT_PAYMENT
+      ( W_ADJUSTMENT_ID    => P_ADJUSTMENT_ID
+      , W_PAY_YYYYMM       => P_PAY_YYYYMM
+      , W_WAGE_TYPE        => P_WAGE_TYPE
+      , W_PERSON_ID        => V_PERSON_ID
+      , W_SOB_ID           => P_SOB_ID
+      , W_ORG_ID           => P_ORG_ID
+      , P_USER_ID          => P_USER_ID 
+      );
+  END INSERT_ADJUST_PAY_DETAIL;
+                       
+-- 퇴직정산 급여/상여 상세 내역 수정.
+  PROCEDURE UPDATE_ADJUST_PAY_DETAIL
+            ( W_ADJUSTMENT_ID    IN HRR_RETIRE_ADJUST_PAY_DETAIL.ADJUSTMENT_ID%TYPE
+            , W_PAY_YYYYMM       IN HRR_RETIRE_ADJUST_PAY_DETAIL.PAY_YYYYMM%TYPE
+            , W_WAGE_TYPE        IN HRR_RETIRE_ADJUST_PAY_DETAIL.WAGE_TYPE%TYPE
+            , W_ALLOWANCE_ID     IN HRR_RETIRE_ADJUST_PAY_DETAIL.ALLOWANCE_ID%TYPE
+            , P_ALLOWANCE_AMOUNT IN HRR_RETIRE_ADJUST_PAY_DETAIL.ALLOWANCE_AMOUNT%TYPE
+            , W_SOB_ID           IN HRR_RETIRE_ADJUST_PAY_DETAIL.SOB_ID%TYPE
+            , W_ORG_ID           IN HRR_RETIRE_ADJUST_PAY_DETAIL.ORG_ID%TYPE
+            , P_USER_ID          IN HRR_RETIRE_ADJUST_PAY_DETAIL.CREATED_BY%TYPE 
+            )
+  AS
+    V_PERSON_ID                  HRR_RETIRE_ADJUST_PAY_DETAIL.PERSON_ID%TYPE;
+  BEGIN
+    IF CLOSE_CHECK_F(W_ADJUSTMENT_ID) = 'Y' THEN
+      RAISE_APPLICATION_ERROR(-20001, EAPP_MESSAGE_G.RETURN_TEXT_F(USERENV_G.GET_TERRITORY_S_F, 'FCM_10168', NULL));
+      RETURN;
+    END IF;
+    
+    BEGIN
+      SELECT RA.PERSON_ID
+        INTO V_PERSON_ID
+        FROM HRR_RETIRE_ADJUSTMENT RA
+      WHERE RA.ADJUSTMENT_ID       = W_ADJUSTMENT_ID
+      ;
+    EXCEPTION WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20001, EAPP_MESSAGE_G.RETURN_TEXT_F(USERENV_G.GET_TERRITORY_S_F, 'FCM_10028', NULL));
+    END;
+    
+    UPDATE HRR_RETIRE_ADJUST_PAY_DETAIL APD
+      SET APD.ALLOWANCE_AMOUNT  = P_ALLOWANCE_AMOUNT
+        , APD.LAST_UPDATE_DATE  = SYSDATE
+        , APD.LAST_UPDATED_BY   = P_USER_ID
+    WHERE APD.ADJUSTMENT_ID     = W_ADJUSTMENT_ID
+      AND APD.PAY_YYYYMM        = W_PAY_YYYYMM
+      AND APD.WAGE_TYPE         = W_WAGE_TYPE
+      AND APD.ALLOWANCE_ID      = W_ALLOWANCE_ID
+      AND APD.SOB_ID            = W_SOB_ID
+      AND APD.ORG_ID            = W_ORG_ID
+    ;
+    -- 합계 반영.
+    SUMMARY_ADJUSTMENT_PAYMENT
+      ( W_ADJUSTMENT_ID    => W_ADJUSTMENT_ID
+      , W_PAY_YYYYMM       => W_PAY_YYYYMM
+      , W_WAGE_TYPE        => W_WAGE_TYPE
+      , W_PERSON_ID        => V_PERSON_ID
+      , W_SOB_ID           => W_SOB_ID
+      , W_ORG_ID           => W_ORG_ID
+      , P_USER_ID          => P_USER_ID 
+      );
+  END UPDATE_ADJUST_PAY_DETAIL;
+
+-- 퇴직정산 급여/상여 상세 내역 삭제.
+  PROCEDURE DELETE_ADJUST_PAY_DETAIL
+            ( W_ADJUSTMENT_ID    IN HRR_RETIRE_ADJUST_PAY_DETAIL.ADJUSTMENT_ID%TYPE
+            , W_PAY_YYYYMM       IN HRR_RETIRE_ADJUST_PAY_DETAIL.PAY_YYYYMM%TYPE
+            , W_WAGE_TYPE        IN HRR_RETIRE_ADJUST_PAY_DETAIL.WAGE_TYPE%TYPE
+            , W_ALLOWANCE_ID     IN HRR_RETIRE_ADJUST_PAY_DETAIL.ALLOWANCE_ID%TYPE
+            , W_SOB_ID           IN HRR_RETIRE_ADJUST_PAY_DETAIL.SOB_ID%TYPE
+            , W_ORG_ID           IN HRR_RETIRE_ADJUST_PAY_DETAIL.ORG_ID%TYPE
+            )
+  AS
+    V_PERSON_ID                  HRR_RETIRE_ADJUST_PAY_DETAIL.PERSON_ID%TYPE;
+  BEGIN
+    IF CLOSE_CHECK_F(W_ADJUSTMENT_ID) = 'Y' THEN
+      RAISE_APPLICATION_ERROR(-20001, EAPP_MESSAGE_G.RETURN_TEXT_F(USERENV_G.GET_TERRITORY_S_F, 'FCM_10168', NULL));
+      RETURN;
+    END IF;
+    
+    BEGIN
+      SELECT RA.PERSON_ID
+        INTO V_PERSON_ID
+        FROM HRR_RETIRE_ADJUSTMENT RA
+      WHERE RA.ADJUSTMENT_ID       = W_ADJUSTMENT_ID
+      ;
+    EXCEPTION WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20001, EAPP_MESSAGE_G.RETURN_TEXT_F(USERENV_G.GET_TERRITORY_S_F, 'FCM_10028', NULL));
+    END;
+    
+    DELETE HRR_RETIRE_ADJUST_PAY_DETAIL APD
+    WHERE APD.ADJUSTMENT_ID     = W_ADJUSTMENT_ID
+      AND APD.PAY_YYYYMM        = W_PAY_YYYYMM
+      AND APD.WAGE_TYPE         = W_WAGE_TYPE
+      AND APD.ALLOWANCE_ID      = W_ALLOWANCE_ID
+      AND APD.SOB_ID            = W_SOB_ID
+      AND APD.ORG_ID            = W_ORG_ID
+    ;
+    -- 합계 반영.
+    SUMMARY_ADJUSTMENT_PAYMENT
+      ( W_ADJUSTMENT_ID    => W_ADJUSTMENT_ID
+      , W_PAY_YYYYMM       => W_PAY_YYYYMM
+      , W_WAGE_TYPE        => W_WAGE_TYPE
+      , W_PERSON_ID        => V_PERSON_ID
+      , W_SOB_ID           => W_SOB_ID
+      , W_ORG_ID           => W_ORG_ID
+      , P_USER_ID          => -1 
+      );
+  END DELETE_ADJUST_PAY_DETAIL;
+
+---------------------------------------------------------------------------------------------------
+-- 급상여 금액 수정에 따른 총합계 적용.
+  PROCEDURE SUMMARY_ADJUSTMENT_PAYMENT
+            ( W_ADJUSTMENT_ID    IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ADJUSTMENT_ID%TYPE
+            , W_PAY_YYYYMM       IN HRR_RETIRE_ADJUSTMENT_PAYMENT.PAY_YYYYMM%TYPE
+            , W_WAGE_TYPE        IN HRR_RETIRE_ADJUSTMENT_PAYMENT.WAGE_TYPE%TYPE
+            , W_PERSON_ID        IN HRR_RETIRE_ADJUSTMENT_PAYMENT.PERSON_ID%TYPE
+            , W_SOB_ID           IN HRR_RETIRE_ADJUSTMENT_PAYMENT.SOB_ID%TYPE
+            , W_ORG_ID           IN HRR_RETIRE_ADJUSTMENT_PAYMENT.ORG_ID%TYPE
+            , P_USER_ID          IN HRR_RETIRE_ADJUSTMENT_PAYMENT.CREATED_BY%TYPE 
+            )
+  AS
+    V_STD_MONTH                  NUMBER;
+    V_START_DATE                 DATE;
+    V_RETIRE_DATE_TO             DATE;    
+    
+    V_PAY_DATE_FR                DATE;
+    V_PAY_DATE_TO                DATE;
+  BEGIN
+    -- INSERT.
+    UPDATE HRR_RETIRE_ADJUSTMENT_PAYMENT RAP
+      SET RAP.TOTAL_AMOUNT        = NVL((SELECT SUM(APD.ALLOWANCE_AMOUNT) AS TOTAL_AMOUNT
+                                          FROM HRR_RETIRE_ADJUST_PAY_DETAIL APD
+                                        WHERE APD.ADJUSTMENT_ID     = RAP.ADJUSTMENT_ID
+                                          AND APD.PAY_YYYYMM        = RAP.PAY_YYYYMM
+                                          AND APD.WAGE_TYPE         = RAP.WAGE_TYPE
+                                          AND APD.PERSON_ID         = RAP.PERSON_ID
+                                          AND APD.SOB_ID            = RAP.SOB_ID
+                                          AND APD.ORG_ID            = RAP.ORG_ID
+                                        GROUP BY APD.ADJUSTMENT_ID
+                                             , APD.PAY_YYYYMM
+                                             , APD.WAGE_TYPE
+                                             , APD.PERSON_ID
+                                             , APD.CORP_ID
+                                             , APD.SOB_ID
+                                             , APD.ORG_ID
+                                        ), 0)
+      
+        , RAP.LAST_UPDATE_DATE    = SYSDATE
+        , RAP.LAST_UPDATED_BY     = P_USER_ID
+    WHERE RAP.ADJUSTMENT_ID       = W_ADJUSTMENT_ID
+      AND RAP.PAY_YYYYMM          = W_PAY_YYYYMM
+      AND RAP.WAGE_TYPE           = W_WAGE_TYPE
+      AND RAP.PERSON_ID           = W_PERSON_ID
+      AND RAP.SOB_ID              = W_SOB_ID
+      AND RAP.ORG_ID              = W_ORG_ID
+    ;
+    
+    IF SQL%ROWCOUNT = 0 THEN
+      BEGIN
+        --> 퇴직정산 종료일자.
+        BEGIN
+          SELECT RA.RETIRE_DATE_TO
+            INTO V_RETIRE_DATE_TO
+            FROM HRR_RETIRE_ADJUSTMENT RA
+          WHERE RA.ADJUSTMENT_ID    = W_ADJUSTMENT_ID
+          ;
+        EXCEPTION WHEN OTHERS THEN
+          RAISE_APPLICATION_ERROR(-20001, SQLERRM);
+        END;
+        --> 퇴직정산 처리 기준 .
+        BEGIN
+          SELECT CASE
+                   WHEN W_WAGE_TYPE = 'P2' THEN RS.PAY_MONTH
+                   ELSE RS.BONUS_MONTH
+                 END AS STD_MONTH
+            INTO V_STD_MONTH
+            FROM HRR_RETIRE_STANDARD RS
+           WHERE RS.STD_YYYY          = TO_CHAR(V_RETIRE_DATE_TO, 'YYYY')
+             AND RS.SOB_ID            = W_SOB_ID
+             AND RS.ORG_ID            = W_ORG_ID
+          ;
+        EXCEPTION WHEN OTHERS THEN
+          DBMS_OUTPUT.PUT_LINE('Retire Standard Error =>' || SQLERRM);
+          IF W_WAGE_TYPE = 'P2' THEN
+            V_STD_MONTH := 3;
+          ELSE
+            V_STD_MONTH := 12;
+          END IF;
+        END;
+        --> 기준일자 생성;
+        BEGIN
+          SELECT ADD_MONTHS(V_RETIRE_DATE_TO, -V_STD_MONTH) + 1 AS PRE_3RD_MONTH
+            INTO V_START_DATE
+          FROM DUAL;
+        EXCEPTION WHEN OTHERS THEN
+          V_START_DATE := ADD_MONTHS(V_RETIRE_DATE_TO, -3) + 1;
+        END;
+        V_PAY_DATE_FR := TRUNC(TO_DATE(W_PAY_YYYYMM, 'YYYY-MM'), 'MONTH');
+        IF V_PAY_DATE_FR <= V_START_DATE THEN
+          V_PAY_DATE_FR := V_START_DATE;
+        END IF;
+        V_PAY_DATE_TO := LAST_DAY(TO_DATE(W_PAY_YYYYMM, 'YYYY-MM'));
+        IF V_RETIRE_DATE_TO < V_PAY_DATE_TO THEN
+          V_PAY_DATE_TO := V_RETIRE_DATE_TO;
+        END IF;
+        -- INSERT.
+        INSERT INTO HRR_RETIRE_ADJUSTMENT_PAYMENT
+        ( ADJUSTMENT_ID
+        , PAY_YYYYMM, WAGE_TYPE, TOTAL_AMOUNT
+        , START_DATE, END_DATE
+        , PERSON_ID, CORP_ID
+        , SOB_ID, ORG_ID
+        , CREATION_DATE, CREATED_BY, LAST_UPDATE_DATE, LAST_UPDATED_BY      
+        )
+        SELECT APD.ADJUSTMENT_ID
+             , APD.PAY_YYYYMM
+             , APD.WAGE_TYPE
+             , SUM(APD.ALLOWANCE_AMOUNT) AS TOTAL_AMOUNT
+             , V_PAY_DATE_FR
+             , V_PAY_DATE_TO
+             , APD.PERSON_ID
+             , APD.CORP_ID
+             , APD.SOB_ID
+             , APD.ORG_ID
+             , SYSDATE
+             , P_USER_ID
+             , SYSDATE
+             , P_USER_ID
+          FROM HRR_RETIRE_ADJUST_PAY_DETAIL APD
+        WHERE APD.ADJUSTMENT_ID     = W_ADJUSTMENT_ID
+          AND APD.PAY_YYYYMM        = W_PAY_YYYYMM
+          AND APD.WAGE_TYPE         = W_WAGE_TYPE
+          AND APD.PERSON_ID         = W_PERSON_ID
+          AND APD.SOB_ID            = W_SOB_ID
+          AND APD.ORG_ID            = W_ORG_ID
+        GROUP BY APD.ADJUSTMENT_ID
+             , APD.PAY_YYYYMM
+             , APD.WAGE_TYPE
+             , APD.PERSON_ID
+             , APD.CORP_ID
+             , APD.SOB_ID
+             , APD.ORG_ID
+        ;
+      EXCEPTION WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Pay Insert Error : ' || SQLERRM);
+      END;
+    END IF;
+  END;
+
+---------------------------------------------------------------------------------------------------
+--                  퇴 직 금 정 산 내 역
+---------------------------------------------------------------------------------------------------
+ PROCEDURE SELECT_ADJUSTMENT_LIST
+              ( P_CURSOR                            OUT TYPES.TCURSOR
+              , W_CORP_ID                           IN HRR_RETIRE_ADJUSTMENT.CORP_ID%TYPE
+              , W_START_DATE                        IN DATE
+              , W_END_DATE                          IN DATE
+              , W_PERSON_ID                         IN HRR_RETIRE_ADJUSTMENT.PERSON_ID%TYPE
+              , W_DEPT_ID                           IN HRM_PERSON_MASTER.DEPT_ID%TYPE
+              , W_PAY_GRADE_ID                      IN HRM_PERSON_MASTER.PAY_GRADE_ID%TYPE           
+              , W_ADJUSTMENT_TYPE                   IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_TYPE%TYPE
+              , W_CLOSED_DATE_YN                    IN VARCHAR2
+              , W_SOB_ID                            IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+              , W_ORG_ID                            IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+              )
+  AS
+  BEGIN
+    OPEN P_CURSOR FOR
+      SELECT   NVL(PPM.CORP_ID, NULL) AS CORP_ID                      -- 업체ID
+              , NVL(RA.ADJUSTMENT_ID, NULL) AS ADJUSTMENT_ID          -- 퇴직정산ID
+              , RA.ADJUSTMENT_TYPE                                    -- 정산구분(R-퇴직금, M-중도정산)   
+              , HRM_COMMON_G.CODE_NAME_F('RETIRE_ADJUSTMENT_TYPE', RA.ADJUSTMENT_TYPE, RA.SOB_ID, RA.ORG_ID) AS ADJUSTMENT_TYPE_DESC
+              , PPM.DEPT_NAME                                         -- 부서명
+              , PPM.POST_NAME                                         -- 직위
+              , NVL(PPM.PERSON_ID, NULL) AS PERSON_ID                 -- 사원ID
+              , CASE
+                  WHEN GROUPING(PPM.PERSON_ID) = 1 THEN PT_TOTAL_SUM
+                  ELSE PPM.NAME
+                END AS NAME                                           -- 성명
+              , PPM.PERSON_NUM                                        -- 사원번호
+              ----------------------------------------------------------------
+              , NVL(PPM.ORI_JOIN_DATE, NULL) AS ORI_JOIN_DATE         -- 입사일
+              , NVL(PPM.RETIRE_DATE, NULL) AS RETIRE_DATE             -- 퇴사일
+              , NVL(PPM.EXPIRE_DATE, NULL) AS EXPIRE_DATE             -- 중도정산일
+              , NVL(RA.RETIRE_DATE_FR, NULL) AS RETIRE_DATE_FR        -- 정산시작일
+              , NVL(RA.RETIRE_DATE_TO, NULL) AS RETIRE_DATE_TO        -- 정산종료일
+              , NVL(RA.CLOSED_DATE, NULL) AS CLOSED_DATE              -- 지급일자(법정 퇴직급여) 
+              , RA.CLOSED_YN                                          -- 지급구분(법정 퇴직급여) 
+              ----------------------------------------------------------------
+              --           퇴직급여 산정근거(3 개월)
+              ----------------------------------------------------------------
+              , SUM(RA.TOTAL_PAY_AMOUNT) AS TOTAL_PAY_AMOUNT          -- 총 급여액
+              , SUM(RA.TOTAL_BONUS_AMOUNT) AS TOTAL_BONUS_AMOUNT      -- 총 상여금
+              , SUM(RA.YEAR_ALLOWANCE_AMOUNT) AS YEAR_ALLOWANCE_AMOUNT-- 년차수당
+              , NVL(RA.DAY_3RD_COUNT, NULL) AS DAY_3RD_COUNT          -- 근무일수(3 개월 기준)
+              , NVL(RA.DAY_AVG_AMOUNT, NULL) AS DAY_AVG_AMOUNT        -- 일평균액(법정 퇴직급여)
+              ----------------------------------------------------------------
+              --           법정퇴직급여
+              ----------------------------------------------------------------
+              , NVL(RA.RETIRE_DATE_FR, NULL) AS RE_DATE_FR            -- 근속일자(시작일)
+              , NVL(RA.RETIRE_DATE_TO, NULL) AS RE_DATE_TO            -- 근속일자(종료일)
+              , SUM(RA.RETIRE_TOTAL_AMOUNT) AS RETIRE_TOTAL_AMOUNT    -- 총퇴직금(법정 퇴직급여)              
+              , NVL(RA.LONG_YEAR, NULL) AS LONG_YEAR                  -- 근속년수(법정 퇴직급여)
+              , NVL(RA.LONG_MONTH, NULL) AS LONG_MONTH                -- 근속월수(법정 퇴직급여)
+              , NVL(RA.LONG_DAY, NULL) AS LONG_DAY                    -- 근속일수(법정 퇴직급여)
+              , SUM(TRUNC(NVL(RA.TOTAL_PAY_AMOUNT, 0) + ((NVL(RA.TOTAL_BONUS_AMOUNT, 0) +  NVL(RA.YEAR_ALLOWANCE_AMOUNT, 0)) / 4))) AS PAY_SUM_AMOUNT  -- 총급여액(법정 퇴직급여)
+              , SUM(RA.GLORY_AMOUNT) AS GLORY_AMOUNT                  -- 위로금(법정 퇴직급여)
+              , SUM(RA.ETC_SUPP_AMOUNT) AS ETC_SUPP_AMOUNT            -- 기타지급(법정 퇴직급여)           
+              , SUM(RA.INCOME_DED_AMOUNT) AS INCOME_DED_AMOUNT        -- 퇴직급여소득공제(법정 퇴직급여)
+              , SUM(RA.LONG_DED_AMOUNT) AS LONG_DED_AMOUNT            -- 근속공제(법정 퇴직급여)
+              , SUM(NVL(RA.INCOME_DED_AMOUNT, 0) + NVL(RA.LONG_DED_AMOUNT, 0)) AS DED_SUM_AMOUNT   -- 소득공제(법정 퇴직급여)
+              , SUM(RA.TAX_STD_AMOUNT) AS TAX_STD_AMOUNT              -- 과세표준(법정 퇴직급여)
+              , SUM(RA.AVG_TAX_STD_AMOUNT) AS AVG_TAX_STD_AMOUNT      -- 년 과세표준(법정 퇴직급여)
+              , SUM(RA.AVG_COMP_TAX_AMOUNT) AS AVG_COMP_TAX_AMOUNT    -- 년 산출세액(법정 퇴직급여)
+              , SUM(RA.COMP_TAX_AMOUNT) AS COMP_TAX_AMOUNT            -- 산출세액(법정 퇴직급여)
+              , SUM(RA.TAX_DED_AMOUNT) AS TAX_DED_AMOUNT              -- 소득세액공제(법정 퇴직급여)
+              , SUM(TRUNC(RA.INCOME_TAX_AMOUNT, -1)) AS INCOME_TAX_AMOUNT        -- 소득세(법정 퇴직급여)
+              , SUM(TRUNC(RA.RESIDENT_TAX_AMOUNT, -1)) AS RESIDENT_TAX_AMOUNT    -- 주민세(법정 퇴직급여)
+              , SUM(RA.REAL_AMOUNT) AS REAL_AMOUNT                    -- 실지급액(법정 퇴직급여)
+              , NVL(RA.DED_DAY, NULL) AS DED_DAY                      -- 공제일수(법정 퇴직급여)
+              , SUM(RA.ETC_DED_AMOUNT) AS ETC_DED_AMOUNT              -- 기타공제(법정 퇴직급여)
+              , SUM(RA.HEALTH_INSUR_AMOUNT) AS HEALTH_INSUR_AMOUNT    -- 건강보험정산액.               
+              , SUM(RA.REAL_TOTAL_AMOUNT) AS REAL_TOTAL_AMOUNT        -- 실 총지급액(법정 퇴직급여)
+              ----------------------------------------------------------------
+              -- 법정퇴직이외 급여
+              ----------------------------------------------------------------
+              , NVL(PPM.ORI_JOIN_DATE, NULL) AS JOIN_DATE             -- 근속일자(시작일)
+              , NVL(PPM.RETIRE_DATE, NULL) AS RE_DATE                 -- 근속일자(종료일)
+              , SUM(RA.HONORARY_AMOUNT) AS HONORARY_AMOUNT            -- 명예퇴직금(법정이외 퇴직급여)
+              , NVL(RA.H_LONG_YEAR, NULL) AS H_LONG_YEAR              -- 근속년수(법정이외 퇴직급여)
+              , SUM(RA.H_INCOME_DED_AMOUNT) AS H_INCOME_DED_AMOUNT    -- 소득공제(법정이외 퇴직급여)
+              , SUM(RA.H_LONG_DED_AMOUNT) AS H_LONG_DED_AMOUNT        -- 근속공제(법정이외 퇴직급여)
+              , SUM(NVL(RA.H_INCOME_DED_AMOUNT, 0) + NVL(RA.H_LONG_DED_AMOUNT, 0)) AS H_DED_SUM_AMOUNT  -- 소득공제(법정이외 퇴직급여)
+              , SUM(RA.H_TAX_STD_AMOUNT) AS H_TAX_STD_AMOUNT          -- 과세표준(법정이외 퇴직급여)
+              , SUM(RA.H_AVG_TAX_STD_AMOUNT) AS H_AVG_TAX_STD_AMOUNT  -- 년 과세표준(법정이외 퇴직급여)
+              , SUM(RA.H_AVG_COMP_TAX_AMOUNT) AS H_AVG_COMP_TAX_AMOUNT-- 년 산출세액(법정이외 퇴직급여)
+              , SUM(RA.H_COMP_TAX_AMOUNT) AS H_COMP_TAX_AMOUNT        -- 산출세액(법정이외 퇴직급여)
+              , SUM(RA.H_TAX_DED_AMOUNT) AS H_TAX_DED_AMOUNT          -- 소득세액공제(법정이외 퇴직급여)
+              , SUM(RA.H_INCOME_TAX_AMOUNT) AS H_INCOME_TAX_AMOUNT    -- 소득세(법정이외 퇴직급여)
+              , SUM(RA.H_RESIDENT_TAX_AMOUNT) AS H_RESIDENT_TAX_AMOUNT-- 주민세(법정이외 퇴직급여)
+              , SUM(RA.H_REAL_AMOUNT) AS H_REAL_AMOUNT                -- 실지급액(법정이외 퇴직급여)
+              ----------------------------------------------------------------              
+              -- , RA.DED_DAY_DESCRIPTION
+              -- , RA.RETIRE_AMOUNT            
+              -- , HRM_PERSON_MASTER_G.NAME_F(RA.CLOSED_PERSON_ID) AS CLOSED_PERSON
+              --   ROWNUM AS ROW_NUM
+        FROM  HRR_RETIRE_ADJUSTMENT RA
+              , (SELECT  HRM_DEPT_MASTER_G.DEPT_NAME_F(PM.DEPT_ID) AS DEPT_NAME
+                         , HRM_COMMON_G.ID_NAME_F(PM.POST_ID) AS POST_NAME
+                         , PM.NAME
+                         , PM.PERSON_NUM
+                         , HRM_COMMON_G.CODE_NAME_F('EMPLOYE_TYPE', PM.EMPLOYE_TYPE, PM.SOB_ID, PM.ORG_ID) AS EMPLOYE_TYPE_NAME
+                         , PM.ORI_JOIN_DATE
+                         , PM.JOIN_DATE
+                         , PM.EXPIRE_DATE
+                         , PM.RETIRE_DATE
+                         , PM.DISPLAY_NAME
+                         , PM.PERSON_ID 
+                         , PM.CORP_ID
+                         , NVL(T1.ADJUST_COUNT, 0) AS ADJUST_COUNT
+                         , PM.DEPT_ID
+                         , PM.PAY_GRADE_ID
+                     FROM HRM_PERSON_MASTER PM
+                         , ( SELECT RA.PERSON_ID
+                                  , COUNT(RA.ADJUSTMENT_TYPE) AS ADJUST_COUNT
+                               FROM HRR_RETIRE_ADJUSTMENT RA
+                              WHERE ((W_ADJUSTMENT_TYPE   IS NULL AND 1 = 1)
+                                OR   (W_ADJUSTMENT_TYPE   IS NOT NULL AND RA.ADJUSTMENT_TYPE = W_ADJUSTMENT_TYPE))
+                                AND RA.CORP_ID            = W_CORP_ID
+                             GROUP BY RA.PERSON_ID
+                           ) T1
+                    WHERE PM.PERSON_ID        = T1.PERSON_ID(+)
+                      AND PM.CORP_ID          = W_CORP_ID
+                      AND PM.PERSON_ID        = NVL(W_PERSON_ID, PM.PERSON_ID)
+                      AND PM.DEPT_ID          = NVL(W_DEPT_ID, PM.DEPT_ID)
+                      AND PM.PAY_GRADE_ID     = NVL(W_PAY_GRADE_ID, PM.PAY_GRADE_ID)
+                      AND PM.SOB_ID           = W_SOB_ID
+                      AND PM.ORG_ID           = W_ORG_ID/*
+                      AND ((W_ADJUSTMENT_TYPE IS NULL AND 1 = 1)
+                      OR   (W_ADJUSTMENT_TYPE IS NOT NULL
+                      AND  (PM.EMPLOYE_TYPE    = DECODE(W_ADJUSTMENT_TYPE, 'R', '3', '1')
+                       OR PM.EMPLOYE_TYPE     = DECODE(W_ADJUSTMENT_TYPE, 'R', '3', '2'))))*/
+                ) PPM
+           WHERE RA.PERSON_ID             = PPM.PERSON_ID
+             AND RA.PERSON_ID             = NVL(W_PERSON_ID, RA.PERSON_ID)
+             AND RA.CORP_ID               = W_CORP_ID
+             AND ((W_ADJUSTMENT_TYPE      IS NULL AND 1 = 1)
+             OR   (W_ADJUSTMENT_TYPE      IS NOT NULL
+             AND   RA.ADJUSTMENT_TYPE     = W_ADJUSTMENT_TYPE))
+             AND PPM.DEPT_ID              = NVL(W_DEPT_ID, PPM.DEPT_ID)
+             AND PPM.PAY_GRADE_ID         = NVL(W_PAY_GRADE_ID, PPM.PAY_GRADE_ID)
+             AND ((NVL(W_CLOSED_DATE_YN, 'N') = 'Y'
+             AND   RA.CLOSED_DATE             BETWEEN W_START_DATE AND W_END_DATE)
+             OR   (NVL(W_CLOSED_DATE_YN, 'N') = 'N'
+             AND   RA.RETIRE_DATE_TO          BETWEEN W_START_DATE AND W_END_DATE))  -- 지급일자 기준으로 처리.
+             AND RA.SOB_ID                = W_SOB_ID
+             AND RA.ORG_ID                = W_ORG_ID
+          GROUP BY ROLLUP
+                   ((PPM.CORP_ID
+                  , RA.ADJUSTMENT_ID
+                  , RA.ADJUSTMENT_TYPE   
+                  , RA.SOB_ID
+                  , RA.ORG_ID
+                  , PPM.DEPT_NAME
+                  , PPM.POST_NAME
+                  , PPM.PERSON_ID
+                  , PPM.NAME
+                  , PPM.PERSON_NUM
+                  , PPM.ORI_JOIN_DATE
+                  , PPM.RETIRE_DATE
+                  , PPM.EXPIRE_DATE
+                  , RA.RETIRE_DATE_FR
+                  , RA.RETIRE_DATE_TO
+                  , RA.CLOSED_DATE 
+                  , RA.CLOSED_YN 
+                  , RA.DAY_3RD_COUNT
+                  , RA.DAY_AVG_AMOUNT
+                  , RA.RETIRE_DATE_FR
+                  , RA.RETIRE_DATE_TO
+                  , RA.LONG_YEAR
+                  , RA.LONG_MONTH
+                  , RA.LONG_DAY
+                  , RA.DED_DAY
+                  , PPM.ORI_JOIN_DATE
+                  , PPM.RETIRE_DATE
+                  , RA.H_LONG_YEAR
+                   ))
+          ORDER BY RA.ADJUSTMENT_ID;
+              
+  END SELECT_ADJUSTMENT_LIST;
+           
+---------------------------------------------------------------------------------------------------
+-- 해당 퇴직정산에 대해 마감 여부 체크.
+  FUNCTION  CLOSE_CHECK_F
+            ( W_ADJUSTMENT_ID     IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+            ) RETURN VARCHAR2
+  AS
+    V_CLOSE_YN                    VARCHAR2(2) := 'N';
+    
+  BEGIN
+    BEGIN
+      SELECT NVL(RA.CLOSED_YN, 'N') AS CLOSE_YN
+        INTO V_CLOSE_YN
+        FROM HRR_RETIRE_ADJUSTMENT RA
+      WHERE RA.ADJUSTMENT_ID           = W_ADJUSTMENT_ID
+      ;
+    EXCEPTION WHEN OTHERS THEN
+      V_CLOSE_YN := 'N';
+    END;
+    RETURN V_CLOSE_YN;
+    
+  END CLOSE_CHECK_F;
+  
+---------------------------------------------------------------------------------------------------
+--                  퇴 직 금 정 산 내 역 REPORT
+---------------------------------------------------------------------------------------------------
+  PROCEDURE SELECT_RETIRE_LIST
+              ( P_CURSOR                            OUT TYPES.TCURSOR
+              , W_ADJUSTMENT_ID                     IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+              , W_CORP_ID                           IN HRR_RETIRE_ADJUSTMENT.CORP_ID%TYPE
+              , W_PERSON_ID                         IN HRR_RETIRE_ADJUSTMENT.PERSON_ID%TYPE
+              , W_DEPT_ID                           IN HRM_PERSON_MASTER.DEPT_ID%TYPE
+              , W_PAY_GRADE_ID                      IN HRM_PERSON_MASTER.PAY_GRADE_ID%TYPE           
+              , W_ADJUSTMENT_TYPE                   IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_TYPE%TYPE
+              , W_SOB_ID                            IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+              , W_ORG_ID                            IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+              )
+  AS
+  BEGIN
+    OPEN P_CURSOR FOR
+      SELECT    
+           ---------------------------------------------------------------------------------------------- 
+           --                                    인   적   사   항
+           ---------------------------------------------------------------------------------------------- 
+             PM.PERSON_NUM                                          -- 사번.
+           , PM.NAME                                                -- 성명.
+           , PM.REPRE_NUM                                           -- 주민번호.
+           , HRM_COMMON_G.ID_NAME_F(PM.POST_ID) AS POST_NAME        -- 직책.
+           , OU.OPERATING_UNIT_NAME                                 -- 사업장.  
+           , HRM_DEPT_MASTER_G.DEPT_NAME_F(PM.DEPT_ID) AS DEPT_NAME -- 부서.
+           , PM.PRSN_ADDR1 || DECODE(PM.PRSN_ADDR2, NULL, NULL, ' ' || PM.PRSN_ADDR2) AS ADDR  -- 주소.
+           , PM.JOIN_DATE                                           -- 입사일자.
+           , RA.RETIRE_DATE_FR AS EXPIRE_DATE                       -- 최종중간정산일
+           , RA.RETIRE_DATE_TO AS RETIRE_DATE                       -- 퇴직일자.
+           /*, PM.EXPIRE_DATE                                         -- 최종중간정산일
+           , PM.RETIRE_DATE                                         -- 퇴직일자.*/
+           , RA.CLOSED_DATE                                         -- 지급일자.
+           , RA.LONG_DAY || '일(' || HRM_COMMON_DATE_G.PERIOD_YYYY_MM_DD_F(RA.RETIRE_DATE_FR, RA.RETIRE_DATE_TO, 0, 1) || ')' AS CONTINUE_DAY    -- 근속기간.
+           , RA.DED_DAY                                             -- 휴직기간.
+           , RA.LONG_DAY                                            -- 산정일수.
+           , ( SELECT DECODE(HRM_COMMON_G.ID_NAME_F(PMH.BANK_ID), NULL, NULL, '(' || HRM_COMMON_G.ID_NAME_F(PMH.BANK_ID) || ')') || 
+                      DECODE(PMH.BANK_ACCOUNTS, NULL, NULL, PMH.BANK_ACCOUNTS) AS BANK_ACCOUNTS
+                  FROM HRP_PAY_MASTER_HEADER PMH
+                WHERE PMH.CORP_ID              = RA.CORP_ID
+                  AND PMH.START_YYYYMM         <= TO_CHAR(RA.RETIRE_DATE_TO, 'YYYY-MM')
+                  AND (PMH.END_YYYYMM IS NULL OR PMH.END_YYYYMM >= TO_CHAR(RA.RETIRE_DATE_TO, 'YYYY-MM'))
+                  AND PMH.PERSON_ID            = RA.PERSON_ID
+                  AND PMH.SOB_ID               = RA.SOB_ID
+                  AND PMH.ORG_ID               = RA.ORG_ID
+             ) AS BANK_ACCOUNTS                                     -- 계좌번호.
+           , HRM_COMMON_G.ID_NAME_F(PM.RETIRE_ID) AS RETIRE_NAME    -- 퇴직사유.
+           , RA.ADJUSTMENT_TYPE                                     -- 정산구분(R : 퇴직금, N : 중도정산)           
+           , RA.TOTAL_PAY_AMOUNT                                    -- 산정급여.
+           , TRUNC(NVL(RA.TOTAL_BONUS_AMOUNT, 0) / 4) + TRUNC(NVL(RA.YEAR_ALLOWANCE_AMOUNT, 0) / 4) AS ETC_PAY_AMOUNT  -- 산정상여/연차[상여/연차].
+           , NVL(RA.TOTAL_PAY_AMOUNT, 0) + 
+             TRUNC(NVL(RA.TOTAL_BONUS_AMOUNT, 0) / 4) + TRUNC(NVL(RA.YEAR_ALLOWANCE_AMOUNT, 0) / 4) AS TOTAL_SUM_AMOUNT  -- 합계.
+           , RA.DAY_3RD_COUNT                                       -- 평균일수.
+           , RA.DAY_AVG_AMOUNT                                      -- 평균임금.
+           ----------------------------------------------------------------------------------------------- 
+           --                                    퇴 직 금   산 정   내 역
+           ----------------------------------------------------------------------------------------------- 
+           , T1.PAY_YYYYMM1                            --조회조건 인수_1
+           , T1.START_DATE1                            --기간_시작_1
+           , T1.END_DATE1                              --기간_종료_1
+           , T1.END_DATE1 - T1.START_DATE1 + 1 AS DAY1 --근무일수_1
+           , T1.TOTAL_AMOUNT1                          --합계_1
+           , T1.PAY_YYYYMM2                            --조회조건 인수_2
+           , T1.START_DATE2                            --기간_시작_2
+           , T1.END_DATE2                              --기간_종료_2
+           , T1.END_DATE2 - T1.START_DATE2 + 1 AS DAY2 --근무일수_2
+           , T1.TOTAL_AMOUNT2                          --합계_2
+           , T1.PAY_YYYYMM3                            --조회조건 인수_3
+           , T1.START_DATE3                            --기간_시작_3
+           , T1.END_DATE3                              --기간_종료_3
+           , T1.END_DATE3 - T1.START_DATE3 + 1 AS DAY3 --근무일수_3
+           , T1.TOTAL_AMOUNT3                          --합계_3
+           , T1.PAY_YYYYMM4                            --조회조건 인수_4
+           , T1.START_DATE4                            --기간_시작_4
+           , T1.END_DATE4                              --기간_종료_4
+           , T1.END_DATE4 - T1.START_DATE4 + 1 AS DAY4 --근무일수_4
+           , T1.TOTAL_AMOUNT4                          --합계_4
+           , NVL((T1.END_DATE1 - T1.START_DATE1 + 1), 0) + NVL((T1.END_DATE2 - T1.START_DATE2 + 1), 0) + NVL((T1.END_DATE3 - T1.START_DATE3 + 1), 0) + NVL((T1.END_DATE4 - T1.START_DATE4 + 1), 0) AS DAY_SUM --합계[근무일수]
+           ----------------------------------------------------------------------------------------------
+           , RA.RETIRE_AMOUNT                                                                                      -- 퇴직급여[퇴직금].
+           , NULL AS RETIRE_INSUR_AMOUNT                                                                           -- 단체퇴직보험금.
+           , NVL(RA.HONORARY_AMOUNT, 0) + NVL(RA.GLORY_AMOUNT, 0) AS HONORARY_AMOUNT                               -- 명예퇴직수당등
+           , NULL AS RETIRE_PENSION_AMOUNT                                                                         -- 퇴직연금.
+           , NULL AS TAX_FREE_AMOUNT                                                                               -- 비과세소득.
+           , NVL(RA.ETC_SUPP_AMOUNT, 0) AS TOTAL_HONORARY_AMOUNT_2                                                 -- 기타지급액.
+           , RA.RETIRE_TOTAL_AMOUNT                                                                                -- 지급총액.
+           , TRUNC(RA.INCOME_TAX_AMOUNT, -1) AS INCOME_TAX_AMOUNT                                                  -- 소득세[퇴직소득세].
+           , TRUNC(RA.RESIDENT_TAX_AMOUNT, -1) AS RESIDENT_TAX_AMOUNT                                              -- 주민세[퇴직지방소득세].
+           , RA.HEALTH_INSUR_AMOUNT AS HEALTH_INSUR_AMOUNT                                                         -- 건강보험정산.
+           , RA.ETC_DED_AMOUNT                                                                                     -- 기타공제.
+           , TRUNC(NVL(RA.INCOME_TAX_AMOUNT, 0), -1) + TRUNC(NVL(RA.RESIDENT_TAX_AMOUNT, 0), -1) +  
+             NVL(RA.ETC_DED_AMOUNT, 0) + NVL(RA.HEALTH_INSUR_AMOUNT, 0) AS DED_TOTAL_AMOUNT                                                         -- 공제총계.
+           , RA.REAL_TOTAL_AMOUNT AS REAL_TOTAL_AMOUNT                                                             -- 차인직급액.
+           , HRM_COMMON_DATE_G.DATE_YYYYMMDD_F(RA.CLOSED_DATE) AS PRINT_DATE                                       -- 인쇄일시.
+           , PM.NAME AS NAME1
+           , RA.ADJUSTMENT_ID
+        FROM HRM_PERSON_MASTER PM
+          , HRM_OPERATING_UNIT OU
+          , HRR_RETIRE_ADJUSTMENT RA
+          , ( SELECT AP1.ADJUSTMENT_ID
+                  , MAX(DECODE(AP1.ROW_NUM, 1, AP1.PAY_YYYYMM, NULL)) AS PAY_YYYYMM1
+                  , MAX(DECODE(AP1.ROW_NUM, 1, AP1.START_DATE, NULL)) AS START_DATE1
+                  , MAX(DECODE(AP1.ROW_NUM, 1, AP1.END_DATE, NULL))   AS END_DATE1
+                  , MAX(DECODE(AP1.ROW_NUM, 1, AP1.TOTAL_AMOUNT, NULL)) AS TOTAL_AMOUNT1
+                  , MAX(DECODE(AP1.ROW_NUM, 2, AP1.PAY_YYYYMM, NULL)) AS PAY_YYYYMM2
+                  , MAX(DECODE(AP1.ROW_NUM, 2, AP1.START_DATE, NULL)) AS START_DATE2
+                  , MAX(DECODE(AP1.ROW_NUM, 2, AP1.END_DATE, NULL))   AS END_DATE2
+                  , MAX(DECODE(AP1.ROW_NUM, 2, AP1.TOTAL_AMOUNT, NULL)) AS TOTAL_AMOUNT2
+                  , MAX(DECODE(AP1.ROW_NUM, 3, AP1.PAY_YYYYMM, NULL)) AS PAY_YYYYMM3
+                  , MAX(DECODE(AP1.ROW_NUM, 3, AP1.START_DATE, NULL)) AS START_DATE3
+                  , MAX(DECODE(AP1.ROW_NUM, 3, AP1.END_DATE, NULL))   AS END_DATE3
+                  , MAX(DECODE(AP1.ROW_NUM, 3, AP1.TOTAL_AMOUNT, NULL)) AS TOTAL_AMOUNT3
+                  , MAX(DECODE(AP1.ROW_NUM, 4, AP1.PAY_YYYYMM, NULL)) AS PAY_YYYYMM4
+                  , MAX(DECODE(AP1.ROW_NUM, 4, AP1.START_DATE, NULL)) AS START_DATE4
+                  , MAX(DECODE(AP1.ROW_NUM, 4, AP1.END_DATE, NULL))   AS END_DATE4
+                  , MAX(DECODE(AP1.ROW_NUM, 4, AP1.TOTAL_AMOUNT, NULL)) AS TOTAL_AMOUNT4
+                FROM ( SELECT SX1.ADJUSTMENT_ID
+                           , ROWNUM AS ROW_NUM
+                           , SX1.PAY_YYYYMM
+                           , SX1.START_DATE
+                           , SX1.END_DATE
+                           , SX1.TOTAL_AMOUNT
+                         FROM (SELECT AP.ADJUSTMENT_ID
+                                   , AP.PAY_YYYYMM
+                                   , AP.START_DATE
+                                   , AP.END_DATE
+                                   , AP.TOTAL_AMOUNT     
+                                FROM HRR_RETIRE_ADJUSTMENT_PAYMENT AP
+                              WHERE AP.WAGE_TYPE          = 'P1'
+                                AND AP.PERSON_ID          = NVL(W_PERSON_ID, AP.PERSON_ID)
+                                AND AP.SOB_ID             = W_SOB_ID
+                                AND AP.ORG_ID             = W_ORG_ID
+                                AND AP.ADJUSTMENT_ID      = W_ADJUSTMENT_ID
+                              ORDER BY AP.PAY_YYYYMM 
+                              ) SX1
+                      ) AP1
+              GROUP BY AP1.ADJUSTMENT_ID
+            ) T1
+      WHERE PM.OPERATING_UNIT_ID  = OU.OPERATING_UNIT_ID
+        AND PM.PERSON_ID          = RA.PERSON_ID
+        AND RA.ADJUSTMENT_ID      = T1.ADJUSTMENT_ID(+)
+        AND RA.ADJUSTMENT_ID      = W_ADJUSTMENT_ID
+        AND PM.CORP_ID            = W_CORP_ID
+        AND PM.PERSON_ID          = NVL(W_PERSON_ID, PM.PERSON_ID)
+        AND PM.DEPT_ID            = NVL(W_DEPT_ID, PM.DEPT_ID)
+        AND PM.PAY_GRADE_ID       = NVL(W_PAY_GRADE_ID, PM.PAY_GRADE_ID)
+        AND PM.SOB_ID             = W_SOB_ID
+        AND PM.ORG_ID             = W_ORG_ID
+        AND (PM.EMPLOYE_TYPE      = DECODE(W_ADJUSTMENT_TYPE, 'R', '3', '1')
+          OR PM.EMPLOYE_TYPE      = DECODE(W_ADJUSTMENT_TYPE, 'R', '3', '2'))
+        AND RA.ADJUSTMENT_TYPE    = W_ADJUSTMENT_TYPE
+      ORDER BY RA.ADJUSTMENT_ID DESC;
+          
+     END SELECT_RETIRE_LIST;
+
+-- 퇴직금정산내역(REPORT) : 급여 상세 내역.
+  PROCEDURE SELECT_RETIRE_PAYMENT_DETAIL
+              ( P_CURSOR1                           OUT TYPES.TCURSOR1
+              , W_ADJUSTMENT_ID                     IN NUMBER
+              , W_PAY_YYYYMM                        IN VARCHAR2
+              , W_SOB_ID                            IN NUMBER
+              , W_ORG_ID                            IN NUMBER
+              )
+  AS
+  BEGIN
+    OPEN P_CURSOR1 FOR
+      SELECT RAP.ADJUSTMENT_ID
+          , RAP.WAGE_TYPE
+          , RAP.TOTAL_AMOUNT AS TOTAL_AMOUNT
+          , S_RAD.A01 AS A01  -- 기본급.
+          , S_RAD.A26 AS A26  -- 주휴수당.
+          , S_RAD.A02 AS A02  -- 직책수당.
+          , S_RAD.A31 AS A31  -- 복지수당.
+          , S_RAD.A03 AS A03  -- 근속수당.
+          , S_RAD.A13 AS A13  -- 야간수당.
+          , S_RAD.A14 AS A14  -- 특근수당.
+          , S_RAD.A12 AS A12  -- 연장수당.
+          , S_RAD.A19 AS A19  -- 통신보조금.
+          , S_RAD.A_ETC AS A_ETC    -- 그외.
+        FROM HRR_RETIRE_ADJUSTMENT_PAYMENT RAP
+          , ( SELECT RAD.ADJUSTMENT_ID
+                  , RAD.PAY_YYYYMM
+                  , RAD.WAGE_TYPE
+                  , RAD.SOB_ID
+                  , RAD.ORG_ID
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A01', RAD.ALLOWANCE_AMOUNT, 0)) AS A01  -- 기본급.
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A26', RAD.ALLOWANCE_AMOUNT, 0)) AS A26  -- 주휴수당.
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A02', RAD.ALLOWANCE_AMOUNT, 0)) AS A02  -- 직책수당.
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A31', RAD.ALLOWANCE_AMOUNT, 0)) AS A31  -- 복지수당.
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A03', RAD.ALLOWANCE_AMOUNT, 0)) AS A03  -- 근속수당.
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A13', RAD.ALLOWANCE_AMOUNT, 0)) AS A13  -- 야간수당.
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A14', RAD.ALLOWANCE_AMOUNT, 0) +  -- 생산직 특근수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A35', RAD.ALLOWANCE_AMOUNT, 0)    -- 관리직 특근수당.
+                        ) AS A14  -- 특근수당.
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A12', RAD.ALLOWANCE_AMOUNT, 0)) AS A12  -- 연장수당.
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A19', RAD.ALLOWANCE_AMOUNT, 0)) AS A19  -- 통신보조금.
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A04', RAD.ALLOWANCE_AMOUNT, 0) +  -- 영업활동수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A05', RAD.ALLOWANCE_AMOUNT, 0) +  -- X
+                        DECODE(HA.ALLOWANCE_CODE, 'A06', RAD.ALLOWANCE_AMOUNT, 0) +  -- 자격수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A07', RAD.ALLOWANCE_AMOUNT, 0) +  -- 기타수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A08', RAD.ALLOWANCE_AMOUNT, 0) +  -- 가족수당. X
+                        CASE WHEN HA.ALLOWANCE_CODE = 'A09' AND RAD.WAGE_TYPE = 'P1' THEN RAD.ALLOWANCE_AMOUNT ELSE 0 END + -- 연봉상여금.
+                        DECODE(HA.ALLOWANCE_CODE, 'A10', RAD.ALLOWANCE_AMOUNT, 0) +  -- 급상여소급분.
+                        DECODE(HA.ALLOWANCE_CODE, 'A11', RAD.ALLOWANCE_AMOUNT, 0) +  -- 시간외수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A15', RAD.ALLOWANCE_AMOUNT, 0) +  -- 야간당직.
+                        DECODE(HA.ALLOWANCE_CODE, 'A17', RAD.ALLOWANCE_AMOUNT, 0) +  -- 근태공제.
+                        DECODE(HA.ALLOWANCE_CODE, 'A18', RAD.ALLOWANCE_AMOUNT, 0) +  -- 년차수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A20', RAD.ALLOWANCE_AMOUNT, 0) +  -- 통신비.
+                        DECODE(HA.ALLOWANCE_CODE, 'A21', RAD.ALLOWANCE_AMOUNT, 0) +  -- 국외근로수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A22', RAD.ALLOWANCE_AMOUNT, 0) +  -- 생산장려수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A23', RAD.ALLOWANCE_AMOUNT, 0) +  -- X
+                        DECODE(HA.ALLOWANCE_CODE, 'A24', RAD.ALLOWANCE_AMOUNT, 0) +  -- 자기개발수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A25', RAD.ALLOWANCE_AMOUNT, 0) +  -- 차량유지비.
+                        DECODE(HA.ALLOWANCE_CODE, 'A27', RAD.ALLOWANCE_AMOUNT, 0) +  -- X
+                        DECODE(HA.ALLOWANCE_CODE, 'A28', RAD.ALLOWANCE_AMOUNT, 0) +  -- X
+                        DECODE(HA.ALLOWANCE_CODE, 'A29', RAD.ALLOWANCE_AMOUNT, 0) +  -- X
+                        DECODE(HA.ALLOWANCE_CODE, 'A30', RAD.ALLOWANCE_AMOUNT, 0) +  -- X
+                        DECODE(HA.ALLOWANCE_CODE, 'A32', RAD.ALLOWANCE_AMOUNT, 0) +  -- 육아수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A33', RAD.ALLOWANCE_AMOUNT, 0) +  -- 식대.
+                        DECODE(HA.ALLOWANCE_CODE, 'A34', RAD.ALLOWANCE_AMOUNT, 0)    -- 연장ii
+                        ) AS A_ETC    -- 그외.
+                FROM HRR_RETIRE_ADJUST_PAY_DETAIL RAD
+                  , HRM_ALLOWANCE_V HA
+              WHERE RAD.ALLOWANCE_ID        = HA.ALLOWANCE_ID
+                AND RAD.ADJUSTMENT_ID       = W_ADJUSTMENT_ID
+                AND RAD.PAY_YYYYMM          = W_PAY_YYYYMM
+                AND RAD.WAGE_TYPE           = 'P1'
+                AND RAD.SOB_ID              = W_SOB_ID
+                AND RAD.ORG_ID              = W_ORG_ID
+              GROUP BY RAD.ADJUSTMENT_ID
+                  , RAD.PAY_YYYYMM
+                  , RAD.WAGE_TYPE
+                  , RAD.SOB_ID
+                  , RAD.ORG_ID
+             ) S_RAD
+      WHERE RAP.ADJUSTMENT_ID           = S_RAD.ADJUSTMENT_ID
+        AND RAP.PAY_YYYYMM              = S_RAD.PAY_YYYYMM
+        AND RAP.WAGE_TYPE               = S_RAD.WAGE_TYPE
+        AND RAP.SOB_ID                  = S_RAD.SOB_ID
+        AND RAP.ORG_ID                  = S_RAD.ORG_ID
+        AND RAP.ADJUSTMENT_ID           = W_ADJUSTMENT_ID
+        AND RAP.PAY_YYYYMM              = W_PAY_YYYYMM
+        AND RAP.WAGE_TYPE               = 'P1'
+        AND RAP.SOB_ID                  = W_SOB_ID
+        AND RAP.ORG_ID                  = W_ORG_ID
+      ;
+  END SELECT_RETIRE_PAYMENT_DETAIL;
+
+-- 퇴직금정산내역(REPORT) : 급여 상세 내역 합계.
+  PROCEDURE SELECT_RETIRE_PAYMENT_SUM
+              ( P_CURSOR2                           OUT TYPES.TCURSOR2
+              , W_ADJUSTMENT_ID                     IN NUMBER
+              , W_SOB_ID                            IN NUMBER
+              , W_ORG_ID                            IN NUMBER
+              )
+  AS
+  BEGIN
+    OPEN P_CURSOR2 FOR
+      SELECT RAP.ADJUSTMENT_ID
+          , RAP.WAGE_TYPE
+          , SUM(RAP.TOTAL_AMOUNT) AS TOTAL_AMOUNT
+          , SUM(S_RAD.A01) AS A01  -- 기본급.
+          , SUM(S_RAD.A26) AS A26  -- 주휴수당.
+          , SUM(S_RAD.A02) AS A02  -- 직책수당.
+          , SUM(S_RAD.A31) AS A31  -- 복지수당.
+          , SUM(S_RAD.A03) AS A03  -- 근속수당.
+          , SUM(S_RAD.A13) AS A13  -- 야간수당.
+          , SUM(S_RAD.A14) AS A14  -- 특근수당.
+          , SUM(S_RAD.A12) AS A12  -- 연장수당.
+          , SUM(S_RAD.A19) AS A19  -- 통신보조금.
+          , SUM(S_RAD.A_ETC) AS A_ETC    -- 그외.
+        FROM HRR_RETIRE_ADJUSTMENT_PAYMENT RAP
+          , ( SELECT RAD.ADJUSTMENT_ID
+                  , RAD.PAY_YYYYMM
+                  , RAD.WAGE_TYPE
+                  , RAD.SOB_ID
+                  , RAD.ORG_ID
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A01', RAD.ALLOWANCE_AMOUNT, 0)) AS A01  -- 기본급.
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A26', RAD.ALLOWANCE_AMOUNT, 0)) AS A26  -- 주휴수당.
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A02', RAD.ALLOWANCE_AMOUNT, 0)) AS A02  -- 직책수당.
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A31', RAD.ALLOWANCE_AMOUNT, 0)) AS A31  -- 복지수당.
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A03', RAD.ALLOWANCE_AMOUNT, 0)) AS A03  -- 근속수당.
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A13', RAD.ALLOWANCE_AMOUNT, 0)) AS A13  -- 야간수당.
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A14', RAD.ALLOWANCE_AMOUNT, 0) +  -- 생산직 특근수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A35', RAD.ALLOWANCE_AMOUNT, 0)    -- 관리직 특근수당.
+                        ) AS A14  -- 특근수당.
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A12', RAD.ALLOWANCE_AMOUNT, 0)) AS A12  -- 연장수당.
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A19', RAD.ALLOWANCE_AMOUNT, 0)) AS A19  -- 통신보조금.
+                  , SUM(DECODE(HA.ALLOWANCE_CODE, 'A04', RAD.ALLOWANCE_AMOUNT, 0) +  -- 영업활동수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A05', RAD.ALLOWANCE_AMOUNT, 0) +  -- X
+                        DECODE(HA.ALLOWANCE_CODE, 'A06', RAD.ALLOWANCE_AMOUNT, 0) +  -- 자격수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A07', RAD.ALLOWANCE_AMOUNT, 0) +  -- 기타수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A08', RAD.ALLOWANCE_AMOUNT, 0) +  -- 가족수당. X
+                        CASE WHEN HA.ALLOWANCE_CODE = 'A09' AND RAD.WAGE_TYPE = 'P1' THEN RAD.ALLOWANCE_AMOUNT ELSE 0 END + -- 연봉상여금.
+                        DECODE(HA.ALLOWANCE_CODE, 'A10', RAD.ALLOWANCE_AMOUNT, 0) +  -- 급상여소급분.
+                        DECODE(HA.ALLOWANCE_CODE, 'A11', RAD.ALLOWANCE_AMOUNT, 0) +  -- 시간외수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A15', RAD.ALLOWANCE_AMOUNT, 0) +  -- 야간당직.
+                        DECODE(HA.ALLOWANCE_CODE, 'A17', RAD.ALLOWANCE_AMOUNT, 0) +  -- 근태공제.
+                        DECODE(HA.ALLOWANCE_CODE, 'A18', RAD.ALLOWANCE_AMOUNT, 0) +  -- 년차수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A20', RAD.ALLOWANCE_AMOUNT, 0) +  -- 통신비.
+                        DECODE(HA.ALLOWANCE_CODE, 'A21', RAD.ALLOWANCE_AMOUNT, 0) +  -- 국외근로수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A22', RAD.ALLOWANCE_AMOUNT, 0) +  -- 생산장려수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A23', RAD.ALLOWANCE_AMOUNT, 0) +  -- X
+                        DECODE(HA.ALLOWANCE_CODE, 'A24', RAD.ALLOWANCE_AMOUNT, 0) +  -- 자기개발수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A25', RAD.ALLOWANCE_AMOUNT, 0) +  -- 차량유지비.
+                        DECODE(HA.ALLOWANCE_CODE, 'A27', RAD.ALLOWANCE_AMOUNT, 0) +  -- X
+                        DECODE(HA.ALLOWANCE_CODE, 'A28', RAD.ALLOWANCE_AMOUNT, 0) +  -- X
+                        DECODE(HA.ALLOWANCE_CODE, 'A29', RAD.ALLOWANCE_AMOUNT, 0) +  -- X
+                        DECODE(HA.ALLOWANCE_CODE, 'A30', RAD.ALLOWANCE_AMOUNT, 0) +  -- X
+                        DECODE(HA.ALLOWANCE_CODE, 'A32', RAD.ALLOWANCE_AMOUNT, 0) +  -- 육아수당.
+                        DECODE(HA.ALLOWANCE_CODE, 'A33', RAD.ALLOWANCE_AMOUNT, 0) +  -- 식대.
+                        DECODE(HA.ALLOWANCE_CODE, 'A34', RAD.ALLOWANCE_AMOUNT, 0)    -- 연장ii
+                        ) AS A_ETC    -- 그외.
+                FROM HRR_RETIRE_ADJUST_PAY_DETAIL RAD
+                  , HRM_ALLOWANCE_V HA
+              WHERE RAD.ALLOWANCE_ID        = HA.ALLOWANCE_ID
+                AND RAD.ADJUSTMENT_ID       = W_ADJUSTMENT_ID
+                AND RAD.WAGE_TYPE           = 'P1'
+                AND RAD.SOB_ID              = W_SOB_ID
+                AND RAD.ORG_ID              = W_ORG_ID
+              GROUP BY RAD.ADJUSTMENT_ID
+                  , RAD.PAY_YYYYMM
+                  , RAD.WAGE_TYPE
+                  , RAD.SOB_ID
+                  , RAD.ORG_ID
+             ) S_RAD
+      WHERE RAP.ADJUSTMENT_ID           = S_RAD.ADJUSTMENT_ID
+        AND RAP.PAY_YYYYMM              = S_RAD.PAY_YYYYMM
+        AND RAP.WAGE_TYPE               = S_RAD.WAGE_TYPE
+        AND RAP.SOB_ID                  = S_RAD.SOB_ID
+        AND RAP.ORG_ID                  = S_RAD.ORG_ID
+        AND RAP.ADJUSTMENT_ID           = W_ADJUSTMENT_ID
+        AND RAP.WAGE_TYPE               = 'P1'
+        AND RAP.SOB_ID                  = W_SOB_ID
+        AND RAP.ORG_ID                  = W_ORG_ID
+      GROUP BY RAP.ADJUSTMENT_ID
+          , RAP.WAGE_TYPE
+      ;
+  END SELECT_RETIRE_PAYMENT_SUM;
+  
+---------------------------------------------------------------------------------------------------
+--                  퇴직소득원천징수영수증/지급조서 REPORT
+---------------------------------------------------------------------------------------------------
+  PROCEDURE SELECT_RETIRE_WITHHOLDING_TAX
+              ( P_CURSOR                            OUT TYPES.TCURSOR
+              , W_ADJUSTMENT_ID                     IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+              , W_CORP_ID                           IN HRR_RETIRE_ADJUSTMENT.CORP_ID%TYPE
+              , W_PERSON_ID                         IN HRR_RETIRE_ADJUSTMENT.PERSON_ID%TYPE
+              , W_DEPT_ID                           IN HRM_PERSON_MASTER.DEPT_ID%TYPE
+              , W_PAY_GRADE_ID                      IN HRM_PERSON_MASTER.PAY_GRADE_ID%TYPE           
+              , W_ADJUSTMENT_TYPE                   IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_TYPE%TYPE
+              , W_SOB_ID                            IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+              , W_ORG_ID                            IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+              )
+  AS
+    V_END_DATE                  DATE;
+  BEGIN
+    BEGIN
+      SELECT RA.RETIRE_DATE_TO
+        INTO V_END_DATE
+        FROM HRR_RETIRE_ADJUSTMENT RA
+       WHERE RA.ADJUSTMENT_ID       = W_ADJUSTMENT_ID
+      ;
+    EXCEPTION WHEN OTHERS THEN
+      V_END_DATE := TRUNC(SYSDATE);
+    END;
+    
+    OPEN P_CURSOR FOR
+      SELECT -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
+             --                                    우측 상단의 항목(거주구분, 내/외국인, 거주지국)
+             -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
+               CASE
+                 WHEN PM.RESIDENT_TYPE = '1' THEN 'V'
+                 ELSE ''
+               END AS RESIDENT_TYPE_1                                        -- 거주 구분(거주자1).
+             , CASE
+                 WHEN PM.RESIDENT_TYPE = '1' THEN ''
+                 ELSE 'V'
+               END AS RESIDENT_TYPE_2                                        -- 거주 구분(거주자2).
+             , CASE
+                 WHEN PM.NATIONALITY_TYPE = '1' THEN 'V'
+                 ELSE ''
+               END AS NATIONALITY_TYPE_1                                     -- 내외국인 구분(내국인1).
+             , CASE
+                 WHEN PM.NATIONALITY_TYPE = '1' THEN ''
+                 ELSE 'V'
+               END AS NATIONALITY_TYPE_9                                     -- 내외국인 구분(외국인9).
+             , T3.NATION_DESC                                                -- 거주지국.
+             , T3.NATION_ISO_CODE                                            -- 거주지국코드.
+             , '사업장' AS OWNER_TYPE                                        -- 징수의무자구분.
+             -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
+             --                                    징수의무자 인적사항
+             -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
+             , HOU.VAT_NUMBER                                                 -- 사업자등록번호.
+             , CM.CORP_NAME                                                   -- 법인명(상호).
+             , CM.PRESIDENT_NAME                                              -- 대표자(성명).
+             , HOU.ORG_ADDRESS                                                -- 소재지(주소).        
+                 
+             -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
+             --                                    소득자 인적사항
+             -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
+             , PM.NAME                                                            -- 성명.   
+             , PM.REPRE_NUM                                                       -- 주민번호.
+             , PM.PRSN_ADDR1 || ' ' || PM.PRSN_ADDR2  AS ADDRESS                  -- 주소.
+             , CASE 
+                 WHEN TO_CHAR(RA.RETIRE_DATE_FR, 'YYYY') != RA.ADJUSTMENT_YYYY
+                   THEN HRM_COMMON_DATE_G.DATE_YYYYMMDD_F(TO_DATE(RA.ADJUSTMENT_YYYY || '-01-01', 'YYYY-MM-DD')) 
+                 ELSE HRM_COMMON_DATE_G.DATE_YYYYMMDD_F(RA.RETIRE_DATE_FR) 
+               END AS START_RETIRE_DATE                                           -- 귀속연도 시작 일자
+             , HRM_COMMON_G.ID_NAME_F(PM.RETIRE_ID) AS RETIRE_NAME                -- 퇴직사유.
+             , HRM_COMMON_DATE_G.DATE_YYYYMMDD_F(RA.RETIRE_DATE_TO) AS LAST_RETIRE_DATE   -- 귀속연도 마지막 일자(퇴직일자).
+                 
+                 
+             ------------------------------------------------------------------------------------------------------------------- 
+             -- 근무처별 소득 명세서
+             -- 퇴직연금(IRP) 적용시 인쇄 변경 --
+             ------------------------------------------------------------------------------------------------------------------- 
+             -- [ 주(현) ].
+             , NULL AS RETIRE_TAX1                                                -- 퇴직세액공제적용.
+             , NULL AS RETIRE_TAX2                                                -- 퇴직세액공제적용.
+             , NULL AS RETIRE_TAX3                                                -- 퇴직세액공제적용.
+             , NULL AS RETIRE_TAX4                                                -- 퇴직세액공제적용 합계.                 
+                 
+             , CM.CORP_NAME AS WORK_CORP_NAME1                                     -- 근무처명.
+             , NULL AS WORK_CORP_NAME2                                            -- 근무처명.
+             , NULL AS WORK_CORP_NAME3                                            -- 근무처명.
+             , NULL AS WORK_CORP_NAME4                                            -- 근무처명 합계.
+                 
+             , HOU.VAT_NUMBER AS WORK_VAT_NUMBER1                                  -- 사업자등록번호.
+             , NULL AS WORK_VAT_NUMBER2                                           -- 사업자등록번호.
+             , NULL AS WORK_VAT_NUMBER3                                           -- 사업자등록번호.
+             , NULL AS WORK_VAT_NUMBER4                                           -- 사업자등록번호 합계.
+
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     RA.RETIRE_TOTAL_AMOUNT, 
+                                     TO_NUMBER(NULL)) AS RETIRE_TOTAL_AMOUNT1     -- 퇴직급여.
+             , NULL AS RETIRE_TOTAL_AMOUNT2                                       -- 퇴직급여.
+             , NULL AS RETIRE_TOTAL_AMOUNT3                                       -- 퇴직급여.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NVL(RA.RETIRE_TOTAL_AMOUNT, 0) + 
+                                     NVL(RA.HONORARY_AMOUNT, 0), 
+                                     TO_NUMBER(NULL)) AS RETIRE_TOTAL_AMOUNT4     -- 퇴직급여 합계.
+                 
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     RA.HONORARY_AMOUNT, 
+                                     TO_NUMBER(NULL)) AS HONORARY_AMOUNT1         -- 명예퇴직수당(추가퇴직금).
+             , NULL AS HONORARY_AMOUNT2                                           -- 명예퇴직수당(추가퇴직금).
+             , NULL AS HONORARY_AMOUNT3                                           -- 명예퇴직수당(추가퇴직금).
+             , NULL AS HONORARY_AMOUNT4                                           -- 명예퇴직수당(추가퇴직금) 합계.
+                 
+             , NULL AS RETIRE_AMOUNT1                                             -- 퇴직연금일시금.
+             , NULL AS RETIRE_AMOUNT2                                             -- 퇴직연금일시금.
+             , NULL AS RETIRE_AMOUNT3                                             -- 퇴직연금일시금.
+             , NULL AS RETIRE_AMOUNT4                                             -- 퇴직연금일시금 합계.
+             
+             , NULL AS RETIRE_HONORARY_AMOUNT1                                    -- 명예퇴직수당 퇴직연금일시금.
+             , NULL AS RETIRE_HONORARY_AMOUNT2                                    -- 명예퇴직수당 퇴직연금일시금.
+             , NULL AS RETIRE_HONORARY_AMOUNT3                                    -- 명예퇴직수당 퇴직연금일시금.
+             , NULL AS RETIRE_HONORARY_AMOUNT4                                    -- 명예퇴직수당 퇴직연금일시금 합계.
+                 
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NVL(RA.RETIRE_TOTAL_AMOUNT, 0), 
+                                     TO_NUMBER(NULL)) AS TOTAL1                   -- 법정계.
+             , NULL AS TOTAL2                                                     -- 법정계.
+             , NULL AS TOTAL3                                                     -- 법정계.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NVL(RA.RETIRE_TOTAL_AMOUNT, 0) + 
+                                     NVL(RA.HONORARY_AMOUNT, 0), 
+                                     TO_NUMBER(NULL)) AS TOTAL4                   -- 법정외 계 합계.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NVL(RA.HONORARY_AMOUNT, 0), 
+                                     TO_NUMBER(NULL)) AS TOTAL_HONORARY_AMOUNT1   -- 법정외 계.
+             , NULL AS TOTAL_HONORARY_AMOUNT2                                     -- 법정외 계.
+             , NULL AS TOTAL_HONORARY_AMOUNT3                                     -- 법정외 계.
+             , NULL AS TOTAL_HONORARY_AMOUNT4 
+             
+             , NULL AS NON_TAX1                                                   -- 비과세소득.
+             , NULL AS NON_TAX2                                                   -- 비과세소득.
+             , NULL AS NON_TAX3                                                   -- 비과세소득.
+             , NULL AS NON_TAX4                                                   -- 비과세소득 합계.
+             
+             ------------------------------------------------------------------------------------------------------------------- 
+             --                                    퇴직연금명세
+             ------------------------------------------------------------------------------------------------------------------- 
+             -- [ 주(현) ].
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     TO_NUMBER(NULL), 
+                                     NVL(RA.RETIRE_TOTAL_AMOUNT, 0) + 
+                                     NVL(RA.HONORARY_AMOUNT, 0)) AS TOTAL_RECEIPTS1           -- 총수령액.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     TO_NUMBER(NULL), 
+                                     NVL(RA.RETIRE_TOTAL_AMOUNT, 0) + 
+                                     NVL(RA.HONORARY_AMOUNT, 0)) AS REPAY_TOTAL_AMOUNT1       -- 원리금 합계액.
+             , NULL AS INCOME_MONEY_DUE1                                                      -- 소득자 불입액.
+             , NULL AS RETIRE_ANNUITY_DED1                                                    -- 퇴직연금 소득공제액.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     TO_NUMBER(NULL), 
+                                     NVL(RA.RETIRE_TOTAL_AMOUNT, 0) + 
+                                     NVL(RA.HONORARY_AMOUNT, 0)) AS RETIRE_ANNUITY_LUMP_SUM1  -- 퇴직연금일시금.
+             -- [ 종(전) ].
+             , NULL AS TOTAL_RECEIPTS2                                                        -- 총수령액.
+             , NULL AS REPAY_TOTAL_AMOUNT2                                                    -- 원리금 합계액.
+             , NULL AS INCOME_MONEY_DUE2                                                      -- 소득자 불입액.
+             , NULL AS RETIRE_ANNUITY_DED2                                                    -- 퇴직연금 소득공제액.
+             , NULL AS RETIRE_ANNUITY_LUMP_SUM2                                               -- 퇴직연금일시금.
+                 
+             ------------------------------------------------------------------------------------------------------------------- 
+             --                                    세액환산명세
+             -------------------------------------------------------------------------------------------------------------------
+             -- [ 법정퇴직급여 | 주(현) ].
+             , NULL AS RETIRE_ANN_LUMP_SUM_E1                                                 -- 퇴직연금일시금 지급예상액, 이연금액.
+                 
+             , NULL AS TOTAL_LUMP_SUM1                                                        -- 총일시금.
+             , NULL AS RECEIVE_RETIRE_PAY1                                                    -- 수령가능퇴직급여액.
+             , NULL AS EX_RETIRE_ANN_DED1                                                     -- 환산퇴직소득공제.
+             , NULL AS EX_RETIRE_ANN_STANDARD1                                                -- 환산퇴직소득과세표준.
+             , NULL AS EX_YEARLY_ANN_STANDARD1                                                -- 환산연평균 과세표준.
+             , NULL AS EX_YEARLY_TAX_AMOUNT1                                                  -- 환산 연평균 산출세액.
+             -- [ 법정퇴직급여 | 종(전) ].             
+             , NULL AS RETIRE_ANN_LUMP_SUM_E2                                                 -- 퇴직연금일시금 지급예상액, 이연금액.
+                 
+             -- [ 법정외 퇴직급여 | 주(현) ].
+             , NULL AS RETIRE_ANN_LUMP_SUM_E3                                                 -- 퇴직연금일시금 지급예상액, 이연금액.
+                 
+             , NULL AS TOTAL_LUMP_SUM2                                                        -- 총일시금.
+             , NULL AS RECEIVE_RETIRE_PAY2                                                    -- 수령가능퇴직급여액.
+             , NULL AS EX_RETIRE_ANN_DED2                                                     -- 환산퇴직소득공제.
+             , NULL AS EX_RETIRE_ANN_STANDARD2                                                -- 환산퇴직소득과세표준.
+             , NULL AS EX_YEARLY_ANN_STANDARD2                                                -- 환산연평균 과세표준.
+             , NULL AS EX_YEARLY_TAX_AMOUNT2                                                  -- 환산 연평균 산출세액.
+                 
+             -- [ 법정외 퇴직급여 | 종(전) ].
+             , NULL AS RETIRE_ANN_LUMP_SUM_E4                                                 -- 퇴직연금일시금 지급예상액, 이연금액.
+                 
+             ------------------------------------------------------------------------------------------------------------------- 
+             --                                    근속연수
+             ------------------------------------------------------------------------------------------------------------------- 
+             -- [ 법정 퇴직급여(주(현)근무지) ]
+             , TO_CHAR(RA.RETIRE_DATE_FR, 'YYYY.MM.DD') AS RETIRE_DATE_FR1                    -- 입사일(정산시작일)
+             , TO_CHAR(RA.RETIRE_DATE_TO, 'YYYY.MM.DD') AS RETIRE_DATE1                       -- 퇴사일.
+             , RA.LONG_MONTH AS LONG_MONTH1                                                   -- 근속월수.
+             , NULL AS EXCEPT_MONTH1                                                          -- 제외월수.
+             , RA.LONG_YEAR AS LONG_YEAR1                                                     -- 근속연수.
+                 
+             -- [ 법정 외 퇴직급여(주(현)근무지) ]
+             , TO_CHAR(RA.H_RETIRE_DATE_FR, 'YYYY.MM.DD') AS ORI_JOIN_DATE2                   -- 입사일.
+             , TO_CHAR(RA.H_RETIRE_DATE_TO, 'YYYY.MM.DD') AS RETIRE_DATE2                     -- 퇴사일.
+             , RA.H_LONG_MONTH AS LONG_MONTH2                                                 -- 근속월수.
+             , NULL AS EXCEPT_MONTH2                                                          -- 제외월수.
+             , RA.H_LONG_YEAR AS LONG_YEAR2                                                   -- 근속연수.
+                 
+             -- [ 법정 퇴직급여(종(전)근무지) ]
+             , NULL AS PRE_RETIRE_DATE_FR1                                                    -- 입사일(정산시작일)
+             , NULL AS PRE_RETIRE_DATE1                                                       -- 퇴사일.
+             , NULL AS PRE_LONG_MONTH1                                                        -- 근속월수.
+             , NULL AS PRE_EXCEPT_MONTH1                                                      -- 제외월수.
+                       
+             -- [ 법정 외 퇴직급여(종(전)근무지) ] 
+             , NULL AS PRE_ORI_JOIN_DATE2                                                     -- 입사일.
+             , NULL AS PRE_RETIRE_DATE2                                                       -- 퇴사일.
+             , NULL AS PRE_LONG_MONTH2                                                        -- 근속월수.
+             , NULL AS PRE_EXCEPT_MONTH2                                                      -- 제외월수.
+                 
+             , NULL AS PRE_LONG_YEAR1                                                         -- 중복월수1.
+             , NULL AS PRE_LONG_YEAR2                                                         -- 중복월수2.
+                 
+             -------------------------------------------------------------------------------------------------------------------
+             --                                    정산명세
+             ------------------------------------------------------------------------------------------------------------------- 
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     RA.RETIRE_AMOUNT, 
+                                     TO_NUMBER(NULL)) AS RETIRE_AMOUNT                 -- 퇴직급여액.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     RA.HONORARY_AMOUNT, 
+                                     TO_NUMBER(NULL)) AS HONORARY_AMOUNT               -- 명예퇴직금.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NVL(RA.RETIRE_AMOUNT, 0) + 
+                                     NVL(RA.HONORARY_AMOUNT, 0), 
+                                     TO_NUMBER(NULL)) AS TOTAL_RETIRE_AMOUNT           -- 퇴직급여액 합계.
+                 
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NVL(RA.INCOME_DED_AMOUNT, 0) + 
+                                     NVL(RA.LONG_DED_AMOUNT, 0), 
+                                     TO_NUMBER(NULL)) AS DED_SUM_AMOUNT                -- 퇴직소득공제 - 계.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NVL(RA.H_INCOME_DED_AMOUNT, 0) + 
+                                     NVL(RA.H_LONG_DED_AMOUNT, 0), 
+                                     TO_NUMBER(NULL)) AS H_DED_SUM_AMOUNT              -- 퇴직소득공제 - 계.
+             , DECODE(HRP.PERSON_ID, NULL,
+                                     (NVL(RA.INCOME_DED_AMOUNT, 0) + 
+                                      NVL(RA.LONG_DED_AMOUNT, 0)) + 
+                                     (NVL(RA.H_INCOME_DED_AMOUNT, 0) + 
+                                      NVL(RA.H_LONG_DED_AMOUNT, 0)), 
+                                      TO_NUMBER(NULL)) AS TOTAL_INCOME_DED_AMOUNT      -- 퇴직소득공제 합계.
+                 
+             , DECODE(HRP.PERSON_ID, NULL,
+                                     RA.TAX_STD_AMOUNT, 
+                                     TO_NUMBER(NULL)) AS TAX_STD_AMOUNT                -- 퇴직소득과세표준 - 법정퇴직급여.
+             , DECODE(HRP.PERSON_ID, NULL,
+                                     RA.H_TAX_STD_AMOUNT, 
+                                     TO_NUMBER(NULL)) AS H_TAX_STD_AMOUNT              -- 퇴직소득과세표준 - 법정이외 퇴직급여.
+             , DECODE(HRP.PERSON_ID, NULL,
+                                     NVL(RA.TAX_STD_AMOUNT, 0) + 
+                                     NVL(RA.H_TAX_STD_AMOUNT, 0), 
+                                     TO_NUMBER(NULL)) AS TOTAL_TAX_STD_AMOUNT          -- 퇴직소득과세표준 합계.
+                 
+             , DECODE(HRP.PERSON_ID, NULL,
+                                     RA.AVG_TAX_STD_AMOUNT, 
+                                     TO_NUMBER(NULL)) AS AVG_TAX_STD_AMOUNT            -- 세액계산근거 - 연평균과세표준 - 법정퇴직급여.
+             , DECODE(HRP.PERSON_ID, NULL,
+                                     RA.H_AVG_TAX_STD_AMOUNT, 
+                                     TO_NUMBER(NULL)) AS H_AVG_TAX_STD_AMOUNT          -- 세액계산근거 - 연평균과세표준 - 법정이외 퇴직급여.
+             , DECODE(HRP.PERSON_ID, NULL,
+                                     NVL(RA.AVG_TAX_STD_AMOUNT, 0) + 
+                                     NVL(RA.H_AVG_TAX_STD_AMOUNT, 0), 
+                                     TO_NUMBER(NULL)) AS TOTAL_AVG_TAX_STD_AMOUNT      -- 연평균과세표준 합계.
+                 
+             , DECODE(HRP.PERSON_ID, NULL,
+                                     RA.AVG_COMP_TAX_AMOUNT, 
+                                     TO_NUMBER(NULL)) AS AVG_COMP_TAX_AMOUNT           -- 세액계산근거 - 연평균산출세액 - 법정퇴직급여.
+             , DECODE(HRP.PERSON_ID, NULL,
+                                     RA.H_AVG_COMP_TAX_AMOUNT, 
+                                     TO_NUMBER(NULL)) AS H_AVG_COMP_TAX_AMOUNT         -- 세액계산근거 - 연평균산출세액 - 법정이외 퇴직급여.
+             , DECODE(HRP.PERSON_ID, NULL,
+                                     NVL(RA.AVG_COMP_TAX_AMOUNT, 0) + 
+                                     NVL(RA.H_AVG_COMP_TAX_AMOUNT, 0), 
+                                     TO_NUMBER(NULL)) AS TOTAL_AVG_COMP_TAX_AMOUNT     -- 연평균산출세액 합계.
+                 
+             , DECODE(HRP.PERSON_ID, NULL,
+                                     RA.COMP_TAX_AMOUNT, 
+                                     TO_NUMBER(NULL)) AS COMP_TAX_AMOUNT               -- 세액계산근거 - 산출세액 - 법정퇴직급여.
+             , DECODE(HRP.PERSON_ID, NULL,
+                                     RA.H_COMP_TAX_AMOUNT, 
+                                     TO_NUMBER(NULL)) AS H_COMP_TAX_AMOUNT             -- 세액계산근거 - 산출세액 - 법정이외 퇴직급여.
+             , DECODE(HRP.PERSON_ID, NULL,
+                                     NVL(RA.COMP_TAX_AMOUNT, 0) + 
+                                     NVL(RA.H_COMP_TAX_AMOUNT, 0), 
+                                     TO_NUMBER(NULL)) AS TOTAL_COMP_TAX_AMOUNT         -- 산출세액 합계.
+                 
+             , DECODE(HRP.PERSON_ID, NULL,
+                                     RA.TAX_DED_AMOUNT, 
+                                     TO_NUMBER(NULL)) AS TAX_DED_AMOUNT                -- 세액계산근거 - 세액공제(외국납부) - 법정퇴직급여.
+             , DECODE(HRP.PERSON_ID, NULL,
+                                     RA.H_TAX_DED_AMOUNT, 
+                                     TO_NUMBER(NULL)) AS H_TAX_DED_AMOUNT              -- 세액계산근거 - 세액공제(외국납부) - 법정이외 퇴직급여.
+             , DECODE(HRP.PERSON_ID, NULL,
+                                     NVL(RA.TAX_DED_AMOUNT, 0) + 
+                                     NVL(RA.H_TAX_DED_AMOUNT, 0), 
+                                     TO_NUMBER(NULL)) AS TOTAL_TAX_DED_AMOUNT          -- 세액공제 합계.
+                 
+             , DECODE(HRP.PERSON_ID, NULL,
+                                     RA.INCOME_TAX_AMOUNT, 
+                                     TO_NUMBER(NULL)) AS INCOME_TAX_AMOUNT             -- 결정세액 - 퇴직소득세 - 법정퇴직급여.
+             , DECODE(HRP.PERSON_ID, NULL,
+                                     RA.H_INCOME_TAX_AMOUNT, 
+                                     TO_NUMBER(NULL)) AS H_INCOME_TAX_AMOUNT           -- 결정세액 - 퇴직소득세 - 법정이외 퇴직급여.
+             , DECODE(HRP.PERSON_ID, NULL,
+                                     NVL(RA.INCOME_TAX_AMOUNT, 0) + 
+                                     NVL(RA.H_INCOME_TAX_AMOUNT, 0), 
+                                     TO_NUMBER(NULL)) AS TOTAL_INCOME_TAX_AMOUNT       -- 결정세액 합계.
+             ------------------------------------------------------------------------------------------------------------------- 
+             --                                    납부명세
+             ------------------------------------------------------------------------------------------------------------------- 
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NVL(RA.INCOME_TAX_AMOUNT, 0) + 
+                                     NVL(RA.H_INCOME_TAX_AMOUNT, 0), 
+                                     NULL) AS TOTAL_INCOME_TAX_AMOUNT1                 -- 결정세액 - 소득세 합계.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NVL(RA.RESIDENT_TAX_AMOUNT, 0) + 
+                                     NVL(H_RESIDENT_TAX_AMOUNT, 0), 
+                                     NULL) AS RESIDENT_TAX_AMOUNT                      -- 결정세액 - 주민세 합계.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NVL(RA.SP_TAX_AMOUNT, 0) + 
+                                     NVL(RA.H_SP_TAX_AMOUNT, 0), 
+                                     NULL) AS TOTAL_SP_TAX_AMOUNT                      -- 농어촌 특별세 합계.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     (NVL(RA.INCOME_TAX_AMOUNT, 0) + 
+                                      NVL(RA.H_INCOME_TAX_AMOUNT, 0)) + 
+                                     (NVL(RA.RESIDENT_TAX_AMOUNT, 0) + 
+                                      NVL(H_RESIDENT_TAX_AMOUNT, 0)) + 
+                                     (NVL(RA.SP_TAX_AMOUNT, 0) + 
+                                      NVL(RA.H_SP_TAX_AMOUNT, 0)), 
+                                     NULL) AS TOTAL_INCOME_TAX_AMOUNT2                 -- 결정세액 합계.
+                   
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NULL, 
+                                     NULL) AS PRE_INCOME_AMOUNT                        -- 종(전)근무지 기납부세액 | 소득세.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NULL, 
+                                     NULL) AS PRE_LOCAL_AMOUNT                         -- 종(전)근무지 기납부세액 | 주민세.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NULL, 
+                                     NULL) AS PRE_SP_TAX_AMOUNT                        -- 종(전)근무지 기납부세액 | 농특세.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NULL, 
+                                     NULL) AS PRE_TOTAL                                -- 종(전)근무지 기납부세액 | 합계.
+                 
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     (TRUNC(NVL(RA.INCOME_TAX_AMOUNT, 0), -1) + 
+                                      TRUNC(NVL(RA.H_INCOME_TAX_AMOUNT, 0), -1)) - 
+                                     (NVL(NULL, 0)/*종(전)근무지 기납부세액 : 소득세*/), 
+                                     TO_NUMBER(NULL)) AS MINUS_INCOME_AMOUNT           -- 차감원천징수세액 | 소득세.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     (TRUNC(NVL(RA.RESIDENT_TAX_AMOUNT, 0), -1) + 
+                                      TRUNC(NVL(H_RESIDENT_TAX_AMOUNT, 0), -1)) - 
+                                     (NVL(NULL, 0)/*종(전)근무지 기납부세액 : 주민세*/), 
+                                     TO_NUMBER(NULL)) AS MINUS_LOCAL_AMOUNT            -- 차감원천징수세액 | 주민세.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     (TRUNC(NVL(RA.SP_TAX_AMOUNT, 0), -1) +  
+                                      TRUNC(NVL(RA.H_SP_TAX_AMOUNT, 0), -1)) - 
+                                     (NVL(NULL, 0)/*종(전)근무지 기납부세액 : 농특세*/), 
+                                     TO_NUMBER(NULL)) AS MINUS_SP_TAX_AMOUNT           -- 차감원천징수세액 | 농특세.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     ((TRUNC(NVL(RA.INCOME_TAX_AMOUNT, 0), -1) + 
+                                       TRUNC(NVL(RA.H_INCOME_TAX_AMOUNT, 0), -1)) - 
+                                      (NVL(NULL, 0))) + 
+                                     ((TRUNC(NVL(RA.RESIDENT_TAX_AMOUNT, 0), -1) + 
+                                       TRUNC(NVL(H_RESIDENT_TAX_AMOUNT, 0), -1)) - 
+                                      (NVL(NULL, 0))) + 
+                                     ((TRUNC(NVL(RA.SP_TAX_AMOUNT, 0), -1) + 
+                                       TRUNC(NVL(RA.H_SP_TAX_AMOUNT, 0), -1)) - 
+                                      (NVL(NULL, 0))), 
+                                     TO_NUMBER(NULL)) AS TOTAL_MINUS_TAX               -- 차감원천징수세액 합계.
+             , HRM_COMMON_DATE_G.DATE_YYYYMMDD_F(TO_CHAR(SYSDATE, 'YYYY-MM-DD')) AS PRINT_DATE
+             , CM.CORP_NAME || ' 대표이사'  AS PRINT_OWNER
+             -- 전호수 추가(2013-02-20) : 퇴직연금 적용 및 양식 변경 -- 
+             , CASE
+                 WHEN NVL(T1.OFFICER_YN, 'N') = 'Y' THEN '여'
+                 ELSE '부'
+               END AS OFFICER_FLAG  -- 임원여부.
+             , CASE 
+                 WHEN NVL(T2.ADJUST_RETIRE_CODE, '-') = '1' THEN 'O'
+                 ELSE ''
+               END RETIRE_REASON_1  -- 정년퇴직.
+             , CASE 
+                 WHEN NVL(T2.ADJUST_RETIRE_CODE, '-') = '2' THEN 'O'
+                 ELSE ''
+               END RETIRE_REASON_2  -- 정리해고.
+             , CASE 
+                 WHEN NVL(T2.ADJUST_RETIRE_CODE, '-') = '3' THEN 'O'
+                 ELSE ''
+               END RETIRE_REASON_3  -- 자발적퇴직.
+             , CASE 
+                 WHEN NVL(T1.OFFICER_YN, 'N') = 'Y' AND W_ADJUSTMENT_TYPE = 'R' THEN 'O'
+                 WHEN NVL(T2.ADJUST_RETIRE_CODE, '-') = '4' THEN 'O'
+                 ELSE ''
+               END RETIRE_REASON_4  -- 임원퇴직.
+             , CASE 
+                 WHEN W_ADJUSTMENT_TYPE               = 'M' THEN 'O'
+                 WHEN NVL(T2.ADJUST_RETIRE_CODE, '-') = '5' THEN 'O'
+                 ELSE ''
+               END RETIRE_REASON_5  -- 중간정산.
+             , CASE 
+                 WHEN NVL(T1.OFFICER_YN, 'N') = 'Y' AND W_ADJUSTMENT_TYPE = 'R' THEN ''
+                 WHEN W_ADJUSTMENT_TYPE               = 'M' THEN ''
+                 WHEN NVL(T2.ADJUST_RETIRE_CODE, '-') = '6' THEN 'O'
+                 ELSE ''
+               END RETIRE_REASON_6  -- 기타.  
+             , NULL AS ADD_MONTH1                                                                 -- 법정퇴직급여 가산월수.
+             , NULL AS ADD_MONTH2                                                                 -- 법정 외 퇴직급여 가산월수.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NULL, 
+                                     CM.RETIREMENT_PENSION_ACCOUNT) AS RETIREMENT_PENSION_ACCOUNT -- 퇴직연금 계좌번호.
+             , NULL AS DEFERRAL_TAX_AMT                                                           -- 과세이연 금액.
+             , NULL AS PRE_RECEIPT_RETIRE_PAY_AMT                                                 -- 기수령한 퇴직급여액.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NULL, 
+                                     HRP.CORP_NAME) AS RP_CORP_DESC                               -- 퇴직연금 사업자명.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NULL,
+                                     HRP.TAX_REG_NUM) AS RP_TAX_REG_NUM                           -- 사업자번호.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NULL,
+                                     HRP.ACCOUNT_NUM) AS RP_ACCOUNT_NUM                           -- 계좌번호.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     TO_NUMBER(NULL),
+                                     RA.RETIRE_AMOUNT) AS TRANS_RETIRE_AMOUNT                     -- 입금(이체) 법정퇴직급여.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     TO_NUMBER(NULL),
+                                     RA.HONORARY_AMOUNT) AS TRANS_HONORARY_AMOUNT                 -- 입금(이체) 법정퇴직급여이외.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NULL,
+                                     TO_CHAR(HRP.ISSUE_DATE, 'YYYY.MM.DD')) AS TRANS_DATE         -- 입금(이체) 일.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     NULL,
+                                     TO_CHAR(HRP.DUE_DATE, 'YYYY.MM.DD')) AS EXPIRE_DATE          -- 만기일.
+             , DECODE(HRP.PERSON_ID, NULL, 
+                                     TO_NUMBER(NULL),
+                                     (NVL(RA.INCOME_TAX_AMOUNT, 0) + 
+                                      NVL(RA.H_INCOME_TAX_AMOUNT, 0))) AS TRANS_INCOME_TAX_AMOUNT -- 과세이연 결정세액 합계.
+          FROM HRM_PERSON_MASTER PM
+              , HRR_RETIRE_ADJUSTMENT RA
+              , HRM_CORP_MASTER CM
+              , ( SELECT OU.CORP_ID
+                       , OU.OPERATING_UNIT_ID
+                       , OU.PRESIDENT_NAME
+                       , OU.VAT_NUMBER
+                       , OU.ADDR1 || OU.ADDR2 AS ORG_ADDRESS
+                       , OU.SOB_ID
+                       , OU.ORG_ID
+                    FROM HRM_OPERATING_UNIT OU
+                   WHERE OU.SOB_ID           = W_SOB_ID
+                     AND OU.ORG_ID           = W_ORG_ID
+                     AND OU.DEFAULT_FLAG     = 'Y'
+                ) HOU
+              , (-- 시점 인사내역.
+                SELECT HL.PERSON_ID
+                     , HL.DEPT_ID
+                     , HL.POST_ID
+                     , PC.OFFICER_YN
+                  FROM HRM_HISTORY_LINE HL  
+                     , HRM_POST_CODE_V  PC
+                WHERE HL.POST_ID          = PC.POST_ID
+                  AND HL.HISTORY_LINE_ID  IN ( SELECT MAX(S_HL.HISTORY_LINE_ID) AS HISTORY_LINE_ID
+                                                FROM HRM_HISTORY_LINE S_HL
+                                               WHERE S_HL.CHARGE_DATE            <= V_END_DATE
+                                                 AND S_HL.PERSON_ID              = HL.PERSON_ID
+                                               GROUP BY S_HL.PERSON_ID
+                                             )
+                ) T1
+              , (SELECT HC.COMMON_ID AS RETIRE_ID
+                     , HC.CODE      AS RETIRE_CODE
+                     , HC.CODE_NAME AS RETIRE_DESC
+                     , HC.VALUE1    AS ADJUST_RETIRE_CODE
+                  FROM HRM_COMMON HC
+                 WHERE HC.GROUP_CODE        = 'RETIRE'
+                   AND HC.SOB_ID            = W_SOB_ID
+                   AND HC.ORG_ID            = W_ORG_ID
+                ) T2
+              , ( SELECT HC.COMMON_ID AS NATION_ID
+                     , HC.CODE      AS NATION_CODE
+                     , HC.CODE_NAME AS NATION_DESC
+                     , HC.VALUE1    AS NATION_ISO_CODE
+                  FROM HRM_COMMON HC
+                 WHERE HC.GROUP_CODE        = 'NATION'
+                   AND HC.SOB_ID            = W_SOB_ID
+                   AND HC.ORG_ID            = W_ORG_ID
+                 ) T3
+              , HRR_RETIREMENT_PENSION_V HRP
+        WHERE PM.PERSON_ID        = RA.PERSON_ID
+          AND PM.CORP_ID          = CM.CORP_ID          
+          AND PM.OPERATING_UNIT_ID= HOU.OPERATING_UNIT_ID(+)
+          AND PM.PERSON_ID        = T1.PERSON_ID
+          AND PM.RETIRE_ID        = T2.RETIRE_ID(+)
+          AND PM.PERSON_ID        = HRP.PERSON_ID(+)
+          AND PM.NATION_ID        = T3.NATION_ID(+)
+          AND RA.ADJUSTMENT_ID    = W_ADJUSTMENT_ID
+          AND PM.CORP_ID          = W_CORP_ID
+          AND PM.PERSON_ID        = NVL(W_PERSON_ID, PM.PERSON_ID)
+          AND PM.DEPT_ID          = NVL(W_DEPT_ID, PM.DEPT_ID)
+          AND PM.PAY_GRADE_ID     = NVL(W_PAY_GRADE_ID, PM.PAY_GRADE_ID)
+          AND PM.SOB_ID           = W_SOB_ID
+          AND PM.ORG_ID           = W_ORG_ID
+          AND (PM.EMPLOYE_TYPE    = DECODE(W_ADJUSTMENT_TYPE, 'R', '3', '1')
+           OR PM.EMPLOYE_TYPE     = DECODE(W_ADJUSTMENT_TYPE, 'R', '3', '2'))
+          AND RA.ADJUSTMENT_TYPE  = W_ADJUSTMENT_TYPE
+     ORDER BY RA.ADJUSTMENT_ID DESC;
+    END SELECT_RETIRE_WITHHOLDING_TAX;
+    
+---------------------------------------------------------------------------------------------------
+--                  퇴 직 금 정 산 내 역(FORM GRID 출력될 부분)
+---------------------------------------------------------------------------------------------------
+ PROCEDURE SELECT_RETIRE_AD_PRINT
+              ( P_CURSOR                            OUT TYPES.TCURSOR
+              , W_ADJUSTMENT_ID                     IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+              , W_CORP_ID                           IN HRR_RETIRE_ADJUSTMENT.CORP_ID%TYPE
+              , W_START_DATE                        IN DATE
+              , W_END_DATE                          IN DATE
+              , W_PERSON_ID                         IN HRR_RETIRE_ADJUSTMENT.PERSON_ID%TYPE
+              , W_DEPT_ID                           IN HRM_PERSON_MASTER.DEPT_ID%TYPE
+              , W_PAY_GRADE_ID                      IN HRM_PERSON_MASTER.PAY_GRADE_ID%TYPE           
+              , W_ADJUSTMENT_TYPE                   IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_TYPE%TYPE
+              , W_SOB_ID                            IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+              , W_ORG_ID                            IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+              )
+  AS
+  BEGIN
+    OPEN P_CURSOR FOR
+      SELECT   PPM.CORP_ID                -- 업체ID
+              , RA.ADJUSTMENT_ID           -- 퇴직정산ID
+              , RA.ADJUSTMENT_TYPE         -- 정산구분(R-퇴직금, M-중도정산)   
+              , PPM.DEPT_ID                -- 부서ID
+              , PPM.DEPT_NAME              -- 부서명
+              , PPM.POST_NAME              -- 직위
+              , PPM.PERSON_ID              -- 사원ID
+              , PPM.NAME                   -- 성명
+              , PPM.PERSON_NUM             -- 사원번호
+              ----------------------------------------------------------------
+              , PPM.ORI_JOIN_DATE          -- 입사일
+              , PPM.RETIRE_DATE            -- 퇴사일
+              , PPM.EXPIRE_DATE            -- 중도정산일
+              , RA.RETIRE_DATE_FR          -- 정산시작일
+              , RA.RETIRE_DATE_TO          -- 정산종료일
+              , RA.CLOSED_DATE             -- 지급일자(법정 퇴직급여) 
+              , RA.CLOSED_YN               -- 지급구분(법정 퇴직급여) 
+              ----------------------------------------------------------------
+              --           퇴직급여 산정근거(3 개월)
+              ----------------------------------------------------------------
+              , RA.TOTAL_PAY_AMOUNT        -- 총 급여액
+              , RA.TOTAL_BONUS_AMOUNT      -- 총 상여금
+              , RA.YEAR_ALLOWANCE_AMOUNT   -- 년차수당
+              , RA.DAY_3RD_COUNT           -- 근무일수(3 개월 기준)
+              , RA.DAY_AVG_AMOUNT          -- 일평균액(법정 퇴직급여)
+              ----------------------------------------------------------------
+              --           법정퇴직급여
+              ----------------------------------------------------------------
+              , RA.RETIRE_DATE_FR AS RE_DATE_FR   -- 근속일자(시작일)
+              , RA.RETIRE_DATE_TO AS RE_DATE_TO   -- 근속일자(종료일)
+              , RA.RETIRE_TOTAL_AMOUNT     -- 총퇴직금(법정 퇴직급여)              
+              , RA.LONG_YEAR               -- 근속년수(법정 퇴직급여)
+              , RA.LONG_MONTH              -- 근속월수(법정 퇴직급여)
+              , RA.LONG_DAY                -- 근속일수(법정 퇴직급여)
+              , TRUNC(NVL(RA.TOTAL_PAY_AMOUNT, 0) + ((NVL(RA.TOTAL_BONUS_AMOUNT, 0) +  NVL(RA.YEAR_ALLOWANCE_AMOUNT, 0)) / 4)) AS PAY_SUM_AMOUNT  -- 총급여액(법정 퇴직급여)
+              , RA.GLORY_AMOUNT            -- 위로금(법정 퇴직급여)
+              , RA.ETC_SUPP_AMOUNT         -- 기타지급(법정 퇴직급여)           
+              , RA.INCOME_DED_AMOUNT       -- 퇴직급여소득공제(법정 퇴직급여)
+              , RA.LONG_DED_AMOUNT         -- 근속공제(법정 퇴직급여)
+              , NVL(RA.INCOME_DED_AMOUNT, 0) + NVL(RA.LONG_DED_AMOUNT, 0) AS DED_SUM_AMOUNT   -- 소득공제(법정 퇴직급여)
+              , RA.TAX_STD_AMOUNT          -- 과세표준(법정 퇴직급여)
+              , RA.AVG_TAX_STD_AMOUNT      -- 년 과세표준(법정 퇴직급여)
+              , RA.AVG_COMP_TAX_AMOUNT     -- 년 산출세액(법정 퇴직급여)
+              , RA.COMP_TAX_AMOUNT         -- 산출세액(법정 퇴직급여)
+              , RA.TAX_DED_AMOUNT          -- 소득세액공제(법정 퇴직급여)
+              , TRUNC(RA.INCOME_TAX_AMOUNT, -1) AS INCOME_TAX_AMOUNT       -- 소득세(법정 퇴직급여)
+              , TRUNC(RA.RESIDENT_TAX_AMOUNT, -1) AS RESIDENT_TAX_AMOUNT     -- 주민세(법정 퇴직급여)
+              , RA.DED_DAY                 -- 공제일수(법정 퇴직급여)
+              , RA.ETC_DED_AMOUNT          -- 기타공제(법정 퇴직급여)
+              , RA.REAL_AMOUNT             -- 실지급액(법정 퇴직급여) 
+              , RA.REAL_TOTAL_AMOUNT       -- 실 총지급액(법정 퇴직급여)
+              ----------------------------------------------------------------
+              -- 법정퇴직이외 급여
+              ----------------------------------------------------------------
+              , PPM.ORI_JOIN_DATE AS JOIN_DATE  -- 근속일자(시작일)
+              , PPM.RETIRE_DATE AS RE_DATE      -- 근속일자(종료일)
+              , RA.HONORARY_AMOUNT         -- 명예퇴직금(법정이외 퇴직급여)
+              , RA.H_LONG_YEAR             -- 근속년수(법정이외 퇴직급여)
+              , RA.H_INCOME_DED_AMOUNT     -- 소득공제(법정이외 퇴직급여)
+              , RA.H_LONG_DED_AMOUNT       -- 근속공제(법정이외 퇴직급여)
+              , NVL(RA.H_INCOME_DED_AMOUNT, 0) + NVL(RA.H_LONG_DED_AMOUNT, 0) AS H_DED_SUM_AMOUNT  -- 소득공제(법정이외 퇴직급여)
+              , RA.H_TAX_STD_AMOUNT        -- 과세표준(법정이외 퇴직급여)
+              , RA.H_AVG_TAX_STD_AMOUNT    -- 년 과세표준(법정이외 퇴직급여)
+              , RA.H_AVG_COMP_TAX_AMOUNT   -- 년 산출세액(법정이외 퇴직급여)
+              , RA.H_COMP_TAX_AMOUNT       -- 산출세액(법정이외 퇴직급여)
+              , RA.H_TAX_DED_AMOUNT        -- 소득세액공제(법정이외 퇴직급여)
+              , TRUNC(RA.H_INCOME_TAX_AMOUNT, -1) AS H_INCOME_TAX_AMOUNT     -- 소득세(법정이외 퇴직급여)
+              , TRUNC(RA.H_RESIDENT_TAX_AMOUNT, -1) AS H_RESIDENT_TAX_AMOUNT   -- 주민세(법정이외 퇴직급여)
+              , RA.H_REAL_AMOUNT           -- 실지급액(법정이외 퇴직급여)                       
+              ----------------------------------------------------------------              
+              -- , RA.DED_DAY_DESCRIPTION
+              -- , RA.RETIRE_AMOUNT            
+              -- , HRM_PERSON_MASTER_G.NAME_F(RA.CLOSED_PERSON_ID) AS CLOSED_PERSON
+              --   ROWNUM AS ROW_NUM
+        FROM  HRR_RETIRE_ADJUSTMENT RA
+              , (SELECT  HRM_DEPT_MASTER_G.DEPT_NAME_F(PM.DEPT_ID) AS DEPT_NAME
+                         , HRM_COMMON_G.ID_NAME_F(PM.POST_ID) AS POST_NAME
+                         , PM.NAME
+                         , PM.PERSON_NUM
+                         , HRM_COMMON_G.CODE_NAME_F('EMPLOYE_TYPE', PM.EMPLOYE_TYPE, PM.SOB_ID, PM.ORG_ID) AS EMPLOYE_TYPE_NAME
+                         , PM.ORI_JOIN_DATE
+                         , PM.JOIN_DATE
+                         , PM.EXPIRE_DATE
+                         , PM.RETIRE_DATE
+                         , PM.DISPLAY_NAME
+                         , PM.PERSON_ID 
+                         , PM.CORP_ID
+                         , NVL(T1.ADJUST_COUNT, 0) AS ADJUST_COUNT
+                         , PM.DEPT_ID
+                         , PM.PAY_GRADE_ID
+                     FROM HRM_PERSON_MASTER PM
+                         , ( SELECT RA.PERSON_ID
+                                  , COUNT(RA.ADJUSTMENT_TYPE) AS ADJUST_COUNT
+                               FROM HRR_RETIRE_ADJUSTMENT RA
+                              WHERE RA.ADJUSTMENT_TYPE    = W_ADJUSTMENT_TYPE
+                                AND RA.CORP_ID            = W_CORP_ID
+                             GROUP BY RA.PERSON_ID
+                           ) T1
+                    WHERE PM.PERSON_ID        = T1.PERSON_ID(+)
+                      AND PM.CORP_ID          = W_CORP_ID
+                      AND PM.PERSON_ID        = NVL(W_PERSON_ID, PM.PERSON_ID)
+                      AND PM.DEPT_ID          = NVL(W_DEPT_ID, PM.DEPT_ID)
+                      AND PM.PAY_GRADE_ID     = NVL(W_PAY_GRADE_ID, PM.PAY_GRADE_ID)
+                      AND PM.SOB_ID           = W_SOB_ID
+                      AND PM.ORG_ID           = W_ORG_ID
+                      AND (PM.EMPLOYE_TYPE    = DECODE(W_ADJUSTMENT_TYPE, 'R', '3', '1')
+                       OR PM.EMPLOYE_TYPE     = DECODE(W_ADJUSTMENT_TYPE, 'R', '3', '2'))
+                ) PPM
+           WHERE RA.PERSON_ID             = PPM.PERSON_ID
+             AND RA.PERSON_ID             = NVL(W_PERSON_ID, RA.PERSON_ID)
+             AND RA.ADJUSTMENT_ID         = W_ADJUSTMENT_ID
+             AND RA.CORP_ID               = W_CORP_ID
+             AND RA.ADJUSTMENT_TYPE       = W_ADJUSTMENT_TYPE
+             AND PPM.DEPT_ID              = NVL(W_DEPT_ID, PPM.DEPT_ID)
+             AND PPM.PAY_GRADE_ID         = NVL(W_PAY_GRADE_ID, PPM.PAY_GRADE_ID)
+             AND RA.RETIRE_DATE_TO        BETWEEN W_START_DATE AND W_END_DATE
+             AND RA.SOB_ID                = W_SOB_ID
+             AND RA.ORG_ID                = W_ORG_ID
+          ORDER BY RA.ADJUSTMENT_ID DESC;
+              
+         END SELECT_RETIRE_AD_PRINT;
+
+---------------------------------------------------------------------------------------------------
+--                  퇴직소득원천징수영수증/지급조서 REPORT 2013년 -- 추가
+---------------------------------------------------------------------------------------------------
+  PROCEDURE PRINT_RETIRE_TAX_2013
+             ( P_CURSOR                            OUT TYPES.TCURSOR
+              , W_ADJUSTMENT_ID                     IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_ID%TYPE
+              , W_CORP_ID                           IN HRR_RETIRE_ADJUSTMENT.CORP_ID%TYPE
+              , W_PERSON_ID                         IN HRR_RETIRE_ADJUSTMENT.PERSON_ID%TYPE
+              , W_DEPT_ID                           IN HRM_PERSON_MASTER.DEPT_ID%TYPE
+              , W_PAY_GRADE_ID                      IN HRM_PERSON_MASTER.PAY_GRADE_ID%TYPE           
+              , W_ADJUSTMENT_TYPE                   IN HRR_RETIRE_ADJUSTMENT.ADJUSTMENT_TYPE%TYPE
+              , W_SOB_ID                            IN HRR_RETIRE_ADJUSTMENT.SOB_ID%TYPE
+              , W_ORG_ID                            IN HRR_RETIRE_ADJUSTMENT.ORG_ID%TYPE
+              )
+  AS
+    V_END_DATE                  DATE;
+  BEGIN
+    BEGIN
+      SELECT RA.RETIRE_DATE_TO
+        INTO V_END_DATE
+        FROM HRR_RETIRE_ADJUSTMENT RA
+       WHERE RA.ADJUSTMENT_ID       = W_ADJUSTMENT_ID
+      ;
+    EXCEPTION WHEN OTHERS THEN
+      V_END_DATE := TRUNC(SYSDATE);
+    END;
+    
+    OPEN P_CURSOR FOR
+      SELECT -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
+             -- 우측 상단의 항목(거주구분, 내/외국인, 거주지국)
+             -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
+               CASE
+                 WHEN PM.RESIDENT_TYPE = '1' THEN 'V'
+                 ELSE ''
+               END AS RESIDENT_TYPE_1                                        -- 거주 구분(거주자1).
+             , CASE
+                 WHEN PM.RESIDENT_TYPE = '1' THEN ''
+                 ELSE 'V'
+               END AS RESIDENT_TYPE_2                                        -- 거주 구분(거주자2).
+             , CASE
+                 WHEN PM.NATIONALITY_TYPE = '1' THEN 'V'
+                 ELSE ''
+               END AS NATIONALITY_TYPE_1                                     -- 내외국인 구분(내국인1).
+             , CASE
+                 WHEN PM.NATIONALITY_TYPE = '1' THEN ''
+                 ELSE 'V'
+               END AS NATIONALITY_TYPE_9                                     -- 내외국인 구분(외국인9).
+             , T3.NATION_DESC                                                -- 거주지국.
+             , T3.NATION_ISO_CODE                                            -- 거주지국코드.
+             , '사업장' AS OWNER_TYPE                                        -- 징수의무자구분.
+             -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
+             -- 징수의무자 인적사항
+             -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
+             , HOU.VAT_NUMBER                                                 -- 사업자등록번호.
+             , CM.CORP_NAME                                                   -- 법인명(상호).
+             , CM.PRESIDENT_NAME                                              -- 대표자(성명).
+             , CM.LEGAL_NUMBER                                                -- 법인번호.
+             , HOU.ORG_ADDRESS                                                -- 소재지(주소).        
+                 
+             -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
+             --  소득자 인적사항
+             -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
+             , PM.NAME                                                                                -- 성명.   
+             , PM.REPRE_NUM                                                                           -- 주민번호.
+             , PM.PRSN_ADDR1 || ' ' || PM.PRSN_ADDR2  AS ADDRESS                                      -- 주소.
+             , CASE
+                 WHEN NVL(T1.OFFICER_YN, 'N') = 'Y' THEN '여'
+                 ELSE '부'
+               END AS OFFICER_FLAG                                                                    -- 임원여부.
+             , TO_CHAR(HRP.SIGN_UP_DATE, 'YYYY-MM-DD') AS RETIRE_PENSION_REGIST_DATE                  -- 확정급여형 퇴직연금 제도 가입일.
+             , RA.RETIRE_DATE_TO  AS RETIRE_DATE                                                       -- 퇴직금 날짜.
+             , CASE 
+                 WHEN TO_CHAR(RA.RETIRE_DATE_FR, 'YYYY') != RA.ADJUSTMENT_YYYY
+                   THEN HRM_COMMON_DATE_G.DATE_YYYYMMDD_F(TO_DATE(RA.ADJUSTMENT_YYYY || '-01-01', 'YYYY-MM-DD')) 
+                 ELSE HRM_COMMON_DATE_G.DATE_YYYYMMDD_F(RA.RETIRE_DATE_FR) 
+               END AS START_RETIRE_DATE                                           -- 귀속연도 시작 일자
+             , HRM_COMMON_DATE_G.DATE_YYYYMMDD_F(RA.RETIRE_DATE_TO) AS LAST_RETIRE_DATE                -- 귀속연도 마지막 일자(퇴직일자).
+             , CASE 
+                 WHEN NVL(T2.ADJUST_RETIRE_CODE, '-') = '1' THEN 'O'
+                 ELSE ''
+               END RETIRE_REASON_1  -- 정년퇴직.
+             , CASE 
+                 WHEN NVL(T2.ADJUST_RETIRE_CODE, '-') = '2' THEN 'O'
+                 ELSE ''
+               END RETIRE_REASON_2  -- 정리해고.
+             , CASE 
+                 WHEN NVL(T2.ADJUST_RETIRE_CODE, '-') = '3' THEN 'O'
+                 ELSE ''
+               END RETIRE_REASON_3  -- 자발적퇴직.
+             , CASE 
+                 WHEN NVL(T1.OFFICER_YN, 'N') = 'Y' AND W_ADJUSTMENT_TYPE = 'R' THEN 'O'
+                 WHEN NVL(T2.ADJUST_RETIRE_CODE, '-') = '4' THEN 'O'
+                 ELSE ''
+               END RETIRE_REASON_4  -- 임원퇴직.
+             , CASE 
+                 WHEN W_ADJUSTMENT_TYPE               = 'M' THEN 'O'
+                 WHEN NVL(T2.ADJUST_RETIRE_CODE, '-') = '5' THEN 'O'
+                 ELSE ''
+               END RETIRE_REASON_5  -- 중간정산.
+             , CASE 
+                 WHEN NVL(T1.OFFICER_YN, 'N') = 'Y' AND W_ADJUSTMENT_TYPE = 'R' THEN ''
+                 WHEN W_ADJUSTMENT_TYPE               = 'M' THEN ''
+                 WHEN NVL(T2.ADJUST_RETIRE_CODE, '-') = '6' THEN 'O'
+                 ELSE ''
+               END RETIRE_REASON_6  -- 기타.  
+                 
+                 
+             ------------------------------------------------------------------------------------------------------------------- 
+             -- 퇴직급여현황.
+             ------------------------------------------------------------------------------------------------------------------- 
+
+             , NULL AS WORK_CORP_NAME1                                                                -- 근무처명 ( 중간지급) 
+             , CM.CORP_NAME AS WORK_CORP_NAME2                                                        -- 근무처명 (최종분)
+              
+             
+             , NULL AS WORK_VAT_NUMBER1                                                               -- 사업자등록번호 ( 중간지급)
+             , HOU.VAT_NUMBER AS WORK_VAT_NUMBER2                                                     -- 사업자등록번호 (최종분)
+             
+             , NULL AS RETIRE_TOTAL_AMOUNT1                                                           -- 퇴직급여 (중간지급)
+             , RA.RETIRE_TOTAL_AMOUNT AS RETIRE_TOTAL_AMOUNT2                                         -- 퇴직급여 (최종분)                       
+             , RA.RETIRE_TOTAL_AMOUNT AS RETIRE_TOTAL_AMOUNT3                                         -- 퇴직급여 (정산)                       
+                                     
+                                     
+             , NULL AS NON_TAX_TOTAL_AMOUNT1                                                              -- 비과세 퇴직급여 (중간지급)
+             , NULL AS NON_TAX_TOTAL_AMOUNT2                                                              -- 비과세 퇴직급여 (최종분)
+             , NULL AS NON_TAX_TOTAL_AMOUNT3                                                              -- 비과세 퇴직급여 (정산)
+
+            , NULL AS TAX_RETIRE_TOTAL_AMOUNT1                                                            -- 과세대상 퇴직급여 (중간지급)
+            , RA.RETIRE_TOTAL_AMOUNT AS TAX_RETIRE_TOTAL_AMOUNT2                                          -- 과세대상 퇴직급 (최종분)
+            , RA.RETIRE_TOTAL_AMOUNT AS TAX_RETIRE_TOTAL_AMOUNT3                                          -- 과세대상 퇴직급여 (정산)
+      
+             ------------------------------------------------------------------------------------------------------------------- 
+             -- 근속연수.
+             ------------------------------------------------------------------------------------------------------------------- 
+      
+             -- 중간지급 근속연수 
+             , NULL AS ORI_JOIN_DATE1                                                         -- 입사일 ( 중간지급 근속연수)
+             , NULL AS RETIRE_DATE_FR1                                                        -- 기산일/정산시작일 ( 중간지급 근속연수)
+             , NULL AS RETIRE_DATE1                                                           -- 퇴사일 ( 중간지급 근속연수)
+             , NULL AS CLOSED_DATE1                                                            -- 지급일 ( 중간지급 근속연수)
+             , NULL AS LONG_MONTH1                                                            -- 근속월수 ( 중간지급 근속연수)
+             , NULL AS EXCEPT_MONTH1                                                          -- 제외월수 ( 중간지급 근속연수)
+             , NULL AS CHANGE_MONTH1                                                            -- 가감월수 ( 중간지급 근속연수)
+             --, NULL AS PRE_LONG_YEAR1                                                         -- 중복월수 ( 중간지급 근속연수)
+             , NULL AS LONG_YEAR1                                                             -- 근속연수 ( 중간지급 근속연수)
+             
+             -- 최종분 근속연수. 
+             , TO_CHAR(PM.ORI_JOIN_DATE, 'YYYY.MM.DD') AS ORI_JOIN_DATE2                      -- 입사일(최종분)
+             , TO_CHAR(RA.RETIRE_DATE_FR, 'YYYY.MM.DD') AS RETIRE_DATE_FR2                    -- 기산일/정산시작일 ( 최종분)
+             , TO_CHAR(RA.RETIRE_DATE_TO, 'YYYY.MM.DD') AS RETIRE_DATE2                       -- 퇴사일 ( 최종분 )
+             , TO_CHAR(RA.CLOSED_DATE, 'YYYY.MM.DD') AS CLOSED_DATE2                          -- 지급일 ( 최종분 )
+             , RA.LONG_MONTH AS LONG_MONTH2                                                   -- 근속월수 ( 최종분) 
+             , CASE
+                WHEN NVL(RA.DED_DAY, 0) < 0 THEN  CEIL(RA.DED_DAY/30)
+                ELSE NULL
+               END EXCEPT_MONTH2                                                              -- 제외월수 ( 최종분) 
+             , NULL AS CHANGE_MONTH2                                                           -- 가감월수 ( 최종분) 
+             --, NULL AS PRE_LONG_YEAR2                                                        -- 중복월수 ( 최종분)
+             , RA.LONG_YEAR AS LONG_YEAR2                                                     -- 근속연수 ( 최종분)
+             
+             -- 정산(합산)근속연수 
+             , TO_CHAR(PM.ORI_JOIN_DATE, 'YYYY.MM.DD') AS ORI_JOIN_DATE3                      -- 입사일(정산(합산))
+             , TO_CHAR(RA.RETIRE_DATE_FR, 'YYYY.MM.DD') AS RETIRE_DATE_FR3                    -- 기산일/정산시작일 (정산(합산))
+             , TO_CHAR(RA.RETIRE_DATE_TO, 'YYYY.MM.DD') AS RETIRE_DATE3                          -- 퇴사일 (정산(합산))
+             , RA.LONG_MONTH AS LONG_MONTH3                                                   -- 근속월수 (정산(합산))
+             , CASE
+                WHEN NVL(RA.DED_DAY, 0) < 0 THEN  CEIL(RA.DED_DAY/30)
+                ELSE NULL
+               END EXCEPT_MONTH3                                                              -- 제외월수 (정산(합산))
+             , NULL AS CHANGE_MONTH3                                                          -- 가감월수 (정산(합산))
+             , NULL AS PRE_LONG_YEAR3                                                         -- 중복월수 (정산(합산))
+             , RA.LONG_YEAR AS LONG_YEAR3                                                     -- 근속연수 (정산(합산))
+             
+           -- 안분 ( 2012.12.31 이전)
+            , CASE 
+                WHEN NVL(RA.LONG_DAY_1, 0) > 0 THEN RA.RETIRE_DATE_FR
+                ELSE NULL
+              END RETIRE_DATE_FR4                                                             -- 기산일 (2012.12.31 이전)
+            , CASE 
+               WHEN NVL(RA.LONG_DAY_1, 0) > 0 THEN '2012-12-31'
+               ELSE NULL
+              END RETIRE_DATE4                                                                -- 퇴사일  (2012.12.31 이전)
+            , RA.LONG_MONTH_1 AS LONG_MONTH4                                                  -- 근속월수 (2012.12.31 이전)
+            , CASE 
+               WHEN TO_CHAR(RA.RETIRE_DATE_FR, 'YYYY.MM.DD') <= '2012-12-31' 
+                 THEN 
+                 CASE
+                  WHEN NVL(RA.DED_DAY, 0) < 0 THEN  CEIL(RA.DED_DAY/30)
+                  ELSE NULL
+                 END 
+               ELSE NULL
+              END EXCEPT_MONTH4                                                               -- 제외월수 (2012.12.31 이전)
+            , NULL AS CHANGE_MONTH4                                                           -- 가감월수 (2012.12.31 이전)
+            , RA.LONG_YEAR_1 AS LONG_YEAR4                                                    -- 근속년수 (2012.12.31 이전)
+         
+           -- 안분 ( 2013.01.01 이후)
+            , CASE 
+               WHEN NVL(RA.LONG_DAY_2, 0) > 0 THEN '2013-01-01'
+               ELSE NULL
+              END RETIRE_DATE_FR5                                                                -- 퇴사일  ( 2013.01.01 이후)                            
+            , CASE 
+                WHEN NVL(RA.LONG_DAY_2, 0) > 0 THEN RA.RETIRE_DATE_TO
+                ELSE NULL
+              END RETIRE_DATE5                                                                  -- 기산일 ( 2013.01.01 이후)                                                               
+            , RA.LONG_MONTH_2 AS LONG_MONTH5                                                    -- 근속월수 ( 2013.01.01 이후)
+            , CASE 
+               WHEN TO_CHAR(RA.RETIRE_DATE_FR, 'YYYY.MM.DD') > '2012-12-31' 
+                 THEN 
+                 CASE
+                  WHEN NVL(RA.DED_DAY, 0) > 0 THEN  CEIL(RA.DED_DAY/30)
+                  ELSE NULL
+                 END 
+               ELSE NULL
+              END EXCEPT_MONTH5                                                               -- 제외월수 ( 2013.01.01 이후)
+            , NULL AS CHANGE_MONTH5                                                           -- 가감월수 ( 2013.01.01 이후)
+            , RA.LONG_YEAR_2 AS LONG_YEAR5                                                    -- 근속년수 ( 2013.01.01 이후)
+             
+            ------------------------------------------------------------------------------------------------------------------- 
+             -- 퇴직소득과세표준계산
+             -------------------------------------------------------------------------------------------------------------------  
+            -- 중간지급 
+            , NULL AS MID_RETIRE_AMOUNT                                                       -- 퇴직소득(중간지급)
+            
+            --최종분. 
+            , RA.RETIRE_TOTAL_AMOUNT AS RETIRE_AMOUNT                                         -- 퇴직소득(최종분)
+             
+            -- 정산(합산)
+           , RA.RETIRE_TOTAL_AMOUNT AS SUM_RETIRE_AMOUNT                                      -- 퇴직소득(정산(합산)    
+           , RA.INCOME_DED_AMOUNT                                                             -- 퇴직소득정률공제
+           , RA.LONG_DED_AMOUNT                                                               -- 근속연수공제
+           , RA.TAX_STD_AMOUNT                                                                -- 퇴직소득과세표준(27-28-29)
+           
+           ------------------------------------------------------------------------------------------------------------------- 
+           -- 퇴직소득세액계산
+           -------------------------------------------------------------------------------------------------------------------  
+           -- 2012.12.31이전
+           , RA.TAX_STD_AMOUNT_1       AS AVG_TAX_ANBON1                                         -- 과세표준안분(2012.12.31이전)
+           , RA.AVG_TAX_STD_AMOUNT_1   AS AVG_TAX_STD1                                           -- 연평균과세표준(2012.12.31이전)
+           , RA.AVG_COMP_TAX_AMOUNT_1  AS AVG_YEAR_COMP_TAX1                                     -- 연평균산출세액(2012.12.31이전)
+           , RA.COMP_TAX_AMOUNT_1      AS COMP_TAX1                                              -- 산출세액 (2012.12.31이전)
+           
+           -- 2013.01.01이후 
+          , RA.TAX_STD_AMOUNT_2        AS AVG_TAX_ANBON2                                       -- 과세표준안분(2013.01.01이후 )   
+          , RA.AVG_TAX_STD_AMOUNT_2    AS AVG_TAX_STD2                                         -- 연평균과세표준(2013.01.01이후 )
+          , RA.CHG_TAX_STD_AMOUNT_2    AS CHANGE_AVG_TAX_2                                     -- 환산과세표준 (2013.01.01이후 )
+          , RA.CHG_COMP_TAX_AMOUNT_2   AS CAHNGE_AVG_COMP_TAX2                                 -- 환산산출세액 (2013.01.01이후 )
+          , RA.AVG_COMP_TAX_AMOUNT_2   AS AVG_YEAR_COMP_TAX2                                   -- 연평균산출세액 (2013.01.01이후 )
+          , RA.COMP_TAX_AMOUNT_2       AS COMP_TAX2                                            -- 산출세액 (2013.01.01이후 )
+          
+          -- 정산( 합산) 
+          , NVL(RA.TAX_STD_AMOUNT_1, 0) + NVL(RA.TAX_STD_AMOUNT_2 , 0)             AS AVG_TAX_ANBON_SUM              -- 과세표준안분(정산(합산))
+          , NULL                                                                   AS AVG_TAX_STD_SUM                -- 연평균과세표준(정산(합산))
+          , RA.CHG_TAX_STD_AMOUNT_2                                                AS CHANGE_AVG_TAX_SUM             -- 환산과세표준 
+          , RA.CHG_COMP_TAX_AMOUNT_2                                               AS CAHNGE_AVG_COMP_TAX_SUM        -- 환산산출세액액 
+          , NVL(RA.AVG_COMP_TAX_AMOUNT_1, 0) + NVL(RA.AVG_COMP_TAX_AMOUNT_2, 0)    AS COMP_TAX_AMOUNT_SUM            -- 연평균산출세액
+          , NVL(RA.COMP_TAX_AMOUNT_1, 0) + NVL(RA.COMP_TAX_AMOUNT_2, 0)            AS COMP_TAX_SUM                   -- 산출세액
+          , NULL                                                                   AS AHEAD_TAX                      -- 기납부세액
+          , NVL(RA.COMP_TAX_AMOUNT_1, 0) + NVL(RA.COMP_TAX_AMOUNT_2, 0)            AS REPORT_TAX_SUM                 -- 신고대상세액
+          
+           ------------------------------------------------------------------------------------------------------------------- 
+           -- 이연퇴직소득세액계산
+           ------------------------------------------------------------------------------------------------------------------- 
+          , CASE
+              WHEN RA.ADJUSTMENT_YYYY < '2016' THEN 
+                DECODE(HRP.PERSON_ID, NULL, 
+                   TO_NUMBER(NULL),
+                   TRUNC(NVL(RA.COMP_TAX_AMOUNT_1, 0) + NVL(RA.COMP_TAX_AMOUNT_2, 0))) 
+              ELSE
+                DECODE(HRP.PERSON_ID, NULL, 
+                   TO_NUMBER(NULL),
+                   TRUNC(NVL(RA.INCOME_TAX_AMOUNT_3, 0))) 
+            END AS REPORT_TAX_SUM39                  -- 신고대상세액 (39)  
+              
+          , HRP.CORP_NAME                                                         AS RETIREMENT_CORP_NAME            -- 연금계좌취급자
+          , HRP.TAX_REG_NUM                                                                                          -- 사업자등록번호
+          , HRP.ACCOUNT_NUM                                                                                          -- 계좌번호
+          , HRP.ISSUE_DATE                                                                                           -- 입금일
+          , DECODE(HRP.PERSON_ID, NULL, 
+                   TO_NUMBER(NULL),
+                   RA.RETIRE_TOTAL_AMOUNT) AS DEPOSIT_AMOUNT                                              -- 계좌입금금액 
+          , DECODE(HRP.PERSON_ID, NULL, 
+                   TO_NUMBER(NULL),                                                 	
+                   RA.RETIRE_TOTAL_AMOUNT) AS RETIREMENT_PAY                                              -- 퇴직급여 
+          , CASE
+              WHEN RA.ADJUSTMENT_YYYY < '2016' THEN 
+                DECODE(HRP.PERSON_ID, NULL, 
+                   TO_NUMBER(NULL),
+                   TRUNC(NVL(RA.COMP_TAX_AMOUNT_1, 0) + NVL(RA.COMP_TAX_AMOUNT_2, 0))) 
+              ELSE
+                DECODE(HRP.PERSON_ID, NULL, 
+                   TO_NUMBER(NULL),
+                   TRUNC(NVL(RA.INCOME_TAX_AMOUNT_3, 0))) 
+            END AS DEFERRED_TAX           -- 이연퇴직소득세
+               
+           ------------------------------------------------------------------------------------------------------------------- 
+           -- 납부명세
+           -------------------------------------------------------------------------------------------------------------------  
+          , CASE
+              WHEN RA.ADJUSTMENT_YYYY < '2016' THEN RA.INCOME_TAX_AMOUNT
+              ELSE RA.INCOME_TAX_AMOUNT_3  
+            END AS INCOME_TAX_AMOUNT                                                                                -- 신고대상세액(소득세)
+          , CASE
+              WHEN RA.ADJUSTMENT_YYYY < '2016' THEN RA.RESIDENT_TAX_AMOUNT     
+              ELSE RA.RESIDENT_TAX_AMOUNT_3  
+            END AS RESIDENT_TAX_AMOUNT                                                                               -- 신고대상세액(지방소득세)
+          , CASE
+              WHEN RA.ADJUSTMENT_YYYY < '2016' THEN RA.SP_TAX_AMOUNT
+              ELSE RA.SP_TAX_AMOUNT_3 
+            END AS SP_TAX_AMOUNT                                                                                     -- 신고대상세액(농어촌특별세)                           
+          , CASE
+              WHEN RA.ADJUSTMENT_YYYY < '2016' THEN 
+                NVL(RA.INCOME_TAX_AMOUNT, 0) + NVL(RA.RESIDENT_TAX_AMOUNT, 0)  
+              ELSE NVL(RA.INCOME_TAX_AMOUNT_3, 0) + NVL(RA.RESIDENT_TAX_AMOUNT_3, 0)  
+            END AS SUM_INCOME_RESIDENT                   -- 신고대상세액(계.)
+          
+          -- 이연퇴직소득세 : 원단위 절사 처리(배유경J요청)  
+          , CASE
+              WHEN RA.ADJUSTMENT_YYYY < '2016' THEN 
+                DECODE(HRP.PERSON_ID, NULL, TO_NUMBER(NULL), RA.INCOME_TAX_AMOUNT)
+              ELSE 
+                DECODE(HRP.PERSON_ID, NULL, TO_NUMBER(NULL), RA.INCOME_TAX_AMOUNT_3)  
+            END AS DEFERRED_INCOME_TAX        -- 이연퇴직소득세(소득세)
+          , CASE
+              WHEN RA.ADJUSTMENT_YYYY < '2016' THEN 
+                DECODE(HRP.PERSON_ID, NULL, TO_NUMBER(NULL), RA.RESIDENT_TAX_AMOUNT)
+              ELSE 
+                DECODE(HRP.PERSON_ID, NULL, TO_NUMBER(NULL), RA.RESIDENT_TAX_AMOUNT_3)  
+            END AS DEFERRED_RESIDENT_TAX    -- 이연퇴직소득세(지방소득세)
+          , CASE
+              WHEN RA.ADJUSTMENT_YYYY < '2016' THEN 
+                DECODE(HRP.PERSON_ID, NULL, TO_NUMBER(NULL), RA.SP_TAX_AMOUNT) 
+              ELSE 
+                DECODE(HRP.PERSON_ID, NULL, TO_NUMBER(NULL), RA.SP_TAX_AMOUNT_3) 
+            END AS DEFERRED_SP_TAX                -- 이연퇴직소득세(농어촌특별세)         
+          , CASE
+              WHEN RA.ADJUSTMENT_YYYY < '2016' THEN 
+                DECODE(HRP.PERSON_ID, NULL, TO_NUMBER(NULL), NVL(RA.INCOME_TAX_AMOUNT, 0) + NVL(RA.RESIDENT_TAX_AMOUNT, 0)) 
+              ELSE 
+                DECODE(HRP.PERSON_ID, NULL, TO_NUMBER(NULL), NVL(RA.INCOME_TAX_AMOUNT_3, 0) + NVL(RA.RESIDENT_TAX_AMOUNT_3, 0)) 
+            END AS DEFERRED_SUM_INCOME_RESIDENT    -- 이연퇴직소득세 합계 
+            
+          -- 차감원천징수세액 
+          , CASE
+              WHEN RA.ADJUSTMENT_YYYY < '2016' THEN 
+                DECODE(HRP.PERSON_ID, NULL, TRUNC(RA.INCOME_TAX_AMOUNT, -1), TO_NUMBER(NULL)) 
+              ELSE  
+                DECODE(HRP.PERSON_ID, NULL, TRUNC(RA.INCOME_TAX_AMOUNT_3, -1), TO_NUMBER(NULL)) 
+            END AS DEDUCTION_INCOME_TAX        -- 차감원청징수세액(소득세)
+          , CASE
+              WHEN RA.ADJUSTMENT_YYYY < '2016' THEN 
+                DECODE(HRP.PERSON_ID, NULL, TRUNC(RA.RESIDENT_TAX_AMOUNT, -1), TO_NUMBER(NULL)) 
+              ELSE  
+                DECODE(HRP.PERSON_ID, NULL, TRUNC(RA.RESIDENT_TAX_AMOUNT_3, -1), TO_NUMBER(NULL))  
+            END AS DEDUCTION_RESIDENT_TAX    -- 차감원청징수세액(지방소득세)
+          , CASE
+              WHEN RA.ADJUSTMENT_YYYY < '2016' THEN 
+                DECODE(HRP.PERSON_ID, NULL, TRUNC(RA.SP_TAX_AMOUNT, -1), TO_NUMBER(NULL)) 
+              ELSE  
+                DECODE(HRP.PERSON_ID, NULL, TRUNC(RA.SP_TAX_AMOUNT_3, -1), TO_NUMBER(NULL))  
+            END AS DEDUCTION_SP_TAX          -- 차감원청징수세액(농어촌특별세)         
+          , CASE
+              WHEN RA.ADJUSTMENT_YYYY < '2016' THEN 
+                DECODE(HRP.PERSON_ID, NULL, TRUNC(NVL(RA.INCOME_TAX_AMOUNT, 0), -1) + TRUNC(NVL(RA.RESIDENT_TAX_AMOUNT, 0), -1), TO_NUMBER(NULL)) 
+              ELSE 
+                DECODE(HRP.PERSON_ID, NULL, (TRUNC(NVL(RA.INCOME_TAX_AMOUNT_3, 0), -1) + TRUNC(NVL(RA.RESIDENT_TAX_AMOUNT_3, 0), -1)) , TO_NUMBER(NULL)) 
+            END AS DEDUCTION_SUM_INCOME_RESIDENT    -- 차감원청징수세액(농어촌특별세)     
+          ------------------------------------------------------------------------------------------------------------------- 
+           -- 하단프린트.
+           -------------------------------------------------------------------------------------------------------------------  
+          , HRM_COMMON_DATE_G.DATE_YYYYMMDD_F(TO_CHAR(SYSDATE, 'YYYY-MM-DD')) AS PRINT_DATE
+          , CM.CORP_NAME || ' 대표이사'  AS PRINT_OWNER
+          , TO_CHAR(RA.RETIRE_DATE_TO, 'YYYY') AS  FINAL_RETIRE_DATE
+          --<2015년도 추가 >-- 
+          , RA.RETIRE_TOTAL_AMOUNT AS SUM_RETIRE_AMOUNT_3                                    -- 31.퇴직소득(정산(합산)    
+          , RA.LONG_DED_AMOUNT AS LONG_DED_AMOUNT_3                                          -- 32.근속연수공제 
+          , RA.CHG_STD_AMOUNT_3 AS CHG_STD_AMOUNT_3                                          -- 33.환산급여 
+          , RA.CHG_DED_AMOUNT_3 AS CHG_DED_AMOUNT_3                                          -- 34.환산급여별공제 
+          , RA.CHG_TAX_STD_AMOUNT_3 AS CHG_TAX_STD_AMOUNT_3                                  -- 35.퇴직소득과세표준 
+          , RA.CHG_COMP_TAX_AMOUNT_3 AS CHG_COMP_TAX_AMOUNT_3                                -- 42.환산산출세액 
+          , RA.COMP_TAX_AMOUNT_3 AS COMP_TAX_AMOUNT_3                                        -- 43.산출세액 
+          , RA.ADJUSTMENT_YYYY AS ADJUSTMENT_YYYY_3                                          -- 44.퇴직일이 속하는 과세연도 
+          , RA.REAL_COMP_TAX_AMOUNT_3 AS REAL_COMP_TAX_AMOUNT_3                              -- 45.특례적용산출세액 
+          , RA.PREPAID_TAX_AMOUNT_3 AS PREPAID_TAX_AMOUNT_3                                  -- 46.기납부 세액 
+          , RA.INCOME_TAX_AMOUNT_3 AS INCOME_TAX_AMOUNT_3                                    -- 47.신고대상세액    
+          FROM HRM_PERSON_MASTER PM
+              , HRR_RETIRE_ADJUSTMENT RA
+              , HRM_CORP_MASTER CM
+              , ( SELECT OU.CORP_ID
+                       , OU.OPERATING_UNIT_ID
+                       , OU.PRESIDENT_NAME
+                       , OU.VAT_NUMBER
+                       , OU.ADDR1 || OU.ADDR2 AS ORG_ADDRESS
+                       , OU.SOB_ID
+                       , OU.ORG_ID
+                    FROM HRM_OPERATING_UNIT OU
+                   WHERE OU.SOB_ID           = W_SOB_ID
+                     AND OU.ORG_ID           = W_ORG_ID
+                     -- 전호수 추가 : 본사로 인쇄 요청 : 조선미s -- 
+                     AND OU.CORP_ID          = W_CORP_ID
+                     AND (OU.DEFAULT_FLAG    = 'Y'
+                      OR (OU.DEFAULT_FLAG    = 'N'
+                      AND ROWNUM             <= 1))
+                ) HOU
+              , (-- 시점 인사내역.
+                SELECT HL.PERSON_ID
+                     , HL.DEPT_ID
+                     , HL.POST_ID
+                     , PC.OFFICER_YN
+                  FROM HRM_HISTORY_LINE HL  
+                     , HRM_POST_CODE_V  PC
+                WHERE HL.POST_ID          = PC.POST_ID
+                  AND HL.HISTORY_LINE_ID  IN ( SELECT MAX(S_HL.HISTORY_LINE_ID) AS HISTORY_LINE_ID
+                                                FROM HRM_HISTORY_LINE S_HL
+                                               WHERE S_HL.CHARGE_DATE            <= V_END_DATE
+                                                 AND S_HL.PERSON_ID              = HL.PERSON_ID
+                                               GROUP BY S_HL.PERSON_ID
+                                             )
+                ) T1
+              , (SELECT HC.COMMON_ID AS RETIRE_ID
+                     , HC.CODE      AS RETIRE_CODE
+                     , HC.CODE_NAME AS RETIRE_DESC
+                     , HC.VALUE1    AS ADJUST_RETIRE_CODE
+                  FROM HRM_COMMON HC
+                 WHERE HC.GROUP_CODE        = 'RETIRE'
+                   AND HC.SOB_ID            = W_SOB_ID
+                   AND HC.ORG_ID            = W_ORG_ID
+                ) T2
+              , ( SELECT HC.COMMON_ID AS NATION_ID
+                     , HC.CODE      AS NATION_CODE
+                     , HC.CODE_NAME AS NATION_DESC
+                     , HC.VALUE1    AS NATION_ISO_CODE
+                  FROM HRM_COMMON HC
+                 WHERE HC.GROUP_CODE        = 'NATION'
+                   AND HC.SOB_ID            = W_SOB_ID
+                   AND HC.ORG_ID            = W_ORG_ID
+                 ) T3
+              , HRR_RETIREMENT_PENSION_V HRP
+        WHERE PM.PERSON_ID        = RA.PERSON_ID
+          AND PM.CORP_ID          = CM.CORP_ID          
+          AND PM.CORP_ID          = HOU.CORP_ID(+) 
+          --AND PM.OPERATING_UNIT_ID= HOU.OPERATING_UNIT_ID(+)
+          AND PM.PERSON_ID        = T1.PERSON_ID
+          AND PM.RETIRE_ID        = T2.RETIRE_ID(+)
+          AND PM.PERSON_ID        = HRP.PERSON_ID(+)
+          AND PM.NATION_ID        = T3.NATION_ID(+)
+          AND RA.ADJUSTMENT_ID    = W_ADJUSTMENT_ID
+          AND PM.CORP_ID          = W_CORP_ID
+          AND PM.PERSON_ID        = NVL(W_PERSON_ID, PM.PERSON_ID)
+          AND PM.DEPT_ID          = NVL(W_DEPT_ID, PM.DEPT_ID)
+          AND PM.PAY_GRADE_ID     = NVL(W_PAY_GRADE_ID, PM.PAY_GRADE_ID)
+          AND PM.SOB_ID           = W_SOB_ID
+          AND PM.ORG_ID           = W_ORG_ID
+          AND (PM.EMPLOYE_TYPE    = DECODE(W_ADJUSTMENT_TYPE, 'R', '3', '1')
+           OR PM.EMPLOYE_TYPE     = DECODE(W_ADJUSTMENT_TYPE, 'R', '3', '2'))
+          AND RA.ADJUSTMENT_TYPE  = W_ADJUSTMENT_TYPE
+     ORDER BY RA.ADJUSTMENT_ID DESC;
+         
+  END PRINT_RETIRE_TAX_2013;
+   
+END HRR_RETIRE_ADJUSTMENT_G;
+/

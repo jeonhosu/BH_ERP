@@ -1,0 +1,110 @@
+/******************************************************************************/
+/* Project      : FPCB ERP
+/* Module       : HR
+/* Program Name : HRW_EARNER_MASTER
+/* Description  : 소득자 마스터.
+/*
+/* Reference by :
+/* Program History
+/*------------------------------------------------------------------------------
+/*   Date       In Charge          Description
+/*------------------------------------------------------------------------------
+/* 07-JUN-2010  Jeon Ho Su          Initialize
+/******************************************************************************/
+CREATE TABLE HRW_EARNER_MASTER              
+( EARNER_ID                       NUMBER          NOT NULL,
+  EARNER_TYPE                     VARCHAR2(2)     NOT NULL,
+  EARNER_NUM                      VARCHAR2(100)   NOT NULL, 
+  SOB_ID                          NUMBER          NOT NULL,
+  ORG_ID                          NUMBER          NOT NULL,
+  NAME                            VARCHAR2(100)   NOT NULL,
+  CORP_ID                         NUMBER          NOT NULL,
+  DEPT_ID                         NUMBER          ,
+  FLOOR_ID                        NUMBER          ,
+  REPRE_NUM                       VARCHAR2(30)    ,
+  BUSINESS_TYPE                   VARCHAR2(10)    , 
+  COMPANY_NAME                    VARCHAR2(200)   ,
+  TAX_REG_NO                      VARCHAR2(20)    ,
+  NATIONALITY_TYPE                VARCHAR2(2)     ,
+  NATION_ID                       NUMBER          ,
+  BUSINESS_CODE                   VARCHAR2(10)    , 
+  YEAR_ADJUST_YN                  VARCHAR2(2)     ,
+  INCOME_DATE_FR                  DATE            ,
+  INCOME_DATE_TO                  DATE            ,
+  BANK_ID                         NUMBER          ,
+  ACCOUNT_NUM                     VARCHAR2(30)    ,
+  ACCOUNT_HOLDER                  VARCHAR2(50)    ,
+  EMAIL                           VARCHAR2(150)   ,
+  TEL_NUM                         VARCHAR2(30)    ,
+  HP_NUM                          VARCHAR2(30)    ,
+  ZIP_CODE                        VARCHAR2(20)    ,
+  ADDRESS1                        VARCHAR2(150)   ,
+  ADDRESS2                        VARCHAR2(150)   ,
+  ACCOUNT_CONTROL_ID              NUMBER          ,
+  SCH_EXP_REPAY_DED_YN            VARCHAR2(2)     ,
+  SCH_EXP_REPAY_AMT               NUMBER          ,
+  SUPPLY_AMT                      NUMBER          ,
+  DESCRIPTION                     VARCHAR2(100)   ,
+  ATTRIBUTE1                      VARCHAR2(100)   ,
+  ATTRIBUTE2                      VARCHAR2(100)   ,
+  ATTRIBUTE3                      VARCHAR2(100)   ,
+  ATTRIBUTE4                      VARCHAR2(100)   ,
+  ATTRIBUTE5                      VARCHAR2(100)   ,
+  CREATION_DATE                   DATE            NOT NULL,
+  CREATED_BY                      NUMBER          NOT NULL,
+  LAST_UPDATE_DATE                DATE            NOT NULL,
+  LAST_UPDATED_BY                 NUMBER          NOT NULL
+) TABLESPACE FCM_TS_DATA;
+
+-- Add comments to the columns 
+COMMENT ON TABLE HRW_EARNER_MASTER IS '소득자 관리';
+COMMENT ON COLUMN HRW_EARNER_MASTER.EARNER_ID IS '소득자 ID';
+COMMENT ON COLUMN HRW_EARNER_MASTER.EARNER_TYPE IS '소득자 유형(10:거주자사업소득, 15:거주자기타소득,20-비거주자사업소득,25:비거주자기타소득)';
+COMMENT ON COLUMN HRW_EARNER_MASTER.EARNER_NUM IS '사원번호';
+COMMENT ON COLUMN HRW_EARNER_MASTER.NAME IS '성명';
+COMMENT ON COLUMN HRW_EARNER_MASTER.CORP_ID IS '업체ID';
+COMMENT ON COLUMN HRW_EARNER_MASTER.DEPT_ID IS '부서 ID';
+COMMENT ON COLUMN HRW_EARNER_MASTER.FLOOR_ID IS '작업장ID';
+COMMENT ON COLUMN HRW_EARNER_MASTER.REPRE_NUM IS '주민번호';
+COMMENT ON COLUMN HRW_EARNER_MASTER.BUSINESS_TYPE IS '사업자구분(법인/개인)';
+COMMENT ON COLUMN HRW_EARNER_MASTER.COMPANY_NAME IS '상호';
+COMMENT ON COLUMN HRW_EARNER_MASTER.TAX_REG_NO IS '사업자번호';
+COMMENT ON COLUMN HRW_EARNER_MASTER.NATIONALITY_TYPE IS '내외국인구분';
+COMMENT ON COLUMN HRW_EARNER_MASTER.NATION_ID IS '국가 ID';
+COMMENT ON COLUMN HRW_EARNER_MASTER.BUSINESS_CODE IS '소득자(업종)코드';
+COMMENT ON COLUMN HRW_EARNER_MASTER.YEAR_ADJUST_YN IS '연말정산여부';
+COMMENT ON COLUMN HRW_EARNER_MASTER.INCOME_DATE_FR IS '소득발생시작일';
+COMMENT ON COLUMN HRW_EARNER_MASTER.INCOME_DATE_TO IS '소득발생종료일';
+COMMENT ON COLUMN HRW_EARNER_MASTER.BANK_ID IS '은행 ID';
+COMMENT ON COLUMN HRW_EARNER_MASTER.ACCOUNT_NUM IS '계좌번호';
+COMMENT ON COLUMN HRW_EARNER_MASTER.ACCOUNT_HOLDER IS '예금주';
+COMMENT ON COLUMN HRW_EARNER_MASTER.EMAIL IS '이메일 주소';
+COMMENT ON COLUMN HRW_EARNER_MASTER.TEL_NUM IS '전화번호';
+COMMENT ON COLUMN HRW_EARNER_MASTER.HP_NUM IS '휴대전화';
+COMMENT ON COLUMN HRW_EARNER_MASTER.ZIP_CODE IS '우편번호';
+COMMENT ON COLUMN HRW_EARNER_MASTER.ADDRESS1 IS '주소1';
+COMMENT ON COLUMN HRW_EARNER_MASTER.ADDRESS2 IS '주소2';
+COMMENT ON COLUMN HRW_EARNER_MASTER.ACCOUNT_CONTROL_ID IS '계정통제 ID';
+COMMENT ON COLUMN HRW_EARNER_MASTER.SCH_EXP_REPAY_DED_YN IS '학자금상환공제자여부';
+COMMENT ON COLUMN HRW_EARNER_MASTER.SCH_EXP_REPAY_AMT IS '학자금상환통지금액';
+COMMENT ON COLUMN HRW_EARNER_MASTER.SUPPLY_AMT IS '지급액';
+COMMENT ON COLUMN HRW_EARNER_MASTER.DESCRIPTION IS '비고';
+COMMENT ON COLUMN HRW_EARNER_MASTER.CREATION_DATE  IS '생성일자';
+COMMENT ON COLUMN HRW_EARNER_MASTER.CREATED_BY IS '생성자';
+COMMENT ON COLUMN HRW_EARNER_MASTER.LAST_UPDATE_DATE IS '최종수정일자';
+COMMENT ON COLUMN HRW_EARNER_MASTER.LAST_UPDATED_BY IS '최종수정자';
+
+-- PK.
+ALTER TABLE HRW_EARNER_MASTER ADD CONSTRAINTS HRW_EARNER_MASTER_PK PRIMARY KEY(EARNER_ID);
+-- CREATE INDEX.
+CREATE UNIQUE INDEX HRW_EARNER_MASTER_U1 ON HRW_EARNER_MASTER(EARNER_TYPE, EARNER_NUM, SOB_ID, ORG_ID) TABLESPACE FCM_TS_IDX;
+CREATE INDEX HRW_EARNER_MASTER_N1 ON HRW_EARNER_MASTER(EARNER_NUM, SOB_ID, ORG_ID) TABLESPACE FCM_TS_IDX;
+
+-- SEQUENCE.
+CREATE SEQUENCE HRW_EARNER_MASTER_S1;
+
+-- ANALYZE.
+ANALYZE TABLE HRW_EARNER_MASTER COMPUTE STATISTICS;
+ANALYZE INDEX HRW_EARNER_MASTER_U1 COMPUTE STATISTICS;
+ANALYZE INDEX HRW_EARNER_MASTER_N1 COMPUTE STATISTICS;
+

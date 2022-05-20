@@ -1,0 +1,285 @@
+CREATE OR REPLACE PACKAGE GL_CREDIT_CARD_G
+AS
+
+-- 신용카드(법인) 조회.
+  PROCEDURE SELECT_CREDIT_CARD
+            ( P_CURSOR               OUT TYPES.TCURSOR
+            , W_CARD_NUM             IN GL_CREDIT_CARD.CARD_NUM%TYPE
+            , W_PERSON_ID            IN GL_CREDIT_CARD.USE_PERSON_ID%TYPE
+            , W_SOB_ID               IN GL_CREDIT_CARD.SOB_ID%TYPE
+            , W_ORG_ID               IN GL_CREDIT_CARD.ORG_ID%TYPE
+            );
+
+-- 신용카드(법인) 삽입.
+PROCEDURE INSERT_CREDIT_CARD
+          ( P_CARD_NUM              IN GL_CREDIT_CARD.CARD_NUM%TYPE
+          , P_SOB_ID                IN GL_CREDIT_CARD.SOB_ID%TYPE
+          , P_ORG_ID                IN GL_CREDIT_CARD.ORG_ID%TYPE
+          , P_CARD_NAME             IN GL_CREDIT_CARD.CARD_NAME%TYPE
+          , P_CARD_ENG_NAME         IN GL_CREDIT_CARD.CARD_ENG_NAME%TYPE
+          , P_CARD_TYPE_ID          IN GL_CREDIT_CARD.CARD_TYPE_ID%TYPE
+          , P_CRAD_CORP_ID          IN GL_CREDIT_CARD.CRAD_CORP_ID%TYPE
+          , P_EXPIRE_DATE           IN GL_CREDIT_CARD.EXPIRE_DATE%TYPE
+          , P_BANK_ID               IN GL_CREDIT_CARD.BANK_ID%TYPE
+          , P_BANK_ACCOUNT_ID       IN GL_CREDIT_CARD.BANK_ACCOUNT_ID%TYPE
+          , P_LIMIT_AMOUNT          IN GL_CREDIT_CARD.LIMIT_AMOUNT%TYPE
+          , P_CURRENCY_CODE         IN GL_CREDIT_CARD.CURRENCY_CODE%TYPE
+          , P_CURRENCY_LIMIT_AMOUNT IN GL_CREDIT_CARD.CURRENCY_LIMIT_AMOUNT%TYPE
+          , P_USE_PERSON_ID         IN GL_CREDIT_CARD.USE_PERSON_ID%TYPE
+          , P_ISSU_DATE             IN GL_CREDIT_CARD.ISSU_DATE%TYPE
+          , P_DUE_DATE              IN GL_CREDIT_CARD.DUE_DATE%TYPE
+          , P_CLOSE_DAY             IN GL_CREDIT_CARD.CLOSE_DAY%TYPE
+          , P_SETTLE_DAY            IN GL_CREDIT_CARD.SETTLE_DAY%TYPE
+          , P_REMARK                IN GL_CREDIT_CARD.REMARK%TYPE
+          , P_ENABLED_FLAG          IN GL_CREDIT_CARD.ENABLED_FLAG%TYPE
+          , P_USER_ID               IN GL_CREDIT_CARD.CREATED_BY%TYPE 
+          );
+
+-- 신용카드(법인) 수정.
+PROCEDURE UPDATE_CREDIT_CARD
+          ( W_CARD_NUM              IN GL_CREDIT_CARD.CARD_NUM%TYPE
+          , W_SOB_ID                IN GL_CREDIT_CARD.SOB_ID%TYPE
+          , W_ORG_ID                IN GL_CREDIT_CARD.ORG_ID%TYPE
+          , P_CARD_NAME             IN GL_CREDIT_CARD.CARD_NAME%TYPE
+          , P_CARD_ENG_NAME         IN GL_CREDIT_CARD.CARD_ENG_NAME%TYPE
+          , P_CARD_TYPE_ID          IN GL_CREDIT_CARD.CARD_TYPE_ID%TYPE
+          , P_CRAD_CORP_ID          IN GL_CREDIT_CARD.CRAD_CORP_ID%TYPE
+          , P_EXPIRE_DATE           IN GL_CREDIT_CARD.EXPIRE_DATE%TYPE
+          , P_BANK_ID               IN GL_CREDIT_CARD.BANK_ID%TYPE
+          , P_BANK_ACCOUNT_ID       IN GL_CREDIT_CARD.BANK_ACCOUNT_ID%TYPE
+          , P_LIMIT_AMOUNT          IN GL_CREDIT_CARD.LIMIT_AMOUNT%TYPE
+          , P_CURRENCY_CODE         IN GL_CREDIT_CARD.CURRENCY_CODE%TYPE
+          , P_CURRENCY_LIMIT_AMOUNT IN GL_CREDIT_CARD.CURRENCY_LIMIT_AMOUNT%TYPE
+          , P_USE_PERSON_ID         IN GL_CREDIT_CARD.USE_PERSON_ID%TYPE
+          , P_ISSU_DATE             IN GL_CREDIT_CARD.ISSU_DATE%TYPE
+          , P_DUE_DATE              IN GL_CREDIT_CARD.DUE_DATE%TYPE
+          , P_CLOSE_DAY             IN GL_CREDIT_CARD.CLOSE_DAY%TYPE
+          , P_SETTLE_DAY            IN GL_CREDIT_CARD.SETTLE_DAY%TYPE
+          , P_REMARK                IN GL_CREDIT_CARD.REMARK%TYPE
+          , P_ENABLED_FLAG          IN GL_CREDIT_CARD.ENABLED_FLAG%TYPE
+          , P_USER_ID               IN GL_CREDIT_CARD.CREATED_BY%TYPE );
+
+END GL_CREDIT_CARD_G;
+/
+CREATE OR REPLACE PACKAGE BODY GL_CREDIT_CARD_G
+AS
+/******************************************************************************/
+/* Project      : FPCB ERP
+/* Module       : HR
+/* Program Name : GL_CREDIT_CARD_G
+/* Description  : 신용카드 관리.
+/*
+/* Reference by :
+/* Program History :
+/*------------------------------------------------------------------------------
+/*   Date       In Charge          Description
+/*------------------------------------------------------------------------------
+/* 07-JUN-2010  Jeon Ho Su          Initialize
+/******************************************************************************/
+-- 신용카드(법인) 조회.
+  PROCEDURE SELECT_CREDIT_CARD
+            ( P_CURSOR               OUT TYPES.TCURSOR
+            , W_CARD_NUM             IN GL_CREDIT_CARD.CARD_NUM%TYPE
+            , W_PERSON_ID            IN GL_CREDIT_CARD.USE_PERSON_ID%TYPE
+            , W_SOB_ID               IN GL_CREDIT_CARD.SOB_ID%TYPE
+            , W_ORG_ID               IN GL_CREDIT_CARD.ORG_ID%TYPE
+            )
+  AS
+  BEGIN
+    OPEN P_CURSOR FOR
+      SELECT CC.CARD_NUM
+           , CC.CARD_NAME
+           , CC.CARD_ENG_NAME
+           , CC.CARD_TYPE_ID
+           , FI_COMMON_G.ID_NAME_F(CC.CARD_TYPE_ID) AS CARD_TYPE_NAME
+           , CC.CRAD_CORP_ID
+           , FI_COMMON_G.ID_NAME_F(CC.CRAD_CORP_ID) AS CRAD_CORP_NAME     
+           , CC.EXPIRE_DATE
+           , CC.BANK_ID
+           , FB.BANK_NAME
+           , CC.BANK_ACCOUNT_ID
+           , BA.BANK_ACCOUNT_NAME
+           , BA.BANK_ACCOUNT_NUM
+           , CC.LIMIT_AMOUNT
+           , CC.CURRENCY_CODE
+           , CC.CURRENCY_CODE AS DISPLAY_CURRENCY_CODE
+           , CC.CURRENCY_LIMIT_AMOUNT
+           , CC.USE_PERSON_ID
+           , HRM_PERSON_MASTER_G.NAME_F(CC.USE_PERSON_ID) AS USE_PERSON_NAME
+           , CC.ISSU_DATE
+           , CC.DUE_DATE
+           , CC.CLOSE_DAY
+           , CC.SETTLE_DAY
+           , CC.REMARK
+           , CC.ENABLED_FLAG
+           , EAPP_USER_G.USER_NAME_F(CC.LAST_UPDATED_BY) AS LAST_UPDATED_PERSON
+        FROM GL_CREDIT_CARD CC
+           , FI_BANK FB
+           , FI_BANK_ACCOUNT BA
+       WHERE CC.BANK_ID               = FB.BANK_ID(+)
+         AND CC.BANK_ACCOUNT_ID       = BA.BANK_ACCOUNT_ID(+)
+         AND CC.CARD_NUM              = NVL(W_CARD_NUM, CC.CARD_NUM)
+         AND CC.SOB_ID                = W_SOB_ID
+/*         AND CC.ORG_ID                = W_ORG_ID*/
+         AND NVL(CC.USE_PERSON_ID, 0) = NVL(W_PERSON_ID, NVL(CC.USE_PERSON_ID, 0))             
+        ;
+
+  END SELECT_CREDIT_CARD;
+
+-- 신용카드(법인) 삽입.
+PROCEDURE INSERT_CREDIT_CARD
+          ( P_CARD_NUM              IN GL_CREDIT_CARD.CARD_NUM%TYPE
+          , P_SOB_ID                IN GL_CREDIT_CARD.SOB_ID%TYPE
+          , P_ORG_ID                IN GL_CREDIT_CARD.ORG_ID%TYPE
+          , P_CARD_NAME             IN GL_CREDIT_CARD.CARD_NAME%TYPE
+          , P_CARD_ENG_NAME         IN GL_CREDIT_CARD.CARD_ENG_NAME%TYPE
+          , P_CARD_TYPE_ID          IN GL_CREDIT_CARD.CARD_TYPE_ID%TYPE
+          , P_CRAD_CORP_ID          IN GL_CREDIT_CARD.CRAD_CORP_ID%TYPE
+          , P_EXPIRE_DATE           IN GL_CREDIT_CARD.EXPIRE_DATE%TYPE
+          , P_BANK_ID               IN GL_CREDIT_CARD.BANK_ID%TYPE
+          , P_BANK_ACCOUNT_ID       IN GL_CREDIT_CARD.BANK_ACCOUNT_ID%TYPE
+          , P_LIMIT_AMOUNT          IN GL_CREDIT_CARD.LIMIT_AMOUNT%TYPE
+          , P_CURRENCY_CODE         IN GL_CREDIT_CARD.CURRENCY_CODE%TYPE
+          , P_CURRENCY_LIMIT_AMOUNT IN GL_CREDIT_CARD.CURRENCY_LIMIT_AMOUNT%TYPE
+          , P_USE_PERSON_ID         IN GL_CREDIT_CARD.USE_PERSON_ID%TYPE
+          , P_ISSU_DATE             IN GL_CREDIT_CARD.ISSU_DATE%TYPE
+          , P_DUE_DATE              IN GL_CREDIT_CARD.DUE_DATE%TYPE
+          , P_CLOSE_DAY             IN GL_CREDIT_CARD.CLOSE_DAY%TYPE
+          , P_SETTLE_DAY            IN GL_CREDIT_CARD.SETTLE_DAY%TYPE
+          , P_REMARK                IN GL_CREDIT_CARD.REMARK%TYPE
+          , P_ENABLED_FLAG          IN GL_CREDIT_CARD.ENABLED_FLAG%TYPE
+          , P_USER_ID               IN GL_CREDIT_CARD.CREATED_BY%TYPE 
+          )
+  AS
+    V_SYSDATE   DATE := GET_LOCAL_DATE(P_SOB_ID);
+    V_RECORD_COUNT NUMBER := 0;
+
+  BEGIN
+    -- 동일한 카드번호 존재 체크.
+    BEGIN
+      SELECT COUNT(CC.CARD_NUM) AS RECORD_COUNT
+        INTO V_RECORD_COUNT
+        FROM GL_CREDIT_CARD CC
+       WHERE CC.CARD_NUM          = P_CARD_NUM
+         AND CC.SOB_ID            = P_SOB_ID
+/*         AND CC.ORG_ID            = P_ORG_ID*/
+      ;
+    EXCEPTION WHEN OTHERS THEN
+      V_RECORD_COUNT := 0;
+    END;
+    IF V_RECORD_COUNT <> 0 THEN
+      RAISE ERRNUMS.Exist_Data;
+    END IF;
+
+    INSERT INTO GL_CREDIT_CARD
+    ( CARD_NUM
+    , SOB_ID 
+    , ORG_ID 
+    , CARD_NAME 
+    , CARD_ENG_NAME 
+    , CARD_TYPE_ID 
+    , CRAD_CORP_ID 
+    , EXPIRE_DATE 
+    , BANK_ID 
+    , BANK_ACCOUNT_ID 
+    , LIMIT_AMOUNT 
+    , CURRENCY_CODE 
+    , CURRENCY_LIMIT_AMOUNT 
+    , USE_PERSON_ID 
+    , ISSU_DATE 
+    , DUE_DATE 
+    , CLOSE_DAY 
+    , SETTLE_DAY 
+    , REMARK 
+    , ENABLED_FLAG 
+    , CREATION_DATE 
+    , CREATED_BY 
+    , LAST_UPDATE_DATE 
+    , LAST_UPDATED_BY )
+    VALUES
+    ( P_CARD_NUM
+    , P_SOB_ID
+    , P_ORG_ID
+    , P_CARD_NAME
+    , P_CARD_ENG_NAME
+    , P_CARD_TYPE_ID
+    , P_CRAD_CORP_ID
+    , P_EXPIRE_DATE
+    , P_BANK_ID
+    , P_BANK_ACCOUNT_ID
+    , P_LIMIT_AMOUNT
+    , P_CURRENCY_CODE
+    , P_CURRENCY_LIMIT_AMOUNT
+    , P_USE_PERSON_ID
+    , P_ISSU_DATE
+    , P_DUE_DATE
+    , P_CLOSE_DAY
+    , P_SETTLE_DAY
+    , P_REMARK
+    , P_ENABLED_FLAG
+    , V_SYSDATE
+    , P_USER_ID
+    , V_SYSDATE
+    , P_USER_ID );
+
+  EXCEPTION
+    WHEN ERRNUMS.Exist_Data THEN
+    RAISE_APPLICATION_ERROR(ERRNUMS.Exist_Data_Code, ERRNUMS.Exist_Data_Desc);
+  END INSERT_CREDIT_CARD;
+
+-- 신용카드(법인) 수정.
+PROCEDURE UPDATE_CREDIT_CARD
+          ( W_CARD_NUM              IN GL_CREDIT_CARD.CARD_NUM%TYPE
+          , W_SOB_ID                IN GL_CREDIT_CARD.SOB_ID%TYPE
+          , W_ORG_ID                IN GL_CREDIT_CARD.ORG_ID%TYPE
+          , P_CARD_NAME             IN GL_CREDIT_CARD.CARD_NAME%TYPE
+          , P_CARD_ENG_NAME         IN GL_CREDIT_CARD.CARD_ENG_NAME%TYPE
+          , P_CARD_TYPE_ID          IN GL_CREDIT_CARD.CARD_TYPE_ID%TYPE
+          , P_CRAD_CORP_ID          IN GL_CREDIT_CARD.CRAD_CORP_ID%TYPE
+          , P_EXPIRE_DATE           IN GL_CREDIT_CARD.EXPIRE_DATE%TYPE
+          , P_BANK_ID               IN GL_CREDIT_CARD.BANK_ID%TYPE
+          , P_BANK_ACCOUNT_ID       IN GL_CREDIT_CARD.BANK_ACCOUNT_ID%TYPE
+          , P_LIMIT_AMOUNT          IN GL_CREDIT_CARD.LIMIT_AMOUNT%TYPE
+          , P_CURRENCY_CODE         IN GL_CREDIT_CARD.CURRENCY_CODE%TYPE
+          , P_CURRENCY_LIMIT_AMOUNT IN GL_CREDIT_CARD.CURRENCY_LIMIT_AMOUNT%TYPE
+          , P_USE_PERSON_ID         IN GL_CREDIT_CARD.USE_PERSON_ID%TYPE
+          , P_ISSU_DATE             IN GL_CREDIT_CARD.ISSU_DATE%TYPE
+          , P_DUE_DATE              IN GL_CREDIT_CARD.DUE_DATE%TYPE
+          , P_CLOSE_DAY             IN GL_CREDIT_CARD.CLOSE_DAY%TYPE
+          , P_SETTLE_DAY            IN GL_CREDIT_CARD.SETTLE_DAY%TYPE
+          , P_REMARK                IN GL_CREDIT_CARD.REMARK%TYPE
+          , P_ENABLED_FLAG          IN GL_CREDIT_CARD.ENABLED_FLAG%TYPE
+          , P_USER_ID               IN GL_CREDIT_CARD.CREATED_BY%TYPE )
+  AS
+    V_SYSDATE DATE := GET_LOCAL_DATE(W_SOB_ID);
+  BEGIN
+
+     UPDATE GL_CREDIT_CARD
+        SET CARD_NAME             = P_CARD_NAME
+          , CARD_ENG_NAME         = P_CARD_ENG_NAME
+          , CARD_TYPE_ID          = P_CARD_TYPE_ID
+          , CRAD_CORP_ID          = P_CRAD_CORP_ID
+          , EXPIRE_DATE           = P_EXPIRE_DATE
+          , BANK_ID               = P_BANK_ID
+          , BANK_ACCOUNT_ID       = P_BANK_ACCOUNT_ID
+          , LIMIT_AMOUNT          = P_LIMIT_AMOUNT
+          , CURRENCY_CODE         = P_CURRENCY_CODE
+          , CURRENCY_LIMIT_AMOUNT = P_CURRENCY_LIMIT_AMOUNT
+          , USE_PERSON_ID         = P_USE_PERSON_ID
+          , ISSU_DATE             = P_ISSU_DATE
+          , DUE_DATE              = P_DUE_DATE
+          , CLOSE_DAY             = P_CLOSE_DAY
+          , SETTLE_DAY            = P_SETTLE_DAY
+          , REMARK                = P_REMARK
+          , ENABLED_FLAG          = P_ENABLED_FLAG
+          , LAST_UPDATE_DATE      = V_SYSDATE
+          , LAST_UPDATED_BY       = P_USER_ID
+     WHERE CARD_NUM              = W_CARD_NUM
+       AND SOB_ID                = W_SOB_ID
+/*       AND ORG_ID                = W_ORG_ID*/
+    ;
+         
+  END UPDATE_CREDIT_CARD;
+
+END GL_CREDIT_CARD_G;
+/

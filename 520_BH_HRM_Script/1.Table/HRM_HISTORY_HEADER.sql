@@ -1,0 +1,66 @@
+/******************************************************************************/
+/* Project      : FPCB ERP
+/* Module       : HR
+/* Program Name : HRM_HISTORY_HEADER
+/* Description  : 인사발령사항 HEADER.
+/*
+/* Reference by :
+/* Program History
+/*------------------------------------------------------------------------------
+/*   Date       In Charge          Description
+/*------------------------------------------------------------------------------
+/* 07-JUN-2010  Jeon Ho Su          Initialize
+/******************************************************************************/
+CREATE TABLE HRM_HISTORY_HEADER              
+(HISTORY_HEADER_ID                          NUMBER NOT NULL,
+  HISTORY_NUM	                              VARCHAR2(20) NOT NULL,
+  CORP_ID	                                  NUMBER NOT NULL,
+  CHARGE_DATE	                              DATE NOT NULL,
+  CHARGE_ID	                                NUMBER NOT NULL,
+  DESCRIPTION                               VARCHAR2(100),
+  ATTRIBUTE1                                VARCHAR2(100),
+  ATTRIBUTE2                                VARCHAR2(100),
+  ATTRIBUTE3                                VARCHAR2(100),
+  ATTRIBUTE4                                VARCHAR2(100),
+  ATTRIBUTE5                                VARCHAR2(100),
+  HISTORY_YEAR                              VARCHAR2(4),
+  HISTORY_SEQ	                              NUMBER,  
+	SOB_ID                                    NUMBER NOT NULL,
+	ORG_ID                                    NUMBER NOT NULL,
+  CREATION_DATE                             DATE NOT NULL,
+  CREATED_BY                                NUMBER NOT NULL,
+  LAST_UPDATE_DATE                          DATE NOT NULL,
+  LAST_UPDATED_BY                           NUMBER NOT NULL
+)
+TABLESPACE FCM_TS_DATA;
+
+-- Add comments to the columns 
+COMMENT ON COLUMN HRM_HISTORY_HEADER.HISTORY_HEADER_ID IS '인사발령 HEADER ID';
+COMMENT ON COLUMN HRM_HISTORY_HEADER.HISTORY_NUM IS '발령번호';
+COMMENT ON COLUMN HRM_HISTORY_HEADER.CORP_ID IS '업체ID';
+COMMENT ON COLUMN HRM_HISTORY_HEADER.CHARGE_DATE IS '발령일자';
+COMMENT ON COLUMN HRM_HISTORY_HEADER.CHARGE_ID IS '발령사유 ID';
+COMMENT ON COLUMN HRM_HISTORY_HEADER.HISTORY_YEAR IS '발령년';
+COMMENT ON COLUMN HRM_HISTORY_HEADER.HISTORY_SEQ IS '발령번호';
+COMMENT ON COLUMN HRM_HISTORY_HEADER.DESCRIPTION IS '비고';
+COMMENT ON COLUMN HRM_HISTORY_HEADER.CREATION_DATE  IS '생성일자';
+COMMENT ON COLUMN HRM_HISTORY_HEADER.CREATED_BY IS '생성자';
+COMMENT ON COLUMN HRM_HISTORY_HEADER.LAST_UPDATE_DATE IS '최종수정일자';
+COMMENT ON COLUMN HRM_HISTORY_HEADER.LAST_UPDATED_BY IS '최종수정자';
+
+-- CREATE INDEX.
+CREATE UNIQUE INDEX HRM_HISTORY_HEADER_U1 ON HRM_HISTORY_HEADER(HISTORY_HEADER_ID) TABLESPACE FCM_TS_IDX;
+CREATE UNIQUE INDEX HRM_HISTORY_HEADER_U2 ON HRM_HISTORY_HEADER(HISTORY_NUM, SOB_ID, ORG_ID) TABLESPACE FCM_TS_IDX;
+CREATE INDEX HRM_HISTORY_HEADER_N1 ON HRM_HISTORY_HEADER(HISTORY_YEAR, HISTORY_SEQ) TABLESPACE FCM_TS_IDX;
+CREATE INDEX HRM_HISTORY_HEADER_N2 ON HRM_HISTORY_HEADER(CORP_ID, CHARGE_DATE, SOB_ID, ORG_ID) TABLESPACE FCM_TS_IDX;
+
+-- SEQUENCE.
+DROP SEQUENCE HRM_HISTORY_HEADER_S1;
+CREATE SEQUENCE HRM_HISTORY_HEADER_S1;
+
+-- ANALYZE.
+ANALYZE TABLE HRM_HISTORY_HEADER COMPUTE STATISTICS;
+ANALYZE INDEX HRM_HISTORY_HEADER_U1 COMPUTE STATISTICS;
+ANALYZE INDEX HRM_HISTORY_HEADER_U2 COMPUTE STATISTICS;
+ANALYZE INDEX HRM_HISTORY_HEADER_N1 COMPUTE STATISTICS;
+ANALYZE INDEX HRM_HISTORY_HEADER_N2 COMPUTE STATISTICS;

@@ -1,0 +1,25 @@
+SELECT *
+  FROM FI_ACCOUNT_GROUP AG
+WHERE AG.ACCOUNT_SET_ID       = 10
+FOR UPDATE
+;
+
+SELECT *
+  FROM FI_ACCOUNT_CONTROL AC
+WHERE AC.ACCOUNT_SET_ID       = 10
+  AND AC.SOB_ID               = 10
+FOR UPDATE  
+;
+
+SELECT *
+  FROM FI_ACCOUNT_CONTROL_ITEM ACI
+WHERE ACI.SOB_ID               = 10
+  AND EXISTS  ( SELECT 'X'
+                  FROM FI_ACCOUNT_CONTROL AC
+                WHERE AC.ACCOUNT_CONTROL_ID   = ACI.ACCOUNT_CONTROL_ID
+                  AND AC.SOB_ID               = ACI.SOB_ID
+                  AND AC.ACCOUNT_SET_ID       = 10
+                  AND AC.SOB_ID               = 10
+              )
+FOR UPDATE
+;

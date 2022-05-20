@@ -1,0 +1,49 @@
+/******************************************************************************/
+/* Project      : FPCB ERP
+/* Module       : FCM
+/* Program Name : FI_DOCUMENT_NUM_HISTORY
+/* Description  : 문서 채번 기준.
+/*
+/* Reference by :
+/* Program History
+/*------------------------------------------------------------------------------
+/*   Date       In Charge          Description
+/*------------------------------------------------------------------------------
+/* 07-JUN-2010  Jeon Ho Su          Initialize
+/******************************************************************************/
+CREATE TABLE FI_DOCUMENT_NUM_HISTORY
+( DOCUMENT_NUM_ID                 NUMBER          NOT NULL,
+  SOB_ID                          NUMBER          NOT NULL,
+  DOCUMENT_TYPE                   VARCHAR2(20)    NOT NULL,    
+  DATE_TYPE_VALUE                 VARCHAR2(20)    ,
+  YEAR_CHAR                       VARCHAR2(4)     ,
+  MONTH_CHAR                      VARCHAR2(2)     ,
+  DAY_CHAR                        VARCHAR2(2)     ,
+  MAX_DOCUMENT_SEQ                NUMBER          ,
+  DOCUMENT_NUM                    VARCHAR2(50)    ,
+  DESCRIPTION                     VARCHAR2(150)   ,
+  CREATION_DATE                   DATE            NOT NULL,
+  CREATED_BY                      NUMBER          NOT NULL,
+  LAST_UPDATE_DATE                DATE            NOT NULL,
+  LAST_UPDATED_BY                 NUMBER          NOT NULL
+) TABLESPACE FCM_TS_DATA;
+
+COMMENT ON TABLE FI_DOCUMENT_NUM_HISTORY IS '문서번호 채번내역 관리';
+COMMENT ON COLUMN APPS.FI_DOCUMENT_NUM_HISTORY.DOCUMENT_NUM_ID IS '문서ID';
+COMMENT ON COLUMN APPS.FI_DOCUMENT_NUM_HISTORY.DOCUMENT_TYPE IS '문서타입';
+COMMENT ON COLUMN APPS.FI_DOCUMENT_NUM_HISTORY.DATE_TYPE_VALUE IS '날짜형식 값';
+COMMENT ON COLUMN APPS.FI_DOCUMENT_NUM_HISTORY.SOB_ID IS 'SOB ID';
+COMMENT ON COLUMN APPS.FI_DOCUMENT_NUM_HISTORY.YEAR_CHAR IS '년도';
+COMMENT ON COLUMN APPS.FI_DOCUMENT_NUM_HISTORY.MONTH_CHAR IS '월';
+COMMENT ON COLUMN APPS.FI_DOCUMENT_NUM_HISTORY.DAY_CHAR IS '일';
+COMMENT ON COLUMN APPS.FI_DOCUMENT_NUM_HISTORY.MAX_DOCUMENT_SEQ IS '최종 문서일련번호';
+COMMENT ON COLUMN APPS.FI_DOCUMENT_NUM_HISTORY.DOCUMENT_NUM IS '문서번호';
+COMMENT ON COLUMN APPS.FI_DOCUMENT_NUM_HISTORY.DESCRIPTION IS '비고';
+COMMENT ON COLUMN APPS.FI_DOCUMENT_NUM_HISTORY.CREATION_DATE IS '생성자';
+COMMENT ON COLUMN APPS.FI_DOCUMENT_NUM_HISTORY.CREATED_BY IS '생성일';
+COMMENT ON COLUMN APPS.FI_DOCUMENT_NUM_HISTORY.LAST_UPDATE_DATE IS '수정자';
+COMMENT ON COLUMN APPS.FI_DOCUMENT_NUM_HISTORY.LAST_UPDATED_BY IS '수정일';
+
+-- UNIQUE INDEX.
+CREATE UNIQUE INDEX FI_DOCUMENT_NUM_HISTORY_U1 ON FI_DOCUMENT_NUM_HISTORY(SOB_ID, DOCUMENT_TYPE, DATE_TYPE_VALUE) TABLESPACE FCM_TS_IDX;
+CREATE INDEX FI_DOCUMENT_NUM_HISTORY_N1 ON FI_DOCUMENT_NUM_HISTORY(DOCUMENT_NUM_ID) TABLESPACE FCM_TS_IDX;

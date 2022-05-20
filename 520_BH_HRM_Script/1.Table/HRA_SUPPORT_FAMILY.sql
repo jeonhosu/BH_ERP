@@ -1,0 +1,141 @@
+/******************************************************************************/
+/* Project      : FPCB ERP
+/* Module       : HR
+/* Program Name : HRA_SUPPORT_FAMILY
+/* Description  : 연말정산 부양가족 내역..
+/*
+/* Reference by :
+/* Program History
+/*------------------------------------------------------------------------------
+/*   Date       In Charge          Description
+/*------------------------------------------------------------------------------
+/* 07-JUN-2010  Jeon Ho Su          Initialize
+/******************************************************************************/
+CREATE TABLE HRA_SUPPORT_FAMILY
+( YEAR_YYYY                           VARCHAR2(4) NOT NULL,     
+  SOB_ID                              NUMBER NOT NULL,
+  ORG_ID                              NUMBER NOT NULL,
+  PERSON_ID                           NUMBER NOT NULL,          
+  REPRE_NUM	                          VARCHAR2(14) NOT NULL,    
+  RELATION_CODE	                      VARCHAR2(2) NOT NULL,     
+  FAMILY_NAME	                        VARCHAR2(50) NOT NULL,    
+  BASE_YN	                            VARCHAR2(2) DEFAULT 'N',  
+  INCOME_DED_YN	                      VARCHAR2(2) DEFAULT 'N',  
+  SUPPORT_YN	                        VARCHAR2(2) DEFAULT 'N',  
+  SPOUSE_YN	                          VARCHAR2(2) DEFAULT 'N',  
+  OLD_YN	                            VARCHAR2(2) DEFAULT 'N',  
+  OLD1_YN	                            VARCHAR2(2) DEFAULT 'N',  
+  DEFORM_YN	                          VARCHAR2(2) DEFAULT 'N',  
+  WOMAN_YN	                          VARCHAR2(2) DEFAULT 'N',  
+  CHILD_YN	                          VARCHAR2(2) DEFAULT 'N',  
+  BIRTH_YN	                          VARCHAR2(2) DEFAULT 'N',  
+  INSURE_YN	                          VARCHAR2(2) DEFAULT 'N',  
+  MEDICAL_YN	                        VARCHAR2(2) DEFAULT 'N',  
+  EDUCATION_YN	                      VARCHAR2(2) DEFAULT 'N',  
+  CREDIT_YN	                          VARCHAR2(2) DEFAULT 'N',  
+  CASH_YN	                            VARCHAR2(2) DEFAULT 'N',  
+  INSURE_AMT	                        NUMBER DEFAULT 0,         
+  ETC_INSURE_AMT	                    NUMBER DEFAULT 0,	       
+  DEFORM_INSURE_AMT                   NUMBER DEFAULT 0,         
+  ETC_DEFORM_INSURE_AMT               NUMBER DEFAULT 0,	       
+  MEDICAL_AMT	                        NUMBER DEFAULT 0,	       
+  ETC_MEDICAL_AMT	                    NUMBER DEFAULT 0,         
+  EDUCATION_TYPE	                    VARCHAR2(2),              
+  EDUCATION_AMT	                      NUMBER DEFAULT 0,         
+  ETC_EDUCATION_AMT	                  NUMBER DEFAULT 0,         
+  CREDIT_AMT	                        NUMBER DEFAULT 0,         
+  ETC_CREDIT_AMT	                    NUMBER DEFAULT 0,
+  CHECK_CREDIT_AMT	                  NUMBER DEFAULT 0,         
+  ETC_CHECK_CREDIT_AMT	              NUMBER DEFAULT 0,         
+  CASH_AMT	                          NUMBER DEFAULT 0,         
+  ETC_CASH_AMT	                      NUMBER DEFAULT 0,	       
+  ACADE_GIRO_AMT	                    NUMBER DEFAULT 0,         
+  ETC_ACADE_GIRO_AMT	                NUMBER DEFAULT 0,         
+  DONAT_ALL	                          NUMBER DEFAULT 0,         
+  ETC_DONAT_ALL	                      NUMBER DEFAULT 0,         
+  DONAT_50P	                          NUMBER DEFAULT 0,         
+  ETC_DONAT_50P	                      NUMBER DEFAULT 0,         
+  DONAT_30P	                          NUMBER DEFAULT 0,         
+  ETC_DONAT_30P	                      NUMBER DEFAULT 0,         
+  DONAT_10P	                          NUMBER DEFAULT 0,         
+  ETC_DONAT_10P	                      NUMBER DEFAULT 0,         
+  DONAT_10P_RELIGION	                NUMBER DEFAULT 0,         
+  ETC_DONAT_10P_RELIGION	            NUMBER DEFAULT 0,         
+  DONAT_POLI	                        NUMBER DEFAULT 0,         
+  ETC_DONAT_POLI	                    NUMBER DEFAULT 0,         
+  DESCRIPTION                         VARCHAR2(100),            
+  ATTRIBUTE1                          VARCHAR2(100),            
+  ATTRIBUTE2                          VARCHAR2(100),            
+  ATTRIBUTE3                          VARCHAR2(100),            
+  ATTRIBUTE4                          VARCHAR2(100),            
+  ATTRIBUTE5                          VARCHAR2(100),            
+  CREATION_DATE                       DATE NOT NULL,            
+  CREATED_BY                          NUMBER NOT NULL,          
+  LAST_UPDATE_DATE                    DATE NOT NULL,            
+  LAST_UPDATED_BY                     NUMBER NOT NULL 
+) TABLESPACE FCM_TS_DATA;
+
+--> COMMET 설정 
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.YEAR_YYYY IS '정산년도';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.PERSON_ID IS '사원번호';   
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.REPRE_NUM IS '부양가족 주민번호';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.RELATION_CODE IS '관계코드';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.FAMILY_NAME IS '성명';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.BASE_YN IS '기본공제';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.INCOME_DED_YN IS '소득공제';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.SUPPORT_YN IS '부양여부';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.SPOUSE_YN IS '배우자공제';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.OLD_YN IS '경로우대 공제(~69)';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.OLD1_YN IS '경로우대 공제(70~)';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.DEFORM_YN IS '장애여부';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.WOMAN_YN IS '부녀세대';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.CHILD_YN IS '자녀양육';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.BIRTH_YN IS '출생/입양양육'; 
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.INSURE_YN IS '보험료 YN';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.MEDICAL_YN IS '의료비 YN';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.EDUCATION_YN IS '교육비 YN';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.CREDIT_YN IS '신용카드 YN';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.CASH_YN IS '현금영수증 YN';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.INSURE_AMT IS '국세청-보험료';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.ETC_INSURE_AMT IS '기타-보험료';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.DEFORM_INSURE_AMT IS '국세청-장애보험료';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.ETC_DEFORM_INSURE_AMT IS '기타-장애보험료';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.MEDICAL_AMT IS '국세청-의료비';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.ETC_MEDICAL_AMT IS '기타-의료비';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.EDUCATION_TYPE IS '교육비구분';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.EDUCATION_AMT IS '국세청-교육비'; 
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.ETC_EDUCATION_AMT IS '기타교육비';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.CREDIT_AMT IS '국세청-신용카드';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.ETC_CREDIT_AMT IS '기타-신용카드';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.CHECK_CREDIT_AMT IS '국세청-직불카드';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.ETC_CHECK_CREDIT_AMT IS '기타-직불카드';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.CASH_AMT IS '국세청-현금';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.ETC_CASH_AMT IS '기타-현금';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.ACADE_GIRO_AMT IS '국세청-학원지로';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.ETC_ACADE_GIRO_AMT IS '기타-학원지로';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.DONAT_ALL IS '국세청-기부금 전액';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.ETC_DONAT_ALL IS '기타-기부금 전액';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.DONAT_50P IS '국세청-기부금(50%)';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.ETC_DONAT_50P IS '기타-기부금(50%)';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.DONAT_30P IS '국세청-기부금(30%)';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.ETC_DONAT_30P IS '기타-기부금(30%)';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.DONAT_10P IS '국세청-기부금(10%)';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.ETC_DONAT_10P IS '기타-기부금(10%)';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.DONAT_10P_RELIGION IS '국세청-종교기부금';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.ETC_DONAT_POLI IS '기타-종교기부금';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.DONAT_POLI IS '국세청-정치기부금';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.ETC_DONAT_10P_RELIGION IS '기타-정치기부금';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.DESCRIPTION IS '비고';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.CREATION_DATE IS '생성일자';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.CREATED_BY IS '생성자';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.LAST_UPDATE_DATE IS '최종 수정일시';
+COMMENT ON COLUMN HRA_SUPPORT_FAMILY.LAST_UPDATED_BY IS '최종 수정자';
+
+--> 인덱스 생성.                                                                                                                           
+CREATE UNIQUE INDEX HRA_SUPPORT_FAMILY_U1 ON HRA_SUPPORT_FAMILY(YEAR_YYYY, PERSON_ID, REPRE_NUM, SOB_ID, ORG_ID) TABLESPACE FCM_TS_IDX;
+CREATE INDEX HRA_SUPPORT_FAMILY_N1 ON HRA_SUPPORT_FAMILY(YEAR_YYYY, PERSON_ID, SOB_ID, ORG_ID) TABLESPACE FCM_TS_IDX;
+
+--> ANALYZE TABLE/INDEX;
+ANALYZE TABLE HRA_SUPPORT_FAMILY COMPUTE STATISTICS;
+ANALYZE INDEX HRA_SUPPORT_FAMILY_U1 COMPUTE STATISTICS;
+ANALYZE INDEX HRA_SUPPORT_FAMILY_N1 COMPUTE STATISTICS;

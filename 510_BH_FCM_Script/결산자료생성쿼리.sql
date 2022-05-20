@@ -1,0 +1,30 @@
+-- 결산 자료 생성.
+SELECT &W_PERIOD_NAME AS PERIOD_NAME
+    , &W_SOB_ID AS SOB_ID
+    , &W_ORG_ID AS ORG_ID
+    , FH.FORM_HEADER_ID
+    , FH.ITEM_LEVEL
+    , FH.FORM_ITEM_TYPE
+    , FH.FORM_ITEM_CLASS
+    , SYSDATE
+    , &P_USER_ID
+    , SYSDATE
+    , &P_USER_ID
+  FROM FI_FORM_HEADER FH
+WHERE FH.SOB_ID                 = &W_SOB_ID
+  AND FH.ENABLED_FLAG           = 'Y'
+  AND FH.EFFECTIVE_DATE_FR      <= LAST_DAY(TO_DATE(&W_PERIOD_NAME, 'YYYY-MM'))
+  AND (FH.EFFECTIVE_DATE_TO IS NULL OR FH.EFFECTIVE_DATE_TO >= TRUNC(TO_DATE(&W_PERIOD_NAME, 'YYYY-MM')))
+  AND EXISTS ( SELECT 'X'
+                 FROM FI_COMMON FC
+               WHERE FC.GROUP_CODE    = 'FORM_TYPE'
+                 AND FC.COMMON_ID     = FH.FORM_TYPE_ID
+                 AND FC.SOB_ID        = FH.SOB_ID
+                 AND FC.CODE          = '9001'
+              )  
+ORDER BY FH.SORT_SEQ
+;
+
+SELECT *
+  FROM FI_MONTH_SETTLEMENT_SUM
+;

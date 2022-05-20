@@ -1,0 +1,976 @@
+CREATE OR REPLACE PACKAGE FI_BUDGET_ADD_G
+AS
+
+-- 예산신청 조회.
+  PROCEDURE SELECT_BUDGET_ADD
+            ( P_CURSOR               OUT TYPES.TCURSOR
+            , P_BUDGET_TYPE          IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , P_BUDGET_PERIOD        IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , P_DEPT_ID              IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , P_ACCOUNT_CONTROL_ID   IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , P_APPROVE_STATUS       IN FI_BUDGET_ADD.APPROVE_STATUS%TYPE
+            , P_ALL_RECORD_FLAG      IN VARCHAR2
+            , P_CONNECT_PERSON_ID    IN NUMBER
+            , P_SOB_ID               IN FI_BUDGET_ADD.SOB_ID%TYPE
+            );
+
+-- 예산신청 삽입.
+  PROCEDURE INSERT_BUDGET_ADD
+            ( P_BUDGET_TYPE        IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , P_BUDGET_PERIOD      IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , P_DEPT_ID            IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , P_ACCOUNT_CONTROL_ID IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , P_ACCOUNT_CODE       IN FI_BUDGET_ADD.ACCOUNT_CODE%TYPE
+            , P_SOB_ID             IN FI_BUDGET_ADD.SOB_ID%TYPE
+            , P_ORG_ID             IN FI_BUDGET_ADD.ORG_ID%TYPE
+            , P_AMOUNT             IN FI_BUDGET_ADD.AMOUNT%TYPE
+            , P_CAUSE_ID           IN FI_BUDGET_ADD.CAUSE_ID%TYPE
+            , P_DESCRIPTION        IN FI_BUDGET_ADD.DESCRIPTION%TYPE
+            , P_USER_ID            IN FI_BUDGET_ADD.CREATED_BY%TYPE
+            , O_SAVE_SEQ           OUT FI_BUDGET_ADD.SAVE_SEQ%TYPE
+            , O_APPROVE_STATUS     OUT FI_BUDGET_ADD.APPROVE_STATUS%TYPE
+            , O_APPROVE_STATUS_NAME  OUT VARCHAR2
+            );
+
+-- 예산신청 수정.
+  PROCEDURE UPDATE_BUDGET_ADD
+            ( W_BUDGET_TYPE         IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , W_BUDGET_PERIOD       IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , W_DEPT_ID             IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , W_ACCOUNT_CONTROL_ID  IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , W_SOB_ID              IN FI_BUDGET_ADD.SOB_ID%TYPE
+            , P_AMOUNT              IN FI_BUDGET_ADD.AMOUNT%TYPE
+            , P_CAUSE_ID            IN FI_BUDGET_ADD.CAUSE_ID%TYPE
+            , P_DESCRIPTION         IN FI_BUDGET_ADD.DESCRIPTION%TYPE
+            , P_USER_ID             IN FI_BUDGET_ADD.CREATED_BY%TYPE
+            );
+
+-- 예산신청 삭제.
+  PROCEDURE DELETE_BUDGET_ADD
+            ( W_BUDGET_TYPE         IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , W_BUDGET_PERIOD       IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , W_DEPT_ID             IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , W_ACCOUNT_CONTROL_ID  IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , W_SOB_ID              IN FI_BUDGET_ADD.SOB_ID%TYPE
+            );
+            
+-- 예산신청화면에서 승인 처리.
+  PROCEDURE UPDATE_BUDGET_ADD_STATUS
+            ( W_BUDGET_TYPE         IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , W_BUDGET_PERIOD       IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , W_APPROVE_STATUS      IN FI_BUDGET_ADD.APPROVE_STATUS%TYPE
+            , W_DEPT_ID             IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , W_ACCOUNT_CONTROL_ID  IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , W_SOB_ID              IN FI_BUDGET_ADD.SOB_ID%TYPE
+            , P_CONNECT_PERSON_ID   IN HRM_PERSON_MASTER.PERSON_ID%TYPE
+            , P_APPROVE_STATUS      IN FI_BUDGET_ADD.APPROVE_STATUS%TYPE
+            , P_APPROVE_FLAG        IN VARCHAR2
+            , P_USER_ID             IN FI_BUDGET_ADD.CREATED_BY%TYPE
+            , O_MESSAGE             OUT VARCHAR2
+            );            
+
+-- 예산신청 승인 조회.
+  PROCEDURE SELECT_BUDGET_ADD_APPROVE
+            ( P_CURSOR               OUT TYPES.TCURSOR
+            , P_BUDGET_TYPE          IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , P_BUDGET_PERIOD        IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , P_DEPT_ID              IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , P_ACCOUNT_CONTROL_ID   IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , P_APPROVE_STATUS       IN FI_BUDGET_ADD.APPROVE_STATUS%TYPE
+            , P_ALL_RECORD_FLAG      IN VARCHAR2
+            , P_CONNECT_PERSON_ID    IN NUMBER
+            , P_SOB_ID               IN FI_BUDGET_ADD.SOB_ID%TYPE
+            );
+
+-- 예산신청 승인 - 삽입.
+  PROCEDURE INSERT_BUDGET_ADD_APPROVE
+            ( P_BUDGET_TYPE        IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , P_BUDGET_PERIOD      IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , P_DEPT_ID            IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , P_ACCOUNT_CONTROL_ID IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , P_SOB_ID             IN FI_BUDGET_ADD.SOB_ID%TYPE
+            , P_USER_ID            IN FI_BUDGET_ADD.CREATED_BY%TYPE
+            , O_SAVE_SEQ           OUT FI_BUDGET_ADD.SAVE_SEQ%TYPE
+            );
+            
+-- 예산신청 승인 - 수정.
+  PROCEDURE UPDATE_BUDGET_ADD_APPROVE
+            ( W_BUDGET_TYPE         IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , W_BUDGET_PERIOD       IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , W_DEPT_ID             IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , W_ACCOUNT_CONTROL_ID  IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , W_SOB_ID              IN FI_BUDGET_ADD.SOB_ID%TYPE
+            , P_CONNECT_PERSON_ID   IN HRM_PERSON_MASTER.PERSON_ID%TYPE
+            , P_APPROVE_STATUS      IN FI_BUDGET_ADD.APPROVE_STATUS%TYPE
+            , P_APPROVE_FLAG        IN VARCHAR2
+            , P_CHECK_YN            IN VARCHAR2
+            , P_AMOUNT              IN FI_BUDGET_ADD.AMOUNT%TYPE
+            , P_DESCRIPTION         IN FI_BUDGET_ADD.DESCRIPTION%TYPE
+            , P_USER_ID             IN FI_BUDGET_ADD.CREATED_BY%TYPE
+            , O_SAVE_SEQ             OUT FI_BUDGET_ADD.SAVE_SEQ%TYPE
+            );
+
+-- 예산신청 승인 - 승인 상태 수정.
+  PROCEDURE UPDATE_BUDGET_APPROVE_STATUS
+            ( W_BUDGET_TYPE         IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , W_BUDGET_PERIOD       IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , W_DEPT_ID             IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , W_ACCOUNT_CONTROL_ID  IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , W_SOB_ID              IN FI_BUDGET_ADD.SOB_ID%TYPE
+            , P_CONNECT_PERSON_ID   IN HRM_PERSON_MASTER.PERSON_ID%TYPE
+            , P_APPROVE_STATUS      IN FI_BUDGET_ADD.APPROVE_STATUS%TYPE
+            , P_APPROVE_FLAG        IN VARCHAR2
+            , P_CHECK_YN            IN VARCHAR2
+            , P_USER_ID             IN FI_BUDGET_ADD.CREATED_BY%TYPE
+            );
+            
+--예산신청 승인요청 처리.
+  PROCEDURE UPDATE_STATUS_REQUEST
+            ( W_BUDGET_TYPE         IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , W_BUDGET_PERIOD       IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , W_DEPT_ID             IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , W_ACCOUNT_CONTROL_ID  IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , W_SOB_ID              IN FI_BUDGET_ADD.SOB_ID%TYPE
+            , P_USER_ID             IN FI_BUDGET_ADD.CREATED_BY%TYPE
+            , O_APPROVE_STATUS      OUT VARCHAR2
+            , O_APPROVE_STATUS_NAME OUT VARCHAR2
+            );
+
+--예산신청 반려 처리.
+  PROCEDURE UPDATE_STATUS_REJECT
+            ( W_BUDGET_TYPE         IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , W_BUDGET_PERIOD       IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , W_DEPT_ID             IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , W_ACCOUNT_CONTROL_ID  IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , W_SOB_ID              IN FI_BUDGET_ADD.SOB_ID%TYPE
+            , P_USER_ID             IN FI_BUDGET_ADD.CREATED_BY%TYPE
+            , P_REJECT_REMARK       IN FI_BUDGET_ADD.REJECT_REMARK%TYPE
+            , O_APPROVE_STATUS      OUT VARCHAR2
+            , O_APPROVE_STATUS_NAME OUT VARCHAR2
+            );
+                        
+-- 예산신청 상태 리턴.
+  FUNCTION BUDGET_ADD_STATUS_F
+            ( P_BUDGET_TYPE        IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , P_BUDGET_PERIOD      IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , P_DEPT_ID            IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , P_ACCOUNT_CONTROL_ID IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , P_SOB_ID             IN FI_BUDGET_ADD.SOB_ID%TYPE
+            ) RETURN VARCHAR2;
+           
+END FI_BUDGET_ADD_G;
+/
+CREATE OR REPLACE PACKAGE BODY FI_BUDGET_ADD_G
+AS
+/******************************************************************************/
+/* Project      : FPCB ERP
+/* Module       : FI
+/* Program Name : FI_BUDGET_ADD_G
+/* Description  : 예산 신청 관리.
+/*
+/* Reference by :
+/* Program History :
+/*------------------------------------------------------------------------------
+/*   Date       In Charge          Description
+/*------------------------------------------------------------------------------
+/* 07-JUN-2010  Jeon Ho Su          Initialize
+/******************************************************************************/
+-- 예산신청 조회.
+  PROCEDURE SELECT_BUDGET_ADD
+            ( P_CURSOR               OUT TYPES.TCURSOR
+            , P_BUDGET_TYPE          IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , P_BUDGET_PERIOD        IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , P_DEPT_ID              IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , P_ACCOUNT_CONTROL_ID   IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , P_APPROVE_STATUS       IN FI_BUDGET_ADD.APPROVE_STATUS%TYPE
+            , P_ALL_RECORD_FLAG      IN VARCHAR2
+            , P_CONNECT_PERSON_ID    IN NUMBER
+            , P_SOB_ID               IN FI_BUDGET_ADD.SOB_ID%TYPE
+            )
+  AS
+    V_CAP_LEVEL                      VARCHAR2(2) := 'N';     --     
+  BEGIN
+    IF FI_BUDGET_CONTROL_G.BUDGET_MANAGER_CAP_F(P_CONNECT_PERSON_ID, P_SOB_ID) = 'Y' THEN
+      V_CAP_LEVEL := 'Y';
+    END IF;
+    /*raise_application_error(-20001, V_CAP_LEVEL);*/
+    OPEN P_CURSOR FOR
+      SELECT BA.BUDGET_TYPE AS BUDGET_TYPE
+          , FI_COMMON_G.CODE_NAME_F('BUDGET_TYPE', BA.BUDGET_TYPE, BA.SOB_ID) AS BUDGET_TYPE_NAME
+          , BA.BUDGET_PERIOD AS BUDGET_PERIOD
+          , BA.DEPT_ID
+          , DM.DEPT_CODE
+          , DM.DEPT_NAME
+          , BA.ACCOUNT_CONTROL_ID    
+          , BA.ACCOUNT_CODE
+          , AC.ACCOUNT_DESC
+          , BA.SAVE_SEQ
+          , BA.AMOUNT
+          , BA.CAUSE_ID
+          , FI_COMMON_G.ID_NAME_F(BA.CAUSE_ID) AS CAUSE_NAME
+          , BA.DESCRIPTION  DESCRIPTION
+          , BA.APPROVE_STATUS
+          , FI_COMMON_G.CODE_NAME_F('BUDGET_CAPACITY', BA.APPROVE_STATUS, BA.SOB_ID) AS APPROVE_STATUS_NAME
+          , BA.CONFIRMED_YN
+          , HRM_PERSON_MASTER_G.NAME_F(BA.CONFIRMED_PERSON_ID) AS CONFIRMED_PERSON
+          , BA.CLOSED_YN
+          , BA.LAST_YN
+        FROM FI_BUDGET_ADD BA
+          , FI_DEPT_MASTER DM
+          , FI_ACCOUNT_CONTROL AC
+      WHERE BA.DEPT_ID                = DM.DEPT_ID
+        AND BA.ACCOUNT_CONTROL_ID     = AC.ACCOUNT_CONTROL_ID
+        AND BA.BUDGET_TYPE            = NVL(P_BUDGET_TYPE, BA.BUDGET_TYPE)
+        AND BA.BUDGET_PERIOD          = P_BUDGET_PERIOD
+        AND BA.ACCOUNT_CONTROL_ID     = NVL(P_ACCOUNT_CONTROL_ID, BA.ACCOUNT_CONTROL_ID)
+        AND BA.APPROVE_STATUS         = NVL(P_APPROVE_STATUS, BA.APPROVE_STATUS)
+        AND BA.LAST_YN                = DECODE(P_ALL_RECORD_FLAG, 'Y', BA.LAST_YN, 'Y')
+        AND BA.SOB_ID                 = P_SOB_ID
+        AND EXISTS 
+              ( SELECT 'X'
+                  FROM FI_BUDGET_CONTROL BC
+                WHERE BC.DEPT_ID        = BA.DEPT_ID
+                  AND BC.SOB_ID         = BA.SOB_ID
+                  AND BC.DEPT_ID        = NVL(P_DEPT_ID, BC.DEPT_ID)
+                  AND BC.PERSON_ID      = DECODE(V_CAP_LEVEL, 'Y', BC.PERSON_ID, P_CONNECT_PERSON_ID)
+                  AND BC.EFFECTIVE_DATE_FR  <= LAST_DAY(TRUNC(TO_DATE(P_BUDGET_PERIOD, 'YYYY-MM')))
+                  AND (BC.EFFECTIVE_DATE_TO IS NULL OR BC.EFFECTIVE_DATE_TO >= TRUNC(TO_DATE(P_BUDGET_PERIOD, 'YYYY-MM')))
+              )
+      ORDER BY DM.DEPT_CODE, BA.ACCOUNT_CODE, BA.SAVE_SEQ
+      ;
+  END SELECT_BUDGET_ADD;
+
+-- 예산신청 삽입.
+  PROCEDURE INSERT_BUDGET_ADD
+            ( P_BUDGET_TYPE        IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , P_BUDGET_PERIOD      IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , P_DEPT_ID            IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , P_ACCOUNT_CONTROL_ID IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , P_ACCOUNT_CODE       IN FI_BUDGET_ADD.ACCOUNT_CODE%TYPE
+            , P_SOB_ID             IN FI_BUDGET_ADD.SOB_ID%TYPE
+            , P_ORG_ID             IN FI_BUDGET_ADD.ORG_ID%TYPE
+            , P_AMOUNT             IN FI_BUDGET_ADD.AMOUNT%TYPE
+            , P_CAUSE_ID           IN FI_BUDGET_ADD.CAUSE_ID%TYPE
+            , P_DESCRIPTION        IN FI_BUDGET_ADD.DESCRIPTION%TYPE
+            , P_USER_ID            IN FI_BUDGET_ADD.CREATED_BY%TYPE
+            , O_SAVE_SEQ           OUT FI_BUDGET_ADD.SAVE_SEQ%TYPE
+            , O_APPROVE_STATUS     OUT FI_BUDGET_ADD.APPROVE_STATUS%TYPE
+            , O_APPROVE_STATUS_NAME  OUT VARCHAR2
+            )
+  AS
+    V_SYSDATE   DATE := GET_LOCAL_DATE(P_SOB_ID);
+    V_BUDGET_PERIOD_FR    VARCHAR2(7) := NULL;
+    V_BUDGET_PERIOD_TO    VARCHAR2(7) := NULL;
+    V_CREATE_SEQ          NUMBER      := 0;
+    
+    V_RECORD_COUNT NUMBER := 0;
+  BEGIN
+    IF BUDGET_ADD_STATUS_F
+         ( P_BUDGET_TYPE
+          , P_BUDGET_PERIOD
+          , P_DEPT_ID
+          , P_ACCOUNT_CONTROL_ID
+          , P_SOB_ID         
+         ) NOT IN('N', 'A') THEN  -- 승인미요청, 미승인 상태가 아닐 경우 수정 불가.
+      RAISE ERRNUMS.Approve_OK;
+    END IF;
+    
+    -- 동일한 신청사항 .
+    O_SAVE_SEQ := 1;
+    BEGIN
+      SELECT COUNT(BA.ACCOUNT_CONTROL_ID) AS RECORD_COUNT
+        INTO V_RECORD_COUNT
+        FROM FI_BUDGET_ADD BA
+       WHERE BA.BUDGET_TYPE       = P_BUDGET_TYPE
+         AND BA.BUDGET_PERIOD     = P_BUDGET_PERIOD
+         AND BA.DEPT_ID           = P_DEPT_ID
+         AND BA.ACCOUNT_CONTROL_ID  = P_ACCOUNT_CONTROL_ID
+         AND BA.SOB_ID            = P_SOB_ID
+         AND BA.SAVE_SEQ          = O_SAVE_SEQ
+      ;
+    EXCEPTION WHEN OTHERS THEN
+      V_RECORD_COUNT := 0;
+    END;
+    IF V_RECORD_COUNT <> 0 THEN
+      RAISE ERRNUMS.Exist_Data;
+    END IF;
+    
+    FI_BUDGET_ACCOUNT_G.BUDGET_PERIOD_FR_TO(P_BUDGET_PERIOD, P_ACCOUNT_CONTROL_ID, P_SOB_ID, V_BUDGET_PERIOD_FR, V_BUDGET_PERIOD_TO, V_CREATE_SEQ);
+    INSERT INTO FI_BUDGET_ADD
+    ( BUDGET_TYPE
+    , BUDGET_PERIOD 
+    , DEPT_ID 
+    , ACCOUNT_CONTROL_ID 
+    , ACCOUNT_CODE 
+    , SOB_ID 
+    , ORG_ID 
+    , CREATE_SEQ
+    , BUDGET_PERIOD_FR
+    , BUDGET_PERIOD_TO
+    , START_DATE
+    , END_DATE
+    , AMOUNT 
+    , CAUSE_ID 
+    , DESCRIPTION 
+    , CREATION_DATE 
+    , CREATED_BY 
+    , LAST_UPDATE_DATE 
+    , LAST_UPDATED_BY )
+    VALUES
+    ( P_BUDGET_TYPE
+    , P_BUDGET_PERIOD
+    , P_DEPT_ID
+    , P_ACCOUNT_CONTROL_ID
+    , P_ACCOUNT_CODE
+    , P_SOB_ID
+    , P_ORG_ID
+    , V_CREATE_SEQ
+    , V_BUDGET_PERIOD_FR
+    , V_BUDGET_PERIOD_TO
+    , TRUNC(TO_DATE(V_BUDGET_PERIOD_FR, 'YYYY-MM'), 'MONTH')
+    , LAST_DAY(TO_DATE(V_BUDGET_PERIOD_TO, 'YYYY-MM'))
+    , P_AMOUNT
+    , P_CAUSE_ID
+    , P_DESCRIPTION
+    , V_SYSDATE
+    , P_USER_ID
+    , V_SYSDATE
+    , P_USER_ID );
+    
+    O_APPROVE_STATUS := 'N';
+    BEGIN
+      SELECT BA.APPROVE_STATUS
+          , FI_COMMON_G.CODE_NAME_F('BUDGET_CAPACITY', BA.APPROVE_STATUS, BA.SOB_ID) AS APPROVE_STATUS_NAME 
+        INTO O_APPROVE_STATUS
+          , O_APPROVE_STATUS_NAME
+        FROM FI_BUDGET_ADD BA
+      WHERE BA.BUDGET_TYPE            = P_BUDGET_TYPE
+        AND BA.BUDGET_PERIOD          = P_BUDGET_PERIOD        
+        AND BA.DEPT_ID                = P_DEPT_ID
+        AND BA.ACCOUNT_CONTROL_ID     = P_ACCOUNT_CONTROL_ID
+        AND BA.SOB_ID                 = P_SOB_ID
+        AND BA.LAST_YN                = 'Y'
+      ;   
+    EXCEPTION WHEN OTHERS THEN
+      O_APPROVE_STATUS_NAME := FI_COMMON_G.CODE_NAME_F('BUDGET_CAPACITY', O_APPROVE_STATUS, P_SOB_ID);
+    END;
+  EXCEPTION
+    WHEN ERRNUMS.Exist_Data THEN
+      RAISE_APPLICATION_ERROR(ERRNUMS.Exist_Data_Code, ERRNUMS.Exist_Data_Desc);
+    WHEN ERRNUMS.Approve_OK THEN
+      RAISE_APPLICATION_ERROR(ERRNUMS.Approve_Code, ERRNUMS.Approve_Desc);
+  END INSERT_BUDGET_ADD;
+
+-- 예산신청 수정.
+  PROCEDURE UPDATE_BUDGET_ADD
+            ( W_BUDGET_TYPE         IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , W_BUDGET_PERIOD       IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , W_DEPT_ID             IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , W_ACCOUNT_CONTROL_ID  IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , W_SOB_ID              IN FI_BUDGET_ADD.SOB_ID%TYPE
+            , P_AMOUNT              IN FI_BUDGET_ADD.AMOUNT%TYPE
+            , P_CAUSE_ID            IN FI_BUDGET_ADD.CAUSE_ID%TYPE
+            , P_DESCRIPTION         IN FI_BUDGET_ADD.DESCRIPTION%TYPE
+            , P_USER_ID             IN FI_BUDGET_ADD.CREATED_BY%TYPE
+            )
+  AS
+    V_SYSDATE DATE := GET_LOCAL_DATE(W_SOB_ID);
+  BEGIN
+    IF BUDGET_ADD_STATUS_F
+         ( W_BUDGET_TYPE
+          , W_BUDGET_PERIOD
+          , W_DEPT_ID
+          , W_ACCOUNT_CONTROL_ID
+          , W_SOB_ID         
+         ) NOT IN('N', 'A') THEN  -- 승인미요청, 미승인 상태가 아닐 경우 수정 불가.
+      RAISE ERRNUMS.Approve_OK;
+    END IF;
+    
+    UPDATE FI_BUDGET_ADD
+    SET AMOUNT              = P_AMOUNT
+      , CAUSE_ID            = P_CAUSE_ID
+      , DESCRIPTION         = P_DESCRIPTION
+      , LAST_UPDATE_DATE    = V_SYSDATE
+      , LAST_UPDATED_BY     = P_USER_ID
+    WHERE BUDGET_TYPE         = W_BUDGET_TYPE
+      AND BUDGET_PERIOD       = W_BUDGET_PERIOD
+      AND DEPT_ID             = W_DEPT_ID
+      AND ACCOUNT_CONTROL_ID  = W_ACCOUNT_CONTROL_ID
+      AND SOB_ID              = W_SOB_ID
+      AND LAST_YN             = 'Y'
+    ;
+  EXCEPTION
+    WHEN ERRNUMS.Exist_Data THEN
+      RAISE_APPLICATION_ERROR(ERRNUMS.Exist_Data_Code, ERRNUMS.Exist_Data_Desc);
+    WHEN ERRNUMS.Approve_OK THEN
+      RAISE_APPLICATION_ERROR(ERRNUMS.Approve_Code, ERRNUMS.Approve_Desc);
+  END UPDATE_BUDGET_ADD;
+
+-- 예산신청 삭제.
+  PROCEDURE DELETE_BUDGET_ADD
+            ( W_BUDGET_TYPE         IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , W_BUDGET_PERIOD       IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , W_DEPT_ID             IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , W_ACCOUNT_CONTROL_ID  IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , W_SOB_ID              IN FI_BUDGET_ADD.SOB_ID%TYPE
+            )
+  AS
+  BEGIN
+    IF BUDGET_ADD_STATUS_F
+         ( W_BUDGET_TYPE
+          , W_BUDGET_PERIOD
+          , W_DEPT_ID
+          , W_ACCOUNT_CONTROL_ID
+          , W_SOB_ID
+         ) NOT IN('N', 'A') THEN  -- 승인미요청, 미승인 상태가 아닐 경우 수정 불가.
+      RAISE ERRNUMS.Approve_OK;
+    END IF;
+    
+    DELETE FI_BUDGET_ADD
+    WHERE BUDGET_TYPE         = W_BUDGET_TYPE
+      AND BUDGET_PERIOD       = W_BUDGET_PERIOD
+      AND DEPT_ID             = W_DEPT_ID
+      AND ACCOUNT_CONTROL_ID  = W_ACCOUNT_CONTROL_ID
+      AND SOB_ID              = W_SOB_ID
+    ;
+  EXCEPTION
+    WHEN ERRNUMS.Exist_Data THEN
+      RAISE_APPLICATION_ERROR(ERRNUMS.Exist_Data_Code, ERRNUMS.Exist_Data_Desc);
+    WHEN ERRNUMS.Approve_OK THEN
+      RAISE_APPLICATION_ERROR(ERRNUMS.Approve_Code, ERRNUMS.Approve_Desc);
+  END DELETE_BUDGET_ADD;
+
+-- 예산신청화면에서 승인 처리.
+  PROCEDURE UPDATE_BUDGET_ADD_STATUS
+            ( W_BUDGET_TYPE         IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , W_BUDGET_PERIOD       IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , W_APPROVE_STATUS      IN FI_BUDGET_ADD.APPROVE_STATUS%TYPE
+            , W_DEPT_ID             IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , W_ACCOUNT_CONTROL_ID  IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , W_SOB_ID              IN FI_BUDGET_ADD.SOB_ID%TYPE
+            , P_CONNECT_PERSON_ID   IN HRM_PERSON_MASTER.PERSON_ID%TYPE
+            , P_APPROVE_STATUS      IN FI_BUDGET_ADD.APPROVE_STATUS%TYPE
+            , P_APPROVE_FLAG        IN VARCHAR2
+            , P_USER_ID             IN FI_BUDGET_ADD.CREATED_BY%TYPE
+            , O_MESSAGE             OUT VARCHAR2
+            )
+  AS
+    V_CHECK_YN                      CHAR(1) := 'N';
+  BEGIN
+    IF FI_BUDGET_CONTROL_G.BUDGET_MANAGER_CAP_F(P_CONNECT_PERSON_ID, W_SOB_ID) = 'N' THEN
+      RAISE_APPLICATION_ERROR(ERRNUMS.Approval_Nothing_Code, ERRNUMS.Approval_Nothing_Desc);
+      RETURN;
+    END IF;
+    --RAISE_APPLICATION_ERROR(-20001, W_BUDGET_TYPE || '/' ||W_BUDGET_PERIOD || '/' || W_DEPT_ID || '/' || W_SOB_ID || '/' || P_APPROVE_STATUS || '/' || P_APPROVE_FLAG);
+      
+    FOR C1 IN ( SELECT BA.BUDGET_TYPE AS BUDGET_TYPE
+                    , BA.BUDGET_PERIOD AS BUDGET_PERIOD
+                    , BA.DEPT_ID
+                    , BA.ACCOUNT_CONTROL_ID    
+                    , BA.ACCOUNT_CODE
+                    , BA.SAVE_SEQ
+                    , BA.AMOUNT
+                    , BA.APPROVE_STATUS
+                    , BA.CONFIRMED_YN
+                    , BA.CLOSED_YN
+                  FROM FI_BUDGET_ADD BA
+                WHERE BA.BUDGET_TYPE            = NVL(W_BUDGET_TYPE, BA.BUDGET_TYPE)
+                  AND BA.BUDGET_PERIOD          = W_BUDGET_PERIOD
+                  AND BA.DEPT_ID                = NVL(W_DEPT_ID, BA.DEPT_ID)
+                  AND BA.ACCOUNT_CONTROL_ID     = NVL(W_ACCOUNT_CONTROL_ID, BA.ACCOUNT_CONTROL_ID)
+                  AND BA.APPROVE_STATUS         = NVL(W_APPROVE_STATUS, BA.APPROVE_STATUS)
+                  AND BA.LAST_YN                = 'Y'
+                  AND BA.SOB_ID                 = W_SOB_ID
+                ORDER BY BA.DEPT_ID, BA.ACCOUNT_CODE, BA.SAVE_SEQ
+               )
+    LOOP 
+      V_CHECK_YN := 'N';
+      IF P_APPROVE_STATUS = 'C' AND P_APPROVE_FLAG = 'CANCEL' THEN
+        IF C1.APPROVE_STATUS = 'C' THEN
+          V_CHECK_YN := 'Y';
+        END IF;
+      ELSE
+        IF C1.APPROVE_STATUS IN('N', 'A') THEN
+          V_CHECK_YN := 'Y';
+        END IF;
+      END IF;
+      /*RAISE_APPLICATION_ERROR(-20001, V_CHECK_YN);*/
+      IF V_CHECK_YN = 'Y' THEN
+        -- 승인 처리 --
+        UPDATE_BUDGET_APPROVE_STATUS
+          ( C1.BUDGET_TYPE
+          , C1.BUDGET_PERIOD
+          , C1.DEPT_ID
+          , C1.ACCOUNT_CONTROL_ID
+          , W_SOB_ID
+          , P_CONNECT_PERSON_ID
+          , P_APPROVE_STATUS
+          , P_APPROVE_FLAG
+          , V_CHECK_YN
+          , P_USER_ID
+          );
+      END IF;
+    END LOOP C1;
+    O_MESSAGE := EAPP_MESSAGE_G.RETURN_TEXT_F(USERENV_G.GET_TERRITORY_S_F, 'FCM_10112', NULL);
+  END UPDATE_BUDGET_ADD_STATUS;
+  
+-- 예산신청 승인 조회.
+  PROCEDURE SELECT_BUDGET_ADD_APPROVE
+            ( P_CURSOR               OUT TYPES.TCURSOR
+            , P_BUDGET_TYPE          IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , P_BUDGET_PERIOD        IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , P_DEPT_ID              IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , P_ACCOUNT_CONTROL_ID   IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , P_APPROVE_STATUS       IN FI_BUDGET_ADD.APPROVE_STATUS%TYPE
+            , P_ALL_RECORD_FLAG      IN VARCHAR2
+            , P_CONNECT_PERSON_ID    IN NUMBER
+            , P_SOB_ID               IN FI_BUDGET_ADD.SOB_ID%TYPE
+            )
+  AS
+    V_CAP_LEVEL                      VARCHAR2(2) := 'N';     --     
+  BEGIN
+    IF FI_BUDGET_CONTROL_G.BUDGET_MANAGER_CAP_F(P_CONNECT_PERSON_ID, P_SOB_ID) = 'Y' THEN
+      V_CAP_LEVEL := 'Y';
+    END IF;
+    OPEN P_CURSOR FOR
+      SELECT 'N' AS CHECK_YN
+          , BA.BUDGET_TYPE AS BUDGET_TYPE
+          , FI_COMMON_G.CODE_NAME_F('BUDGET_TYPE', BA.BUDGET_TYPE, BA.SOB_ID) AS BUDGET_TYPE_NAME
+          , BA.BUDGET_PERIOD AS BUDGET_PERIOD
+          , BA.DEPT_ID
+          , DM.DEPT_CODE
+          , DM.DEPT_NAME
+          , BA.ACCOUNT_CONTROL_ID    
+          , BA.ACCOUNT_CODE
+          , AC.ACCOUNT_DESC
+          , BA.SAVE_SEQ
+          , BA.AMOUNT
+          , BA.CAUSE_ID
+          , FI_COMMON_G.ID_NAME_F(BA.CAUSE_ID) AS CAUSE_NAME
+          , BA.DESCRIPTION  DESCRIPTION
+          , BA.APPROVE_STATUS
+          , FI_COMMON_G.CODE_NAME_F('BUDGET_CAPACITY', BA.APPROVE_STATUS, BA.SOB_ID) AS APPROVE_STATUS_NAME
+          , BA.CONFIRMED_YN
+          , HRM_PERSON_MASTER_G.NAME_F(BA.CONFIRMED_PERSON_ID) AS CONFIRMED_PERSON
+          , BA.CLOSED_YN
+        FROM FI_BUDGET_ADD BA
+          , FI_DEPT_MASTER DM
+          , FI_ACCOUNT_CONTROL AC
+      WHERE BA.DEPT_ID                = DM.DEPT_ID
+        AND BA.ACCOUNT_CONTROL_ID     = AC.ACCOUNT_CONTROL_ID
+        AND BA.BUDGET_TYPE            = NVL(P_BUDGET_TYPE, BA.BUDGET_TYPE)
+        AND BA.BUDGET_PERIOD          = P_BUDGET_PERIOD
+        AND BA.ACCOUNT_CONTROL_ID     = NVL(P_ACCOUNT_CONTROL_ID, BA.ACCOUNT_CONTROL_ID)
+        AND BA.APPROVE_STATUS         = NVL(P_APPROVE_STATUS, BA.APPROVE_STATUS)
+        AND BA.LAST_YN                = DECODE(P_ALL_RECORD_FLAG, 'Y', BA.LAST_YN, 'Y')
+        AND BA.SOB_ID                 = P_SOB_ID
+        AND EXISTS 
+              ( SELECT 'X'
+                  FROM FI_BUDGET_CONTROL BC
+                WHERE BC.DEPT_ID        = BA.DEPT_ID
+                  AND BC.SOB_ID         = BA.SOB_ID
+                  AND BC.DEPT_ID        = NVL(P_DEPT_ID, BC.DEPT_ID)
+                  AND BC.PERSON_ID      = DECODE(V_CAP_LEVEL, 'Y', BC.PERSON_ID, P_CONNECT_PERSON_ID)
+                  AND BC.EFFECTIVE_DATE_FR  <= LAST_DAY(TRUNC(TO_DATE(P_BUDGET_PERIOD, 'YYYY-MM')))
+                  AND (BC.EFFECTIVE_DATE_TO IS NULL OR BC.EFFECTIVE_DATE_TO >= TRUNC(TO_DATE(P_BUDGET_PERIOD, 'YYYY-MM')))
+              )
+      ORDER BY BA.DEPT_ID, BA.ACCOUNT_CODE, BA.SAVE_SEQ
+      ;
+  END SELECT_BUDGET_ADD_APPROVE;
+
+-- 예산신청 승인 - 삽입.
+  PROCEDURE INSERT_BUDGET_ADD_APPROVE
+            ( P_BUDGET_TYPE        IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , P_BUDGET_PERIOD      IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , P_DEPT_ID            IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , P_ACCOUNT_CONTROL_ID IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , P_SOB_ID             IN FI_BUDGET_ADD.SOB_ID%TYPE
+            , P_USER_ID            IN FI_BUDGET_ADD.CREATED_BY%TYPE
+            , O_SAVE_SEQ           OUT FI_BUDGET_ADD.SAVE_SEQ%TYPE
+            )
+  AS
+    V_SYSDATE   DATE := GET_LOCAL_DATE(P_SOB_ID);
+    V_SAVE_SEQ  NUMBER := 0;
+  BEGIN
+    BEGIN
+      SELECT NVL(MAX(BA.SAVE_SEQ), 0) AS SAVE_SEQ
+        INTO V_SAVE_SEQ
+        FROM FI_BUDGET_ADD BA
+      WHERE BA.BUDGET_TYPE         = P_BUDGET_TYPE
+        AND BA.BUDGET_PERIOD       = P_BUDGET_PERIOD
+        AND BA.DEPT_ID             = P_DEPT_ID
+        AND BA.ACCOUNT_CONTROL_ID  = P_ACCOUNT_CONTROL_ID
+        AND BA.SOB_ID              = P_SOB_ID
+        AND BA.LAST_YN             = 'Y'
+      ;
+    EXCEPTION WHEN OTHERS THEN
+      V_SAVE_SEQ := 1;
+    END;
+    
+    -- 최종 자료 Y/N 변경.
+    UPDATE FI_BUDGET_ADD
+    SET LAST_YN             = 'N'
+      , LAST_UPDATE_DATE    = V_SYSDATE
+      , LAST_UPDATED_BY     = P_USER_ID
+    WHERE BUDGET_TYPE         = P_BUDGET_TYPE
+      AND BUDGET_PERIOD       = P_BUDGET_PERIOD
+      AND DEPT_ID             = P_DEPT_ID
+      AND ACCOUNT_CONTROL_ID  = P_ACCOUNT_CONTROL_ID
+      AND SOB_ID              = P_SOB_ID
+      AND LAST_YN             = 'Y'
+    ;
+    
+    INSERT INTO FI_BUDGET_ADD
+    ( BUDGET_TYPE
+    , BUDGET_PERIOD 
+    , DEPT_ID 
+    , ACCOUNT_CONTROL_ID 
+    , ACCOUNT_CODE 
+    , SOB_ID 
+    , ORG_ID 
+    , CREATE_SEQ
+    , BUDGET_PERIOD_FR
+    , BUDGET_PERIOD_TO
+    , START_DATE
+    , END_DATE
+    , SAVE_SEQ
+    , AMOUNT
+    , CAUSE_ID
+    , LAST_YN
+    , APPROVED_YN
+    , APPROVED_DATE
+    , APPROVED_PERSON_ID
+    , CONFIRMED_YN
+    , CONFIRMED_DATE
+    , CONFIRMED_PERSON_ID
+    , CLOSED_YN
+    , CLOSED_DATE
+    , CLOSED_PERSON_ID
+    , APPROVE_STATUS
+    , DESCRIPTION 
+    , CREATION_DATE 
+    , CREATED_BY 
+    , LAST_UPDATE_DATE 
+    , LAST_UPDATED_BY )
+    SELECT BUDGET_TYPE
+        , BUDGET_PERIOD 
+        , DEPT_ID 
+        , ACCOUNT_CONTROL_ID 
+        , ACCOUNT_CODE 
+        , SOB_ID 
+        , ORG_ID 
+        , CREATE_SEQ
+        , BUDGET_PERIOD_FR
+        , BUDGET_PERIOD_TO
+        , START_DATE
+        , END_DATE
+        , NVL(V_SAVE_SEQ, 0) + 1 AS SAVE_SEQ
+        , AMOUNT
+        , CAUSE_ID
+        , 'Y' AS LAST_YN
+        , APPROVED_YN
+        , APPROVED_DATE
+        , APPROVED_PERSON_ID
+        , CONFIRMED_YN
+        , CONFIRMED_DATE
+        , CONFIRMED_PERSON_ID
+        , CLOSED_YN
+        , CLOSED_DATE
+        , CLOSED_PERSON_ID
+        , APPROVE_STATUS
+        , DESCRIPTION 
+        , V_SYSDATE
+        , P_USER_ID
+        , V_SYSDATE
+        , P_USER_ID
+      FROM FI_BUDGET_ADD BA
+    WHERE BA.BUDGET_TYPE         = P_BUDGET_TYPE
+      AND BA.BUDGET_PERIOD       = P_BUDGET_PERIOD
+      AND BA.DEPT_ID             = P_DEPT_ID
+      AND BA.ACCOUNT_CONTROL_ID  = P_ACCOUNT_CONTROL_ID
+      AND BA.SOB_ID              = P_SOB_ID
+      AND BA.SAVE_SEQ            = V_SAVE_SEQ
+    ;
+    O_SAVE_SEQ := NVL(V_SAVE_SEQ, 0) + 1;
+  END INSERT_BUDGET_ADD_APPROVE;            
+            
+-- 예산신청 승인 - 수정.
+  PROCEDURE UPDATE_BUDGET_ADD_APPROVE
+            ( W_BUDGET_TYPE         IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , W_BUDGET_PERIOD       IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , W_DEPT_ID             IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , W_ACCOUNT_CONTROL_ID  IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , W_SOB_ID              IN FI_BUDGET_ADD.SOB_ID%TYPE
+            , P_CONNECT_PERSON_ID   IN HRM_PERSON_MASTER.PERSON_ID%TYPE
+            , P_APPROVE_STATUS      IN FI_BUDGET_ADD.APPROVE_STATUS%TYPE
+            , P_APPROVE_FLAG        IN VARCHAR2
+            , P_CHECK_YN            IN VARCHAR2
+            , P_AMOUNT              IN FI_BUDGET_ADD.AMOUNT%TYPE
+            , P_DESCRIPTION         IN FI_BUDGET_ADD.DESCRIPTION%TYPE
+            , P_USER_ID             IN FI_BUDGET_ADD.CREATED_BY%TYPE
+            , O_SAVE_SEQ            OUT FI_BUDGET_ADD.SAVE_SEQ%TYPE
+            )
+  AS
+    V_SYSDATE DATE := GET_LOCAL_DATE(W_SOB_ID);
+    V_AMOUNT  NUMBER := 0;
+  BEGIN
+    IF BUDGET_ADD_STATUS_F
+         ( W_BUDGET_TYPE
+          , W_BUDGET_PERIOD
+          , W_DEPT_ID
+          , W_ACCOUNT_CONTROL_ID
+          , W_SOB_ID         
+         ) IN('C') THEN  -- 확정승인 상태일 경우 수정 불가. 단,승인 취소시 저장.
+      IF P_APPROVE_STATUS = 'C' AND P_APPROVE_FLAG = 'CANCEL' THEN
+        NULL;
+      ELSE 
+        RAISE_APPLICATION_ERROR(ERRNUMS.Approve_Code, ERRNUMS.Approve_Desc);
+      END IF;
+    END IF;
+    
+    BEGIN
+    -- 수정전 금액 조회.
+      SELECT AMOUNT, SAVE_SEQ
+        INTO V_AMOUNT, O_SAVE_SEQ
+        FROM FI_BUDGET_ADD
+      WHERE BUDGET_TYPE         = W_BUDGET_TYPE
+        AND BUDGET_PERIOD       = W_BUDGET_PERIOD
+        AND DEPT_ID             = W_DEPT_ID
+        AND ACCOUNT_CONTROL_ID  = W_ACCOUNT_CONTROL_ID
+        AND SOB_ID              = W_SOB_ID
+        AND LAST_YN             = 'Y'
+      ;
+    EXCEPTION WHEN OTHERS THEN
+      V_AMOUNT := 0;
+      O_SAVE_SEQ := 1;
+    END;
+    IF V_AMOUNT <> P_AMOUNT THEN
+      INSERT_BUDGET_ADD_APPROVE
+        ( P_BUDGET_TYPE        => W_BUDGET_TYPE
+        , P_BUDGET_PERIOD      => W_BUDGET_PERIOD
+        , P_DEPT_ID            => W_DEPT_ID
+        , P_ACCOUNT_CONTROL_ID => W_ACCOUNT_CONTROL_ID
+        , P_SOB_ID             => W_SOB_ID
+        , P_USER_ID            => P_USER_ID
+        , O_SAVE_SEQ           => O_SAVE_SEQ
+        );
+    END IF;
+    
+    UPDATE FI_BUDGET_ADD
+    SET AMOUNT              = P_AMOUNT
+      , DESCRIPTION         = P_DESCRIPTION
+      , LAST_UPDATE_DATE    = V_SYSDATE
+      , LAST_UPDATED_BY     = P_USER_ID
+    WHERE BUDGET_TYPE         = W_BUDGET_TYPE
+      AND BUDGET_PERIOD       = W_BUDGET_PERIOD
+      AND DEPT_ID             = W_DEPT_ID
+      AND ACCOUNT_CONTROL_ID  = W_ACCOUNT_CONTROL_ID
+      AND SOB_ID              = W_SOB_ID
+      AND LAST_YN             = 'Y'
+    ;
+    
+    -- 승인 처리 --
+    IF P_APPROVE_STATUS IS NOT NULL AND P_APPROVE_FLAG IS NOT NULL THEN
+      UPDATE_BUDGET_APPROVE_STATUS
+        ( W_BUDGET_TYPE
+        , W_BUDGET_PERIOD
+        , W_DEPT_ID
+        , W_ACCOUNT_CONTROL_ID
+        , W_SOB_ID
+        , P_CONNECT_PERSON_ID
+        , P_APPROVE_STATUS
+        , P_APPROVE_FLAG
+        , P_CHECK_YN
+        , P_USER_ID
+        );
+    END IF;
+  END UPDATE_BUDGET_ADD_APPROVE;
+
+-- 예산신청 승인 - 승인 상태 수정.
+  PROCEDURE UPDATE_BUDGET_APPROVE_STATUS
+            ( W_BUDGET_TYPE         IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , W_BUDGET_PERIOD       IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , W_DEPT_ID             IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , W_ACCOUNT_CONTROL_ID  IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , W_SOB_ID              IN FI_BUDGET_ADD.SOB_ID%TYPE
+            , P_CONNECT_PERSON_ID   IN HRM_PERSON_MASTER.PERSON_ID%TYPE
+            , P_APPROVE_STATUS      IN FI_BUDGET_ADD.APPROVE_STATUS%TYPE
+            , P_APPROVE_FLAG        IN VARCHAR2
+            , P_CHECK_YN            IN VARCHAR2
+            , P_USER_ID             IN FI_BUDGET_ADD.CREATED_BY%TYPE
+            )
+  AS
+    V_CAP_C     VARCHAR2(2) := 'N';
+  BEGIN
+--    RAISE_APPLICATION_ERROR(-20001, W_DEPT_ID || '/' || P_CONNECT_PERSON_ID);
+    IF FI_BUDGET_CONTROL_G.BUDGET_MANAGER_CAP_F(P_CONNECT_PERSON_ID, W_SOB_ID) = 'Y' THEN
+      V_CAP_C := 'C';
+    END IF;
+    -- CHECK_YN = 'Y' 일 경우에만 처리.
+    IF P_CHECK_YN <> 'Y' THEN
+      RETURN;
+    END IF;
+    -- // 승인 처리 // --
+    IF P_APPROVE_STATUS = 'A' AND P_APPROVE_FLAG = 'OK' THEN
+		-- 미승인 --> 1차 승인 : 승인.
+      IF V_CAP_C <> 'C' THEN
+        RAISE_APPLICATION_ERROR(ERRNUMS.Approval_Nothing_Code, ERRNUMS.Approval_Nothing_Desc);
+      END IF;
+			UPDATE FI_BUDGET_ADD BA
+				SET BA.APPROVED_YN          = DECODE(P_CHECK_YN, 'Y', 'Y', BA.APPROVED_YN)
+					, BA.APPROVED_DATE        = DECODE(P_CHECK_YN, 'Y', GET_LOCAL_DATE(BA.SOB_ID), BA.APPROVED_DATE)
+					, BA.APPROVED_PERSON_ID   = DECODE(P_CHECK_YN, 'Y', P_CONNECT_PERSON_ID, BA.APPROVED_PERSON_ID)
+          , BA.CONFIRMED_YN         = DECODE(P_CHECK_YN, 'Y', 'Y', BA.CONFIRMED_YN)
+					, BA.CONFIRMED_DATE       = DECODE(P_CHECK_YN, 'Y', GET_LOCAL_DATE(BA.SOB_ID), BA.CONFIRMED_DATE)
+					, BA.CONFIRMED_PERSON_ID  = DECODE(P_CHECK_YN, 'Y', P_CONNECT_PERSON_ID, BA.CONFIRMED_PERSON_ID)          
+					, BA.APPROVE_STATUS       = DECODE(P_CHECK_YN, 'Y', 'C', BA.APPROVE_STATUS)          
+          , BA.EMAIL_STATUS         = 'AR'
+					, BA.LAST_UPDATE_DATE     = GET_LOCAL_DATE(BA.SOB_ID)
+					, BA.LAST_UPDATED_BY      = P_USER_ID
+			WHERE BUDGET_TYPE         = W_BUDGET_TYPE
+        AND BUDGET_PERIOD       = W_BUDGET_PERIOD
+        AND DEPT_ID             = W_DEPT_ID
+        AND ACCOUNT_CONTROL_ID  = W_ACCOUNT_CONTROL_ID
+        AND SOB_ID              = W_SOB_ID
+        AND LAST_YN             = 'Y'
+		  ;
+		ELSIF P_APPROVE_STATUS = 'C' AND P_APPROVE_FLAG = 'CANCEL' THEN
+		-- 확정 승인 --> 1차 승인 : 승인 취소.
+      IF V_CAP_C <> 'C' THEN
+        RAISE_APPLICATION_ERROR(ERRNUMS.Approval_Nothing_Code, ERRNUMS.Approval_Nothing_Desc);
+      END IF;
+		  UPDATE FI_BUDGET_ADD BA
+				SET BA.APPROVED_YN          = DECODE(P_CHECK_YN, 'Y', 'N', BA.APPROVED_YN)
+					, BA.APPROVED_DATE        = DECODE(P_CHECK_YN, 'Y', NULL, BA.APPROVED_DATE)
+					, BA.APPROVED_PERSON_ID   = DECODE(P_CHECK_YN, 'Y', NULL, BA.APPROVED_PERSON_ID)
+          , BA.CONFIRMED_YN         = DECODE(P_CHECK_YN, 'Y', 'N', BA.CONFIRMED_YN)
+					, BA.CONFIRMED_DATE       = DECODE(P_CHECK_YN, 'Y', NULL, BA.CONFIRMED_DATE)
+					, BA.CONFIRMED_PERSON_ID  = DECODE(P_CHECK_YN, 'Y', NULL, BA.CONFIRMED_PERSON_ID)          
+					, BA.APPROVE_STATUS       = DECODE(P_CHECK_YN, 'Y', 'A', BA.APPROVE_STATUS)          
+          , BA.EMAIL_STATUS         = 'CR'
+					, BA.LAST_UPDATE_DATE     = GET_LOCAL_DATE(BA.SOB_ID)
+					, BA.LAST_UPDATED_BY      = P_USER_ID
+			WHERE BUDGET_TYPE         = W_BUDGET_TYPE
+        AND BUDGET_PERIOD       = W_BUDGET_PERIOD
+        AND DEPT_ID             = W_DEPT_ID
+        AND ACCOUNT_CONTROL_ID  = W_ACCOUNT_CONTROL_ID
+        AND SOB_ID              = W_SOB_ID
+        AND LAST_YN             = 'Y'
+		  ;
+		ELSE
+		-- 승인단계 선택 안함.
+			RAISE_APPLICATION_ERROR(-20001, EAPP_MESSAGE_G.RETURN_TEXT_F(USERENV_G.GET_TERRITORY_S_F, 'FCM_10043', '&&VALUE:=승인상태&&TEXT:=승인상태를 선택후 다시 처리하세요'));
+			RETURN;
+		END IF;
+  END UPDATE_BUDGET_APPROVE_STATUS;
+  
+--예산시청 승인요청 처리.
+  PROCEDURE UPDATE_STATUS_REQUEST
+            ( W_BUDGET_TYPE         IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , W_BUDGET_PERIOD       IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , W_DEPT_ID             IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , W_ACCOUNT_CONTROL_ID  IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , W_SOB_ID              IN FI_BUDGET_ADD.SOB_ID%TYPE
+            , P_USER_ID             IN FI_BUDGET_ADD.CREATED_BY%TYPE
+            , O_APPROVE_STATUS      OUT VARCHAR2
+            , O_APPROVE_STATUS_NAME OUT VARCHAR2
+            )
+  AS
+    V_SYSDATE   DATE := GET_LOCAL_DATE(W_SOB_ID);
+    V_APPROVE_STATUS                VARCHAR2(2);
+  BEGIN
+    BEGIN
+		  SELECT BA.APPROVE_STATUS
+        INTO V_APPROVE_STATUS
+        FROM FI_BUDGET_ADD BA
+      WHERE BUDGET_TYPE         = W_BUDGET_TYPE
+        AND BUDGET_PERIOD       = W_BUDGET_PERIOD
+        AND DEPT_ID             = W_DEPT_ID
+        AND ACCOUNT_CONTROL_ID  = W_ACCOUNT_CONTROL_ID
+        AND SOB_ID              = W_SOB_ID
+      ;
+		EXCEPTION WHEN OTHERS THEN
+		  V_APPROVE_STATUS := 'N';
+		END;
+		IF V_APPROVE_STATUS NOT IN('A', 'N') THEN
+      RAISE_APPLICATION_ERROR(-20001, EAPP_MESSAGE_G.RETURN_TEXT_F(USERENV_G.GET_TERRITORY_S_F, 'FCM_10042', '&&VALUE:=Approval Request(승인요청)'));
+    END IF;
+		
+    UPDATE FI_BUDGET_ADD BA
+    SET BA.APPROVE_STATUS     = 'A'
+      , BA.EMAIL_STATUS       = 'AR'
+      , LAST_UPDATE_DATE      = V_SYSDATE
+      , LAST_UPDATED_BY       = P_USER_ID
+    WHERE BUDGET_TYPE         = W_BUDGET_TYPE
+      AND BUDGET_PERIOD       = W_BUDGET_PERIOD
+      AND DEPT_ID             = W_DEPT_ID
+      AND ACCOUNT_CONTROL_ID  = W_ACCOUNT_CONTROL_ID
+      AND SOB_ID              = W_SOB_ID
+      AND LAST_YN             = 'Y'
+    ;    
+    O_APPROVE_STATUS := 'A';
+    O_APPROVE_STATUS_NAME := FI_COMMON_G.CODE_NAME_F('BUDGET_CAPACITY', O_APPROVE_STATUS, W_SOB_ID);
+  END UPDATE_STATUS_REQUEST;
+
+--예산시청 반려 처리.
+  PROCEDURE UPDATE_STATUS_REJECT
+            ( W_BUDGET_TYPE         IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , W_BUDGET_PERIOD       IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , W_DEPT_ID             IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , W_ACCOUNT_CONTROL_ID  IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , W_SOB_ID              IN FI_BUDGET_ADD.SOB_ID%TYPE
+            , P_USER_ID             IN FI_BUDGET_ADD.CREATED_BY%TYPE
+            , P_REJECT_REMARK       IN FI_BUDGET_ADD.REJECT_REMARK%TYPE
+            , O_APPROVE_STATUS      OUT VARCHAR2
+            , O_APPROVE_STATUS_NAME OUT VARCHAR2
+            )
+  AS
+    V_SYSDATE   DATE := GET_LOCAL_DATE(W_SOB_ID);
+  BEGIN
+    UPDATE FI_BUDGET_ADD BA
+    SET BA.APPROVE_STATUS     = 'R'
+      , BA.REJECT_REMARK      = P_REJECT_REMARK
+      , BA.EMAIL_STATUS       = 'RR'
+      , LAST_UPDATE_DATE      = V_SYSDATE
+      , LAST_UPDATED_BY       = P_USER_ID
+    WHERE BUDGET_TYPE         = W_BUDGET_TYPE
+      AND BUDGET_PERIOD       = W_BUDGET_PERIOD
+      AND DEPT_ID             = W_DEPT_ID
+      AND ACCOUNT_CONTROL_ID  = W_ACCOUNT_CONTROL_ID
+      AND SOB_ID              = W_SOB_ID
+      AND LAST_YN             = 'Y'
+    ;    
+    O_APPROVE_STATUS := 'R';
+    O_APPROVE_STATUS_NAME := FI_COMMON_G.CODE_NAME_F('BUDGET_CAPACITY', O_APPROVE_STATUS, W_SOB_ID);
+  END UPDATE_STATUS_REJECT;
+  
+-- 예산신청 상태 리턴.
+  FUNCTION BUDGET_ADD_STATUS_F
+            ( P_BUDGET_TYPE        IN FI_BUDGET_ADD.BUDGET_TYPE%TYPE
+            , P_BUDGET_PERIOD      IN FI_BUDGET_ADD.BUDGET_PERIOD%TYPE
+            , P_DEPT_ID            IN FI_BUDGET_ADD.DEPT_ID%TYPE
+            , P_ACCOUNT_CONTROL_ID IN FI_BUDGET_ADD.ACCOUNT_CONTROL_ID%TYPE
+            , P_SOB_ID             IN FI_BUDGET_ADD.SOB_ID%TYPE
+            ) RETURN VARCHAR2
+  AS
+    V_APPROVE_STATUS               VARCHAR2(5) := 'N';
+  BEGIN
+    BEGIN
+      SELECT BA.APPROVE_STATUS AS APPROVE_STATUS
+        INTO V_APPROVE_STATUS
+        FROM FI_BUDGET_ADD BA
+       WHERE BA.BUDGET_TYPE       = P_BUDGET_TYPE
+         AND BA.BUDGET_PERIOD     = P_BUDGET_PERIOD
+         AND BA.DEPT_ID           = P_DEPT_ID
+         AND BA.ACCOUNT_CONTROL_ID  = P_ACCOUNT_CONTROL_ID
+         AND BA.SOB_ID            = P_SOB_ID
+         AND BA.LAST_YN           = 'Y'
+      ;
+    EXCEPTION WHEN OTHERS THEN
+      V_APPROVE_STATUS := 'N';
+    END;
+    RETURN V_APPROVE_STATUS;
+  END BUDGET_ADD_STATUS_F;
+
+END FI_BUDGET_ADD_G;
+/

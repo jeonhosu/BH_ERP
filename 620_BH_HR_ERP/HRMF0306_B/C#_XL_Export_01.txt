@@ -1,0 +1,118 @@
+
+        #region ----- Territory Get Methods ----
+
+        private int GetTerritory(ISUtil.Enum.TerritoryLanguage pTerritoryEnum)
+        {
+            int vTerritory = 0;
+
+            switch (pTerritoryEnum)
+            {
+                case ISUtil.Enum.TerritoryLanguage.Default:
+                    vTerritory = 1;
+                    break;
+                case ISUtil.Enum.TerritoryLanguage.TL1_KR:
+                    vTerritory = 2;
+                    break;
+                case ISUtil.Enum.TerritoryLanguage.TL2_CN:
+                    vTerritory = 3;
+                    break;
+                case ISUtil.Enum.TerritoryLanguage.TL3_VN:
+                    vTerritory = 4;
+                    break;
+                case ISUtil.Enum.TerritoryLanguage.TL4_JP:
+                    vTerritory = 5;
+                    break;
+                case ISUtil.Enum.TerritoryLanguage.TL5_XAA:
+                    vTerritory = 6;
+                    break;
+            }
+
+            return vTerritory;
+        }
+
+        #endregion;
+
+
+        #region ----- XL Export Methods ----
+
+        private void ExportXL(ISGridAdvEx pGrid)
+        {
+            string vMessage = string.Empty;
+            int vCountRows = pGrid.RowCount;
+
+            if (vCountRows > 0)
+            {
+                saveFileDialog1.Title = "Excel_Save";
+                saveFileDialog1.FileName = "Ex_00";
+                saveFileDialog1.DefaultExt = "xls";
+                System.IO.DirectoryInfo vSaveFolder = new System.IO.DirectoryInfo(System.Environment.GetFolderPath(Environment.SpecialFolder.Desktop));
+                saveFileDialog1.InitialDirectory = vSaveFolder.FullName;
+                saveFileDialog1.Filter = "Excel Files (*.xls)|*.xls";
+                if (saveFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    System.Windows.Forms.Application.UseWaitCursor = true;
+                    this.Cursor = System.Windows.Forms.Cursors.WaitCursor;
+                    System.Windows.Forms.Application.DoEvents();
+
+                    string vOpenExcelFileName = "HRMF0507_002.xls";
+                    string vSaveExcelFileName = saveFileDialog1.FileName;
+
+                    XLExport mExport = new XLExport();
+                    int vTerritory = GetTerritory(pGrid.TerritoryLanguage);
+                    bool vbXLSaveOK = mExport.ExcelExport(pGrid, vTerritory, vOpenExcelFileName, vSaveExcelFileName, this.Text, this);
+                    if (vbXLSaveOK == true)
+                    {
+                        vMessage = string.Format("Save OK [{0}]", vSaveExcelFileName);
+                        isAppInterfaceAdv1.OnAppMessage(vMessage);
+                        System.Windows.Forms.Application.DoEvents();
+                    }
+                    else
+                    {
+                        vMessage = string.Format("Save Err [{0}]", vSaveExcelFileName);
+                        isAppInterfaceAdv1.OnAppMessage(vMessage);
+                        System.Windows.Forms.Application.DoEvents();
+                    }
+
+                    System.Windows.Forms.Application.UseWaitCursor = false;
+                    this.Cursor = System.Windows.Forms.Cursors.Default;
+                    System.Windows.Forms.Application.DoEvents();
+                }
+            }
+        }
+
+        #endregion;
+
+
+
+
+//        private void isAppInterfaceAdv1_AppMainButtonClick(ISAppButtonEvents e)
+//        ISUtil.Enum.AppMainButtonType.Export 에 붙여넣기
+
+                else if (e.AppMainButtonType == ISUtil.Enum.AppMainButtonType.Export)
+                {
+                    //ExportXL(idaSETTLEMENT_SUM_HEADER);
+                    
+                    int vIndexTab = itbFINAL_SETTLE.SelectedIndex;
+                    if (vIndexTab == 0)
+                    {
+                        if (idaSETTLEMENT_SUM_HEADER.IsFocused == true)
+                        {
+                            ExportXL(igrSETTLEMENT_SUM_HEADER);
+                        }
+                        else if (idaSLIP_LINE.IsFocused == true)
+                        {
+                            ExportXL(igrSLIP_LINE_LIST);
+                        }
+                    }
+                    else if (vIndexTab == 1)
+                    {
+                        ExportXL(igrSETTLEMENT_SUM_LIST);
+                    }
+                    else if (vIndexTab == 2)
+                    {
+                        ExportXL(isGridAdvEx1);
+                    }
+                }
+
+
+

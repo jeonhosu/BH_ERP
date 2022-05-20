@@ -1,0 +1,166 @@
+CREATE OR REPLACE PACKAGE GL_FISCAL_CALENDAR_G
+AS
+
+-- 회계달력 조회.
+  PROCEDURE SELECT_FISCAL_CALENDAR
+            ( P_CURSOR               OUT TYPES.TCURSOR
+            , W_FISCAL_CALENDAR_NAME IN GL_FISCAL_CALENDAR.FISCAL_CALENDAR_NAME%TYPE
+            , W_SOB_ID               IN GL_FISCAL_CALENDAR.SOB_ID%TYPE
+            , W_ORG_ID               IN GL_FISCAL_CALENDAR.ORG_ID%TYPE
+            );
+
+-- 회계달력 삽입.
+  PROCEDURE INSERT_FISCAL_CALENDAR
+            ( P_FISCAL_CALENDAR_ID   IN GL_FISCAL_CALENDAR.FISCAL_CALENDAR_ID%TYPE
+            , P_FISCAL_CALENDAR_CODE IN GL_FISCAL_CALENDAR.FISCAL_CALENDAR_CODE%TYPE
+            , P_FISCAL_CALENDAR_NAME IN GL_FISCAL_CALENDAR.FISCAL_CALENDAR_NAME%TYPE
+            , P_SOB_ID               IN GL_FISCAL_YEAR.SOB_ID%TYPE
+            , P_ORG_ID               IN GL_FISCAL_YEAR.ORG_ID%TYPE
+            , P_USER_ID              IN GL_FISCAL_YEAR.CREATED_BY%TYPE
+            );
+
+-- 회계달력 수정.
+  PROCEDURE UPDATE_FISCAL_CALENDAR
+            ( W_FISCAL_CALENDAR_ID   IN GL_FISCAL_CALENDAR.FISCAL_CALENDAR_ID%TYPE
+            , P_FISCAL_CALENDAR_NAME IN GL_FISCAL_CALENDAR.FISCAL_CALENDAR_NAME%TYPE
+            , P_USER_ID              IN GL_FISCAL_YEAR.CREATED_BY%TYPE
+            );
+
+-- LOOKUP : 회계달력 조회.
+  PROCEDURE LU_FISCAL_CALENDAR
+            ( P_CURSOR3              OUT TYPES.TCURSOR3
+            );
+            
+END GL_FISCAL_CALENDAR_G;
+/
+CREATE OR REPLACE PACKAGE BODY GL_FISCAL_CALENDAR_G
+AS
+/******************************************************************************/
+/* Project      : FPCB ERP
+/* Module       : HR
+/* Program Name : GL_FISCAL_CALENDAR_G
+/* Description  : 회계 달력 관리
+/*
+/* Reference by : 
+/* Program History :
+/*------------------------------------------------------------------------------
+/*   Date       In Charge          Description
+/*------------------------------------------------------------------------------
+/* 07-JUN-2010  Jeon Ho Su          Initialize
+/******************************************************************************/
+-- 회계달력 조회.
+  PROCEDURE SELECT_FISCAL_CALENDAR
+            ( P_CURSOR               OUT TYPES.TCURSOR
+            , W_FISCAL_CALENDAR_NAME IN GL_FISCAL_CALENDAR.FISCAL_CALENDAR_NAME%TYPE
+            , W_SOB_ID               IN GL_FISCAL_CALENDAR.SOB_ID%TYPE
+            , W_ORG_ID               IN GL_FISCAL_CALENDAR.ORG_ID%TYPE
+            )
+  AS
+  BEGIN
+    OPEN P_CURSOR FOR
+      SELECT FC.FISCAL_CALENDAR_ID
+           , FC.FISCAL_CALENDAR_CODE
+           , FC.FISCAL_CALENDAR_NAME
+           , SOB.SOB_DESCRIPTION
+        FROM GL_FISCAL_CALENDAR FC
+          , EAPP_SET_OF_BOOKS_TLV SOB
+       WHERE FC.SOB_ID                  = SOB.SOB_ID
+         AND FC.FISCAL_CALENDAR_NAME LIKE W_FISCAL_CALENDAR_NAME || '%'      
+         AND FC.SOB_ID                  = W_SOB_ID
+/*         AND FC.ORG_ID                  = W_ORG_ID*/
+      ;
+
+  END SELECT_FISCAL_CALENDAR;
+
+-- 회계달력 삽입.
+  PROCEDURE INSERT_FISCAL_CALENDAR
+            ( P_FISCAL_CALENDAR_ID   IN GL_FISCAL_CALENDAR.FISCAL_CALENDAR_ID%TYPE
+            , P_FISCAL_CALENDAR_CODE IN GL_FISCAL_CALENDAR.FISCAL_CALENDAR_CODE%TYPE
+            , P_FISCAL_CALENDAR_NAME IN GL_FISCAL_CALENDAR.FISCAL_CALENDAR_NAME%TYPE
+            , P_SOB_ID               IN GL_FISCAL_YEAR.SOB_ID%TYPE
+            , P_ORG_ID               IN GL_FISCAL_YEAR.ORG_ID%TYPE
+            , P_USER_ID              IN GL_FISCAL_YEAR.CREATED_BY%TYPE
+            )
+  AS
+    V_SYSDATE                  GL_FISCAL_YEAR.CREATION_DATE%TYPE;
+    V_RECORD_COUNT               NUMBER := 0;
+    
+  BEGIN
+    V_SYSDATE := GET_LOCAL_DATE(P_SOB_ID);
+    V_RECORD_COUNT := 0;
+    BEGIN
+      SELECT COUNT(FC.FISCAL_CALENDAR_ID) AS RECORD_COUNT
+        INTO V_RECORD_COUNT
+        FROM GL_FISCAL_CALENDAR FC
+       WHERE (FC.FISCAL_CALENDAR_ID   = P_FISCAL_CALENDAR_ID
+          OR FC.FISCAL_CALENDAR_CODE  = P_FISCAL_CALENDAR_CODE)
+         AND FC.SOB_ID                = P_SOB_ID
+/*         AND FC.ORG_ID                = P_ORG_ID*/
+      ;    
+    EXCEPTION WHEN OTHERS THEN
+      V_RECORD_COUNT := 0;
+    END;
+    IF V_RECORD_COUNT > 0 THEN
+     RAISE ERRNUMS.Exist_Data;
+    END IF;
+    
+    INSERT INTO GL_FISCAL_CALENDAR
+    ( FISCAL_CALENDAR_ID
+    , FISCAL_CALENDAR_CODE
+    , FISCAL_CALENDAR_NAME
+    , SOB_ID
+    , ORG_ID
+    , CREATION_DATE
+    , CREATED_BY
+    , LAST_UPDATE_DATE
+    , LAST_UPDATED_BY )
+    VALUES
+    ( P_FISCAL_CALENDAR_ID
+    , P_FISCAL_CALENDAR_CODE
+    , P_FISCAL_CALENDAR_NAME
+    , P_SOB_ID
+    , P_ORG_ID
+    , V_SYSDATE
+    , P_USER_ID
+    , V_SYSDATE
+    , P_USER_ID );
+  
+  EXCEPTION 
+    WHEN ERRNUMS.Exist_Data THEN
+    RAISE_APPLICATION_ERROR(ERRNUMS.Exist_Data_Code, ERRNUMS.Exist_Data_Desc);
+  END INSERT_FISCAL_CALENDAR;
+
+-- 회계달력 수정.
+  PROCEDURE UPDATE_FISCAL_CALENDAR
+            ( W_FISCAL_CALENDAR_ID   IN GL_FISCAL_CALENDAR.FISCAL_CALENDAR_ID%TYPE
+            , P_FISCAL_CALENDAR_NAME IN GL_FISCAL_CALENDAR.FISCAL_CALENDAR_NAME%TYPE
+            , P_USER_ID              IN GL_FISCAL_YEAR.CREATED_BY%TYPE
+            )
+  AS
+  BEGIN
+    UPDATE GL_FISCAL_CALENDAR
+      SET FISCAL_CALENDAR_NAME       = P_FISCAL_CALENDAR_NAME
+        , LAST_UPDATE_DATE           = GET_LOCAL_DATE(SOB_ID)
+        , LAST_UPDATED_BY            = P_USER_ID
+    WHERE FISCAL_CALENDAR_ID         = W_FISCAL_CALENDAR_ID
+    ;
+
+  END UPDATE_FISCAL_CALENDAR;
+
+-- LOOKUP : 회계달력 조회.
+  PROCEDURE LU_FISCAL_CALENDAR
+            ( P_CURSOR3              OUT TYPES.TCURSOR3
+            )
+  AS
+  BEGIN
+    OPEN P_CURSOR3 FOR
+      SELECT FC.FISCAL_CALENDAR_NAME
+           , FC.FISCAL_CALENDAR_CODE
+           , FC.FISCAL_CALENDAR_ID
+        FROM GL_FISCAL_CALENDAR FC
+      ;
+  
+  END LU_FISCAL_CALENDAR;
+  
+END GL_FISCAL_CALENDAR_G;
+/

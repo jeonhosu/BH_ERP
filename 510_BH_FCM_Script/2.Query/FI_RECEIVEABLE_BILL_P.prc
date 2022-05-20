@@ -1,0 +1,136 @@
+CREATE OR REPLACE PROCEDURE FI_RECEIVEABLE_BILL_P
+(
+  P_GB                     IN VARCHAR2                 ,
+  P_BILL_MASTER_ID           IN FI_BILL_MASTER.BILL_MASTER_ID%TYPE,
+  P_BILL_NUM                 IN FI_BILL_MASTER.BILL_NUM%TYPE,
+  P_SOB_ID                   IN FI_BILL_MASTER.SOB_ID%TYPE,
+  P_ORG_ID                   IN FI_BILL_MASTER.ORG_ID%TYPE,
+  P_BILL_TYPE                IN FI_BILL_MASTER.BILL_TYPE%TYPE,
+  P_CUSTOMER_ID              IN FI_BILL_MASTER.CUSTOMER_ID%TYPE,
+  P_ISSUE_DATE               IN FI_BILL_MASTER.ISSUE_DATE%TYPE,
+  P_DUE_DATE                 IN FI_BILL_MASTER.DUE_DATE%TYPE,
+  P_BILL_STATUS              IN FI_BILL_MASTER.BILL_STATUS%TYPE,
+  P_BILL_MODE                IN FI_BILL_MASTER.BILL_MODE%TYPE,
+  P_AREA_CODE                IN FI_BILL_MASTER.AREA_CODE%TYPE,
+  P_BILL_AMOUNT              IN FI_BILL_MASTER.BILL_AMOUNT%TYPE,
+  P_BANK_NAME                IN FI_BILL_MASTER.BANK_NAME%TYPE,
+  P_ISSUE_NAME               IN FI_BILL_MASTER.ISSUE_NAME%TYPE,
+  P_ENDORSE_NAME             IN FI_BILL_MASTER.ENDORSE_NAME%TYPE,
+  P_ENDORSE_ADDRESS          IN FI_BILL_MASTER.ENDORSE_ADDRESS%TYPE,
+  P_RECEIPT_DEPT_ID          IN FI_BILL_MASTER.RECEIPT_DEPT_ID%TYPE,
+  P_KEEP_DEPT_ID             IN FI_BILL_MASTER.KEEP_DEPT_ID%TYPE,
+  P_RECEIPT_DATE             IN FI_BILL_MASTER.RECEIPT_DATE%TYPE,
+  P_TRUST_DATE               IN FI_BILL_MASTER.TRUST_DATE%TYPE,
+  P_TRUST_BANK_ID            IN FI_BILL_MASTER.TRUST_BANK_ID%TYPE,
+  P_BAD_DATE                 IN FI_BILL_MASTER.BAD_DATE%TYPE,
+  P_DC_DATE                  IN FI_BILL_MASTER.DC_DATE%TYPE,
+  P_DC_BANK_ID               IN FI_BILL_MASTER.DC_BANK_ID%TYPE,
+  P_DC_REMAIN_AMOUNT         IN FI_BILL_MASTER.DC_REMAIN_AMOUNT%TYPE,
+  P_GIVE_DATE                IN FI_BILL_MASTER.GIVE_DATE%TYPE,
+  P_MOVE_START_DATE          IN FI_BILL_MASTER.MOVE_START_DATE%TYPE,
+  P_MOVE_CONFIRM_DATE        IN FI_BILL_MASTER.MOVE_CONFIRM_DATE%TYPE,
+  P_PAYMENT_DATE             IN FI_BILL_MASTER.PAYMENT_DATE%TYPE,
+  P_CANCEL_MOVE_DATE         IN FI_BILL_MASTER.CANCEL_MOVE_DATE%TYPE,
+  P_CANCEL_MOVE_BAD_DATE     IN FI_BILL_MASTER.CANCEL_MOVE_BAD_DATE%TYPE,
+  P_CANCEL_BAD_DATE          IN FI_BILL_MASTER.CANCEL_BAD_DATE%TYPE,
+  P_CANCEL_PAYMENT_DATE      IN FI_BILL_MASTER.CANCEL_PAYMENT_DATE%TYPE,
+  P_CANCEL_DC_DATE           IN FI_BILL_MASTER.CANCEL_DC_DATE%TYPE,
+  P_CANCEL_TRUST_DATE        IN FI_BILL_MASTER.CANCEL_TRUST_DATE%TYPE,
+  P_CREDIT_YN                IN FI_BILL_MASTER.CREDIT_YN%TYPE,
+  P_CREDIT_NO_REMARK         IN FI_BILL_MASTER.CREDIT_NO_REMARK%TYPE,
+  P_LAST_REPLACE_DATE        IN FI_BILL_MASTER.LAST_REPLACE_DATE%TYPE,
+  P_SLIP_LINE_ID             IN FI_BILL_MASTER.SLIP_LINE_ID%TYPE,
+  P_CREATION_DATE            IN FI_BILL_MASTER.CREATION_DATE%TYPE,
+  P_CREATED_BY               IN FI_BILL_MASTER.CREATED_BY%TYPE,
+  P_LAST_UPDATE_DATE         IN FI_BILL_MASTER.LAST_UPDATE_DATE%TYPE,
+  P_LAST_UPDATED_BY          IN FI_BILL_MASTER.LAST_UPDATED_BY%TYPE
+
+) AS
+/*   어음 계정  */
+
+    V_LAST_MOVE_NO      FI_BILL_MOVE.MOVE_SEQ%TYPE;          -- 어음이동 MAX NO
+    V_PERSON_ID         FI_SLIP_LINE.PERSON_ID%TYPE;         --
+    V_SLIP_DATE         FI_SLIP_LINE.SLIP_DATE%TYPE;         --
+    V_SLIP_HEADER_ID    FI_SLIP_LINE.SLIP_HEADER_ID%TYPE;    --
+    V_GL_DATE           FI_SLIP_LINE.GL_DATE%TYPE;           --
+    
+    V_ERRTEXT            VARCHAR2(500);
+ 
+
+BEGIN
+
+        SELECT  NVL(MAX(MOVE_SEQ),0) + 1
+          INTO  V_LAST_MOVE_NO
+          FROM  FI_BILL_MOVE
+         WHERE  BILL_NUM  = P_BILL_NUM
+           AND  SOB_ID    = P_SOB_ID ;
+
+        SELECT  PERSON_ID,   SLIP_DATE,   SLIP_HEADER_ID,   GL_DATE
+          INTO  V_PERSON_ID, V_SLIP_DATE, V_SLIP_HEADER_ID, V_GL_DATE
+          FROM  FI_SLIP_LINE
+         WHERE  SLIP_LINE_ID  = P_SLIP_LINE_ID
+           AND  SOB_ID        = P_SOB_ID ;
+
+     -- DBMS_OUTPUT.PUT_LINE ( 'START ' ||P_ACTDATE ||' ' ||P_SACODE ||' ' || P_ACTCODE || ' ' || V_LEVEL1 );
+    -- 전표 입력
+    IF SUBSTR(P_GB, 1, 1) = 'I' THEN
+
+      BEGIN
+        
+         -- 어음 HISTORY
+         UPDATE FI_BILL_MOVE
+            SET BILL_STATUS       = P_BILL_STATUS ,
+                BILL_AMOUNT       = P_BILL_AMOUNT ,
+                LAST_UPDATE_DATE  = P_LAST_UPDATE_DATE,
+                LAST_UPDATED_BY   = P_LAST_UPDATED_BY
+                
+          WHERE SLIP_LINE_ID      = P_SLIP_LINE_ID
+            AND SOB_ID            = P_SOB_ID ;
+
+        IF SQL%ROWCOUNT = 0 THEN
+
+             INSERT INTO FI_BILL_MOVE
+                 (    BILL_NUM,               MOVE_SEQ,
+                      SOB_ID,                 ORG_ID,
+                      MOVE_DATE,              BILL_STATUS,
+                      BILL_TYPE,              DEPT_ID,
+                      PERSON_ID,              CUSTOMER_ID,
+                      BILL_AMOUNT,            PAYMENT_TYPE,
+                      SLIP_DATE,              
+                      SLIP_HEADER_ID,         SLIP_LINE_ID,
+                      CREATION_DATE,          CREATED_BY,
+                      LAST_UPDATE_DATE,       LAST_UPDATED_BY )
+
+             VALUES
+                (    P_BILL_NUM,           V_LAST_MOVE_NO,
+                     P_SOB_ID,             P_ORG_ID,
+                     V_GL_DATE,            P_BILL_STATUS,
+                     P_BILL_TYPE,          P_RECEIPT_DEPT_ID,
+                     V_PERSON_ID,          P_CUSTOMER_ID,
+                     P_BILL_AMOUNT,        '1',
+                     V_SLIP_DATE,
+                     V_SLIP_HEADER_ID,     P_SLIP_LINE_ID,
+                     P_CREATION_DATE,      P_CREATED_BY,
+                     P_LAST_UPDATE_DATE,   P_LAST_UPDATED_BY );
+       
+          END IF;
+          
+       END;
+       
+    -- 전표 삭제.
+   ELSE
+
+      BEGIN
+
+        DELETE FROM  FI_BILL_MOVE
+        WHERE SLIP_LINE_ID       = P_SLIP_LINE_ID
+          AND SOB_ID             = P_SOB_ID ;
+
+      EXCEPTION WHEN NO_DATA_FOUND THEN
+          RAISE_APPLICATION_ERROR(-20001, 'FI_BILL_MOVE : 어음이동 DATA 삭제 오류('||SQLCODE||' : '||SQLERRM||')');
+      END;
+
+    END IF;
+
+END FI_RECEIVEABLE_BILL_P;
+/
